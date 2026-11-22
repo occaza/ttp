@@ -178,7 +178,7 @@
 
 <div class="space-y-16 sm:space-y-24">
 	<!-- 1. HERO SECTION -->
-	<section class="relative overflow-hidden border-b border-border/60 bg-linear-to-b from-primary/5 via-background to-background pt-8 pb-14 sm:pt-14 sm:pb-20">
+	<section class="relative overflow-hidden border-b border-border/60 bg-muted/20 pt-8 pb-14 sm:pt-14 sm:pb-20">
 		<div class="mx-auto max-w-6xl px-4 sm:px-6">
 			<div class="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
 				<!-- Hero Left: Pitch & Quick Search -->
@@ -294,11 +294,8 @@
 
 				<!-- Hero Right: Interactive Simulated Live Jastip Card -->
 				<div class="lg:col-span-5">
-					<div class="relative mx-auto max-w-md rounded-2xl border border-border/80 bg-card p-5 shadow-xl sm:p-6">
-						<!-- Glow Effect Behind Card -->
-						<div class="pointer-events-none absolute -inset-0.5 rounded-2xl bg-linear-to-br from-primary/30 to-transparent opacity-30 blur-xl"></div>
-
-						<div class="relative space-y-4">
+					<div class="relative mx-auto max-w-md rounded-2xl border border-border/80 bg-card p-5 shadow-lg sm:p-6">
+						<div class="space-y-4">
 							<!-- Header Card -->
 							<div class="flex items-center justify-between border-b border-border/70 pb-3">
 								<div class="flex items-center gap-2">
@@ -629,7 +626,7 @@
 	<section class="mx-auto max-w-6xl px-4 sm:px-6">
 		<div class="grid gap-6 md:grid-cols-2">
 			<!-- CTA Pelanggan -->
-			<div class="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary via-primary/95 to-primary/85 p-6 text-primary-foreground shadow-md sm:p-8">
+			<div class="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-md sm:p-8">
 				<div class="space-y-3">
 					<div class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs">
 						<ShoppingBag class="size-3.5" />

@@ -35,12 +35,8 @@
 	<div class="grid w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-lg md:grid-cols-12">
 		<!-- Left Visual Panel (Desktop Only) -->
 		<div
-			class="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-primary via-primary/95 to-primary/85 p-8 text-primary-foreground md:col-span-5 md:flex lg:p-10"
+			class="relative hidden flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:col-span-5 md:flex lg:p-10"
 		>
-			<!-- Decorative Background Pattern -->
-			<div class="pointer-events-none absolute -top-12 -right-12 size-48 rounded-full bg-white/10 blur-2xl"></div>
-			<div class="pointer-events-none absolute -bottom-12 -left-12 size-48 rounded-full bg-black/10 blur-2xl"></div>
-
 			<!-- Brand Identity Header -->
 			<div class="relative z-10 space-y-4">
 				<a
