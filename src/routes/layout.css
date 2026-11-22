@@ -51,10 +51,44 @@
 		border-color: var(--border);
 	}
 
+	html {
+		-webkit-tap-highlight-color: transparent;
+		-webkit-text-size-adjust: 100%;
+		overscroll-behavior-y: none;
+	}
+
 	body {
 		background-color: var(--background);
 		color: var(--foreground);
 		font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+	}
+
+	/* Eliminate 300ms tap delay and double-tap zoom delay */
+	button,
+	a,
+	[role='button'],
+	input,
+	select,
+	textarea {
+		touch-action: manipulation;
+	}
+
+	/* Prevent long-press text selection on interactive controls */
+	button,
+	[role='button'],
+	a[role='button'] {
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-touch-callout: none;
+	}
+
+	/* Prevent iOS Safari auto-zoom on mobile inputs (must be >= 16px) */
+	@media (pointer: coarse) {
+		input,
+		textarea,
+		select {
+			font-size: 16px !important;
+		}
 	}
 }
 
