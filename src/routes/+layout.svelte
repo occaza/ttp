@@ -97,14 +97,14 @@
 							class="inline-flex items-center gap-2 rounded-lg border border-border/80 bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-xs transition-colors hover:bg-muted"
 						>
 							<div
-								class="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary"
+								class="flex size-5 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary"
 							>
 								{data.profile?.full_name?.charAt(0).toUpperCase() || 'U'}
 							</div>
 							<span class="max-w-28 truncate">{data.profile?.full_name || 'Profil'}</span>
 							{#if data.role && data.role !== 'customer'}
 								<span
-									class="rounded bg-primary/10 px-1 py-0.5 text-[9px] font-bold text-primary uppercase"
+									class="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary uppercase"
 								>
 									{data.role}
 								</span>
@@ -159,7 +159,7 @@
 					<p class="text-xs leading-relaxed text-muted-foreground max-w-sm">
 						Platform jasa titip belanja & pengantaran lokal terpercaya. Hubungkan kebutuhan belanja Anda langsung ke mitra lokal dengan struk asli toko.
 					</p>
-					<div class="flex items-center gap-2 pt-1 text-[11px] text-muted-foreground">
+					<div class="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
 						<ShieldCheck class="size-4 text-primary" />
 						<span>100% Struk Kasir Asli & Terverifikasi</span>
 					</div>
@@ -188,7 +188,7 @@
 
 				<div class="col-span-2 space-y-2.5">
 					<p class="font-bold text-foreground">Wilayah Layanan</p>
-					<ul class="space-y-1 text-[11px] text-muted-foreground">
+					<ul class="space-y-1 text-xs text-muted-foreground">
 						<li>Jakarta Selatan</li>
 						<li>Jakarta Pusat & Barat</li>
 						<li>Jakarta Timur & Utara</li>
@@ -198,7 +198,7 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-[11px] sm:flex-row">
+			<div class="flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-xs sm:flex-row">
 				<p>&copy; {new Date().getFullYear()} Titipin Indonesia. Hak cipta dilindungi undang-undang.</p>
 				<div class="flex items-center gap-4">
 					<a href="{resolve('/')}#bantuan" class="transition-colors hover:text-foreground">Ketentuan Layanan</a>
@@ -216,21 +216,21 @@
 		<div class="mx-auto grid h-16 max-w-lg grid-cols-4">
 			<a
 				href={resolve('/')}
-				class="flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
+				class="flex flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
 			>
 				<Home class="size-5" />
 				<span>Beranda</span>
 			</a>
 			<a
 				href="{resolve('/')}#eksplor"
-				class="flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
+				class="flex flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
 			>
 				<Compass class="size-5" />
 				<span>Kategori</span>
 			</a>
 			<a
 				href="{resolve('/')}#carakerja"
-				class="flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
+				class="flex flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
 			>
 				<ShoppingBag class="size-5" />
 				<span>Cara Kerja</span>
@@ -238,7 +238,7 @@
 			{#if data?.user}
 				<a
 					href={resolve('/profil')}
-					class="flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
+					class="flex flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
 				>
 					<UserIcon class="size-5" />
 					<span>Profil</span>
@@ -246,7 +246,7 @@
 			{:else}
 				<a
 					href={resolve('/masuk')}
-					class="flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
+					class="flex flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground transition-all hover:text-primary active:scale-95"
 				>
 					<UserIcon class="size-5" />
 					<span>Masuk</span>

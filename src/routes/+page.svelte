@@ -242,7 +242,7 @@
 						</div>
 
 						<!-- Popular Search Chips -->
-						<div class="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+						<div class="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
 							<span class="font-medium text-foreground">Sering dititip:</span>
 							<button
 								type="button"
@@ -294,51 +294,48 @@
 
 				<!-- Hero Right: Interactive Simulated Live Jastip Card -->
 				<div class="lg:col-span-5">
-					<div class="relative mx-auto max-w-md rounded-2xl border border-border/80 bg-card p-5 shadow-lg sm:p-6">
+					<div class="mx-auto max-w-md rounded-2xl border border-border/80 bg-card p-5 shadow-lg sm:p-6">
 						<div class="space-y-4">
 							<!-- Header Card -->
 							<div class="flex items-center justify-between border-b border-border/70 pb-3">
-								<div class="flex items-center gap-2">
-									<div class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+								<div class="flex items-center gap-2.5">
+									<div class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
 										<ShoppingBag class="size-4" />
 									</div>
 									<div>
 										<p class="text-xs font-bold text-foreground">Titipan Aktif #TP-8921</p>
-										<p class="text-[10px] text-muted-foreground">Area Kebayoran Baru • Live Update</p>
+										<p class="text-xs text-muted-foreground">Area Kebayoran Baru • Live Update</p>
 									</div>
 								</div>
-								<span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-									<span class="size-1.5 rounded-full bg-emerald-500"></span>
+								<span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+									<span class="size-2 rounded-full bg-primary"></span>
 									Sedang Dibelikan
 								</span>
 							</div>
 
-							<!-- Item Details -->
-							<div class="space-y-2 rounded-xl bg-muted/40 p-3.5">
+							<!-- Item Details (Flattened layout without nested card container) -->
+							<div class="space-y-2 border-b border-border/70 pb-3">
 								<div class="flex items-start justify-between text-xs">
 									<div>
 										<p class="font-bold text-foreground">Gulai Tikungan (Gultik) Blok M</p>
-										<p class="text-[11px] text-muted-foreground">3x Porsi Spesial, Kerupuk Tambah, Sambal Dipisah</p>
+										<p class="text-xs text-muted-foreground">3x Porsi Spesial, Kerupuk Tambah, Sambal Dipisah</p>
 									</div>
 									<span class="font-bold text-foreground">Rp 60.000</span>
 								</div>
-								<div class="flex items-center justify-between border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+								<div class="flex items-center justify-between pt-1 text-xs text-muted-foreground">
 									<span>Tarif Jastip Mitra</span>
 									<span class="font-medium text-foreground">Rp 15.000</span>
 								</div>
-								<div class="flex items-center justify-between border-t border-border/60 pt-2 text-xs font-bold">
+								<div class="flex items-center justify-between pt-1 text-xs font-bold">
 									<span class="text-foreground">Total Transparan</span>
 									<span class="text-primary">Rp 75.000</span>
 								</div>
 							</div>
 
-							<!-- Verified Receipt Badge -->
-							<div class="flex items-center gap-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5 text-xs text-emerald-700 dark:text-emerald-300">
-								<Receipt class="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-								<div class="flex-1">
-									<p class="text-[11px] font-semibold">Struk Kasir Asli Terverifikasi</p>
-									<p class="text-[10px] opacity-80">Foto bukti struk langsung dari pedagang warung</p>
-								</div>
+							<!-- Verified Receipt Status -->
+							<div class="flex items-center gap-2 text-xs font-semibold text-foreground">
+								<Receipt class="size-4 shrink-0 text-primary" />
+								<span>Struk kasir fisik asli dari pedagang terverifikasi</span>
 							</div>
 
 							<!-- Assigned Mitra Profile -->
@@ -349,15 +346,15 @@
 									</div>
 									<div>
 										<p class="text-xs font-bold text-foreground">Dimas Pratama</p>
-										<div class="flex items-center gap-1 text-[10px] text-muted-foreground">
-											<Star class="size-3 fill-amber-400 text-amber-400" />
+										<div class="flex items-center gap-1 text-xs text-muted-foreground">
+											<Star class="size-3.5 fill-amber-400 text-amber-400" />
 											<span class="font-semibold text-foreground">4.95</span>
 											<span>(320+ titipan sukses)</span>
 										</div>
 									</div>
 								</div>
 								<div class="text-right">
-									<span class="block text-[10px] text-muted-foreground">Estimasi Tiba</span>
+									<span class="block text-xs text-muted-foreground">Estimasi Tiba</span>
 									<span class="text-xs font-bold text-foreground">~15 Menit</span>
 								</div>
 							</div>
@@ -449,7 +446,7 @@
 							>
 								<IconComponent class="size-5" />
 							</div>
-							<span class="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+							<span class="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
 								{cat.badge}
 							</span>
 						</div>
@@ -463,13 +460,13 @@
 							</p>
 						</div>
 
-						<div class="rounded-lg bg-muted/40 p-2.5 text-[11px] text-muted-foreground">
+						<div class="rounded-lg bg-muted/40 p-2.5 text-xs text-muted-foreground">
 							<span class="font-medium text-foreground">Contoh:</span> {cat.examples}
 						</div>
 					</div>
 
 					<div class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs">
-						<span class="text-[11px] text-muted-foreground">{cat.activeMitra}</span>
+						<span class="text-xs text-muted-foreground">{cat.activeMitra}</span>
 						<a
 							href={resolve('/daftar')}
 							class="inline-flex items-center gap-1 font-semibold text-primary transition-colors hover:underline"
@@ -502,7 +499,7 @@
 				{#each workflows as flow}
 					<div class="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
 						<div class="space-y-3">
-							<span class="text-3xl font-black text-primary/30">
+							<span class="text-3xl font-black text-primary">
 								{flow.step}
 							</span>
 							<h3 class="text-base font-bold text-foreground">
@@ -614,7 +611,7 @@
 
 						<div class="mt-5 border-t border-border/60 pt-3">
 							<p class="text-xs font-bold text-foreground">{test.name}</p>
-							<p class="text-[11px] text-muted-foreground">{test.role} • {test.location}</p>
+							<p class="text-xs text-muted-foreground">{test.role} • {test.location}</p>
 						</div>
 					</div>
 				{/each}

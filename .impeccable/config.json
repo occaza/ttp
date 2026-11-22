@@ -1,0 +1,10 @@
+{
+	"detector": {
+		"extensions": [
+			{
+				"ext": ".svelte",
+				"engine": "html"
+			}
+		]
+	}
+}

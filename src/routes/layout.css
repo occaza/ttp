@@ -8,8 +8,8 @@
 		--card-foreground: oklch(0.18 0.02 240);
 		--popover: oklch(1 0 0);
 		--popover-foreground: oklch(0.18 0.02 240);
-		/* Titipin Primary Teal */
-		--primary: oklch(0.48 0.13 195);
+		/* Titipin Primary Teal - calibrated for WCAG AA 4.5:1+ contrast */
+		--primary: oklch(0.42 0.13 195);
 		--primary-foreground: oklch(0.99 0 0);
 		--secondary: oklch(0.96 0.015 195);
 		--secondary-foreground: oklch(0.25 0.05 195);
@@ -21,7 +21,7 @@
 		--destructive-foreground: oklch(0.99 0 0);
 		--border: oklch(0.9 0.01 240);
 		--input: oklch(0.9 0.01 240);
-		--ring: oklch(0.48 0.13 195);
+		--ring: oklch(0.42 0.13 195);
 		--radius: 0.625rem;
 	}
 
@@ -61,6 +61,17 @@
 		background-color: var(--background);
 		color: var(--foreground);
 		font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+	}
+
+	/* Eliminate straggler / orphan words on text blocks */
+	p,
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		text-wrap: pretty;
 	}
 
 	/* Eliminate 300ms tap delay and double-tap zoom delay */
