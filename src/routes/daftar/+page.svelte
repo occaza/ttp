@@ -18,7 +18,8 @@
 		ShoppingBag,
 		ArrowLeft,
 		Sparkles,
-		BadgePercent
+		BadgePercent,
+		LockKeyhole
 	} from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -39,7 +40,7 @@
 	<title>Daftar Akun Baru - Titipin</title>
 	<meta
 		name="description"
-		content="Daftar akun Titipin sebagai Pelanggan untuk titip belanja lokal atau sebagai Mitra untuk penghasilan tambahan."
+		content="Daftar akun Titipin untuk memesan jasa titip belanja lokal dengan harga struk toko asli."
 	/>
 </svelte:head>
 
@@ -53,7 +54,6 @@
 		<div
 			class="relative hidden flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:col-span-5 md:flex lg:p-10"
 		>
-			<!-- Brand Identity Header -->
 			<div class="relative z-10 space-y-4">
 				<a
 					href={resolve('/')}
@@ -91,15 +91,15 @@
 					<ul class="mt-3 space-y-2 text-xs text-white/90">
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-emerald-300" />
-							<span>Bisa titip ke warung gang atau resto tanpa ojol</span>
+							<span>Titip ke warung gang atau resto tanpa batas ojol</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-emerald-300" />
-							<span>Harga barang sesuai struk kasir toko (tanpa markup)</span>
+							<span>Harga barang sesuai struk kasir toko asli</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-emerald-300" />
-							<span>Bebas beri catatan spesifik belanjaan</span>
+							<span>Catatan belanja detail & estimasi tiba akurat</span>
 						</li>
 					</ul>
 				{:else}
@@ -110,15 +110,15 @@
 					<ul class="mt-3 space-y-2 text-xs text-white/90">
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-amber-300" />
-							<span>Komisi tarif jasa titip 100% transparan</span>
+							<span>Tarif komisi jasa titip transparan</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-amber-300" />
-							<span>Fleksibel, ambil pesanan searah rute Anda</span>
+							<span>Fleksibel, searah dengan rute harian Anda</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-amber-300" />
-							<span>Terhubung langsung dengan pelanggan area lokal</span>
+							<span>Terhubung langsung dengan pemesan area sekitar</span>
 						</li>
 					</ul>
 				{/if}
@@ -130,7 +130,7 @@
 			>
 				<div class="flex items-center gap-2">
 					<ShieldCheck class="size-4 shrink-0 text-emerald-300" />
-					<span>Privasi dan data kontak tersimpan aman</span>
+					<span>Data kontak dan privasi terlindungi dengan enkripsi</span>
 				</div>
 			</div>
 		</div>
@@ -154,11 +154,9 @@
 			</div>
 
 			<div class="space-y-1.5">
-				<h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-					Buat Akun Baru
-				</h1>
+				<h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Daftar Akun</h1>
 				<p class="text-xs text-muted-foreground sm:text-sm">
-					Pilih peran Anda dan lengkapi data singkat untuk memulai.
+					Daftarkan diri Anda untuk mulai memesan jasa titip belanja lokal.
 				</p>
 			</div>
 
@@ -169,7 +167,7 @@
 				>
 					<AlertCircle class="mt-0.5 size-4 shrink-0" />
 					<div>
-						<p class="font-semibold">Gagal mendaftar</p>
+						<p class="font-semibold">Pendaftaran belum berhasil</p>
 						<p class="mt-0.5">{form.error}</p>
 					</div>
 				</div>
@@ -182,116 +180,102 @@
 					loading = true;
 				}}
 			>
-				<!-- Role Selector Buttons -->
+				<!-- Role Selection -->
 				<div class="space-y-1.5">
 					<Label class="text-xs font-semibold text-foreground">Daftar Sebagai</Label>
 					<div class="grid grid-cols-2 gap-2.5">
-						<label
+						<!-- Customer Option -->
+						<button
+							type="button"
 							class="flex cursor-pointer flex-col rounded-xl border p-3 text-left transition-all {selectedRole ===
 							'customer'
-								? 'border-primary bg-primary/5 ring-1 ring-primary/40'
-								: 'border-border/80 hover:border-border hover:bg-muted/30'}"
+								? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+								: 'border-border/80 bg-background hover:bg-muted/50'}"
+							onclick={() => (selectedRole = 'customer')}
 						>
-							<input
-								type="radio"
-								name="role"
-								value="customer"
-								checked={selectedRole === 'customer'}
-								onchange={() => (selectedRole = 'customer')}
-								class="sr-only"
-							/>
 							<div class="flex items-center justify-between">
-								<ShoppingBag
-									class="size-4.5 {selectedRole === 'customer'
-										? 'text-primary'
-										: 'text-muted-foreground'}"
-								/>
+								<span class="text-xs font-bold text-foreground">Pelanggan</span>
 								{#if selectedRole === 'customer'}
-									<span
-										class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
-									>
-										Dipilih
-									</span>
+									<div class="size-2 rounded-full bg-primary"></div>
 								{/if}
 							</div>
-							<span class="mt-2 text-xs font-bold text-foreground">Pelanggan</span>
-							<span class="mt-0.5 text-[11px] text-muted-foreground">
-								Titip belanja & kebutuhan harian
-							</span>
-						</label>
+							<p class="mt-1 text-[11px] text-muted-foreground">Titip belanja kebutuhan lokal</p>
+						</button>
 
+						<!-- Provider Option -->
 						{#if data.allowProviderRegistration}
-							<label
+							<button
+								type="button"
 								class="flex cursor-pointer flex-col rounded-xl border p-3 text-left transition-all {selectedRole ===
 								'provider'
-									? 'border-primary bg-primary/5 ring-1 ring-primary/40'
-									: 'border-border/80 hover:border-border hover:bg-muted/30'}"
+									? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+									: 'border-border/80 bg-background hover:bg-muted/50'}"
+								onclick={() => (selectedRole = 'provider')}
 							>
-								<input
-									type="radio"
-									name="role"
-									value="provider"
-									checked={selectedRole === 'provider'}
-									onchange={() => (selectedRole = 'provider')}
-									class="sr-only"
-								/>
 								<div class="flex items-center justify-between">
-									<ShieldCheck
-										class="size-4.5 {selectedRole === 'provider'
-											? 'text-primary'
-											: 'text-muted-foreground'}"
-									/>
+									<span class="text-xs font-bold text-foreground">Mitra Jastip</span>
 									{#if selectedRole === 'provider'}
-										<span
-											class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
-										>
-											Dipilih
-										</span>
+										<div class="size-2 rounded-full bg-primary"></div>
 									{/if}
 								</div>
-								<span class="mt-2 text-xs font-bold text-foreground">Mitra Jastip</span>
-								<span class="mt-0.5 text-[11px] text-muted-foreground">
-									Sediakan jasa & dapatkan komisi
-								</span>
-							</label>
+								<p class="mt-1 text-[11px] text-muted-foreground">Bantu belanja & raih penghasilan</p>
+							</button>
 						{:else}
 							<div
-								class="relative flex flex-col rounded-xl border border-dashed border-border/80 bg-muted/40 p-3 opacity-75"
-								title="Pendaftaran mitra sedang ditutup sementara"
+								class="flex cursor-not-allowed flex-col rounded-xl border border-border/50 bg-muted/40 p-3 opacity-70"
+								title="Pendaftaran mitra ditutup sementara"
 							>
 								<div class="flex items-center justify-between">
-									<ShieldCheck class="size-4.5 text-muted-foreground" />
+									<span class="text-xs font-semibold text-muted-foreground">Mitra Jastip</span>
 									<span
-										class="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground uppercase"
+										class="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground"
 									>
-										Ditutup
+										<LockKeyhole class="size-2.5" />
+										<span>Ditutup</span>
 									</span>
 								</div>
-								<span class="mt-2 text-xs font-bold text-muted-foreground">Mitra Jastip</span>
-								<span class="mt-0.5 text-[10px] leading-tight text-muted-foreground">
-									Ditutup sementara (fokus layanan internal)
-								</span>
+								<p class="mt-1 text-[11px] text-muted-foreground">Fokus layanan internal</p>
 							</div>
 						{/if}
 					</div>
+					<input type="hidden" name="role" value={selectedRole} />
 				</div>
 
 				<!-- Full Name Input -->
 				<div class="space-y-1.5">
 					<Label for="full_name" class="text-xs font-semibold text-foreground">Nama Lengkap</Label>
 					<div class="relative">
-						<User
-							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
-						/>
+						<User class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
 						<Input
 							id="full_name"
 							name="full_name"
 							type="text"
 							autocomplete="name"
 							enterkeyhint="next"
-							placeholder="Contoh: Budi Santoso"
+							placeholder="Nama lengkap Anda"
 							required
 							value={form?.full_name || ''}
+							class="h-10 pl-9.5 text-sm"
+						/>
+					</div>
+				</div>
+
+				<!-- Phone / WhatsApp Input -->
+				<div class="space-y-1.5">
+					<Label for="phone" class="text-xs font-semibold text-foreground">Nomor WhatsApp</Label>
+					<div class="relative">
+						<Phone
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
+						<Input
+							id="phone"
+							name="phone"
+							type="tel"
+							autocomplete="tel"
+							enterkeyhint="next"
+							placeholder="081234567890"
+							required
+							value={form?.phone || ''}
 							class="h-10 pl-9.5 text-sm"
 						/>
 					</div>
@@ -301,9 +285,7 @@
 				<div class="space-y-1.5">
 					<Label for="email" class="text-xs font-semibold text-foreground">Alamat Email</Label>
 					<div class="relative">
-						<Mail
-							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
-						/>
+						<Mail class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
 						<Input
 							id="email"
 							name="email"
@@ -320,39 +302,11 @@
 					</div>
 				</div>
 
-				<!-- Phone Input -->
-				<div class="space-y-1.5">
-					<div class="flex items-center justify-between">
-						<Label for="phone" class="text-xs font-semibold text-foreground">
-							Nomor WhatsApp / HP
-						</Label>
-						<span class="text-[11px] text-muted-foreground">Aktif untuk koordinasi</span>
-					</div>
-					<div class="relative">
-						<Phone
-							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
-						/>
-						<Input
-							id="phone"
-							name="phone"
-							type="tel"
-							inputmode="tel"
-							autocomplete="tel"
-							enterkeyhint="next"
-							placeholder="08123456789"
-							value={form?.phone || ''}
-							class="h-10 pl-9.5 text-sm"
-						/>
-					</div>
-				</div>
-
 				<!-- Password Input -->
 				<div class="space-y-1.5">
 					<Label for="password" class="text-xs font-semibold text-foreground">Kata Sandi</Label>
 					<div class="relative">
-						<Lock
-							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
-						/>
+						<Lock class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
 						<Input
 							id="password"
 							name="password"
@@ -362,6 +316,7 @@
 							autocorrect="off"
 							enterkeyhint="done"
 							placeholder="Minimal 6 karakter"
+							minlength={6}
 							required
 							class="h-10 pr-10 pl-9.5 text-sm"
 						/>
@@ -390,9 +345,9 @@
 						<span
 							class="mr-2 inline-block size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
 						></span>
-						<span>Membuat akun...</span>
+						<span>Memproses Pendaftaran...</span>
 					{:else}
-						<span>Daftar Sebagai {selectedRole === 'customer' ? 'Pelanggan' : 'Mitra'}</span>
+						<span>Daftar Akun Sekarang</span>
 						<ArrowRight class="ml-1.5 size-4" />
 					{/if}
 				</Button>

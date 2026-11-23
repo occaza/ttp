@@ -20,15 +20,16 @@
 		HeartHandshake,
 		BadgeCheck,
 		Users,
-		ShoppingBag
+		ShoppingBag,
+		CheckCircle2,
+		XCircle,
+		HelpCircle
 	} from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	let searchQuery = $state('');
 	let selectedLocation = $state('Jakarta Selatan');
-
-	const getStars = (count: number) => Array.from({ length: count }, (_, i) => i);
 
 	const locations = [
 		'Jakarta Selatan',
@@ -61,16 +62,16 @@
 		custom: Sparkles
 	};
 
-	const categories = [
+	const defaultCategories = [
 		{
 			id: 'kuliner',
 			slug: 'food-beverage',
 			name: 'Kuliner & Warung Hits',
-			desc: 'Resto viral tanpa ojol, kedai kopi legendaris, & jajanan malam.',
+			desc: 'Resto viral tanpa ojol, kedai kopi legendaris, dan jajanan malam.',
 			examples: 'Gultik Blok M, Martabak San Fransisco, Warteg Warmo',
 			icon: Utensils,
 			badge: 'Paling Populer',
-			activeMitra: '42 Mitra Online'
+			activeMitra: '42 Mitra Siap'
 		},
 		{
 			id: 'pasar',
@@ -80,47 +81,47 @@
 			examples: 'Sayur bayam, daging segar, ayam potong, bumbu rempah',
 			icon: Carrot,
 			badge: 'Subuh - Siang',
-			activeMitra: '28 Mitra Online'
+			activeMitra: '28 Mitra Siap'
 		},
 		{
 			id: 'swalayan',
 			slug: 'grocery-mart',
 			name: 'Minimarket & Swalayan',
 			desc: 'Kebutuhan rumah mendesak, air galon, popok, atau cemilan.',
-			examples: 'Indomaret, Alfamart, Superindo, minimarket lokal',
+			examples: 'Indomaret, Alfamart, Superindo, toko kelontong',
 			icon: Store,
 			badge: 'Cepat 20 Menit',
-			activeMitra: '35 Mitra Online'
+			activeMitra: '35 Mitra Siap'
 		},
 		{
 			id: 'farmasi',
 			slug: 'pharmacy',
 			name: 'Apotek & Kebutuhan Medis',
-			desc: 'Obat resep/bebas, vitamin, termometer, & kebutuhan darurat 24 jam.',
+			desc: 'Obat bebas/resep, vitamin, termometer, dan kebutuhan darurat.',
 			examples: 'Apotek K-24, Kimia Farma, Century, Apotek Berkat',
 			icon: Pill,
 			badge: 'Prioritas Cepat',
-			activeMitra: '19 Mitra Online'
+			activeMitra: '19 Mitra Siap'
 		},
 		{
 			id: 'kurir',
 			slug: 'pickup-delivery',
 			name: 'Ambil & Antar Dokumen',
 			desc: 'Kunci rumah tertinggal, berkas kantor, charger laptop, paket lokal.',
-			examples: 'Dokumen kantor, laundry selesai, barang tertinggal di kafe',
+			examples: 'Dokumen kantor, laundry selesai, barang tertinggal',
 			icon: Truck,
 			badge: 'Langsung Antar',
-			activeMitra: '50 Mitra Online'
+			activeMitra: '50 Mitra Siap'
 		},
 		{
 			id: 'custom',
 			slug: 'custom-request',
 			name: 'Titip Request Kustom',
 			desc: 'Antrean tiket, belanja toko spesifik, florist, atau titip khusus.',
-			examples: 'Toko hobi, bunga ucapan, merchandise event, request unik',
+			examples: 'Toko hobi, karangan bunga, merchandise event, titip barang',
 			icon: Sparkles,
 			badge: 'Fleksibel',
-			activeMitra: '25 Mitra Online'
+			activeMitra: '25 Mitra Siap'
 		}
 	];
 
@@ -131,302 +132,210 @@
 					slug: cat.slug,
 					name: cat.name,
 					desc: cat.description || 'Layanan titip belanja terpercaya.',
-					examples: categories[idx]?.examples || 'Belanja kebutuhan toko lokal',
+					examples: defaultCategories[idx]?.examples || 'Belanja kebutuhan toko lokal',
 					icon: categoryIcons[cat.icon || ''] || categoryIcons[cat.slug] || Utensils,
-					badge: categories[idx]?.badge || 'Tersedia',
-					activeMitra: categories[idx]?.activeMitra || 'Mitra Siap'
+					badge: defaultCategories[idx]?.badge || 'Tersedia',
+					activeMitra: defaultCategories[idx]?.activeMitra || 'Mitra Siap'
 				}))
-			: categories
+			: defaultCategories
 	);
 
-	const workflows = [
+	const filteredCategories = $derived(
+		searchQuery.trim()
+			? resolvedCategories.filter(
+					(cat) =>
+						cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						cat.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						cat.examples.toLowerCase().includes(searchQuery.toLowerCase())
+				)
+			: resolvedCategories
+	);
+
+	const steps = [
 		{
-			step: '01',
+			number: '01',
 			title: 'Tulis Titipan & Lokasi Toko',
-			desc: 'Sebutkan toko atau warung tujuan beserta rincian barang dan catatan khusus belanja Anda.'
+			desc: 'Tulis nama warung, pasar, atau toko tujuan lengkap dengan rincian belanjaan dan catatan spesifik Anda.'
 		},
 		{
-			step: '02',
+			number: '02',
 			title: 'Mitra Belanja & Foto Struk',
-			desc: 'Mitra lokal terdekat datang ke lokasi, membelikan barang, dan mengirimkan foto struk kasir asli untuk konfirmasi harga.'
+			desc: 'Mitra membelikan pesanan langsung di lokasi dan wajib mengunggah foto struk kasir asli toko sebagai bukti transaksi.'
 		},
 		{
-			step: '03',
-			title: 'Antar Cepat & Bayar Transparan',
-			desc: 'Barang diantar langsung ke alamat Anda. Bayar sesuai struk riil toko ditambah tarif jastip yang disepakati.'
+			number: '03',
+			title: 'Diantar Langsung & Bayar Transparan',
+			desc: 'Barang diantar ke alamat Anda. Anda membayar harga asli sesuai struk toko ditambah tarif jasa titip yang disepakati.'
+		}
+	];
+
+	const comparisons = [
+		{
+			feature: 'Pilihan Tempat Belanja',
+			titipin: 'Bebas titip ke warung gang, pasar subuh, hingga toko non-rekanan',
+			competitor: 'Terbatas hanya restoran & toko yang terdaftar di aplikasi'
+		},
+		{
+			feature: 'Harga Barang / Menu',
+			titipin: '100% harga asli toko fisik sesuai struk kasir',
+			competitor: 'Sering di-markup 20% hingga 35% dari harga kasir asli'
+		},
+		{
+			feature: 'Struktur Biaya',
+			titipin: 'Tarif jasa titip flat transparan, disepakati di awal',
+			competitor: 'Ongkir dinamis + biaya layanan + biaya platform + kemasan'
+		},
+		{
+			feature: 'Bukti Pembelian',
+			titipin: 'Wajib lampirkan foto struk kasir toko fisik',
+			competitor: 'Tanpa struk fisik toko'
 		}
 	];
 
 	const testimonials = [
 		{
 			quote:
-				'Pagi-pagi butuh bumbu dapur dan ayam potong dari Pasar Mayestik tapi anak lagi rewel. Titip lewat Titipin, jam 7 pagi sudah sampai fresh dan struknya rapi!',
-			name: 'Sarah Wijaya',
+				'Akhirnya bisa titip Gultik Blok M langganan pas lembur di kantor. Harganya jujur sesuai harga mangkuk di tempat, ada foto struknya.',
+			author: 'Dimas Prasetyo',
+			role: 'Pekerja Kantor',
+			location: 'Jakarta Selatan'
+		},
+		{
+			quote:
+				'Belanja sayur pasar subuh jadi praktis tanpa perlu keluar rumah jam 5 pagi. Sayurannya segar dan catatan titipan dibaca teliti sama mitra.',
+			author: 'Siti Rahmawati',
 			role: 'Ibu Rumah Tangga',
-			location: 'Kebayoran Baru',
-			rating: 5
+			location: 'Tangerang Selatan'
 		},
 		{
 			quote:
-				'Kunci apartemen ketinggalan di kantor SCBD saat weekend. Mitra Titipin bantu ambil dan antar ke rumah di Tebet dalam 30 menit. Cepat, komunikatif, dan amanah.',
-			name: 'Kevin Pratama',
-			role: 'Karyawan Swasta',
-			location: 'Tebet',
-			rating: 5
-		},
-		{
-			quote:
-				'Sering bolak-balik rute Blok M ke Cipete. Sambil jalan ambil titipan pelanggan, lumayan dapat penghasilan tambahan 150-250 ribu per hari secara fleksibel.',
-			name: 'Bagus Setiawan',
-			role: 'Mitra Jastip Titipin',
-			location: 'Jakarta Selatan',
-			rating: 5
+				'Kunci kosan ketinggalan di kampus langsung diantar sama mitra dalam 30 menit. Cepat, aman, dan tarifnya sangat masuk akal.',
+			author: 'Fajar Nugraha',
+			role: 'Mahasiswa',
+			location: 'Depok'
 		}
 	];
-
-	const faqs = [
-		{
-			q: 'Bagaimana cara perhitungan biaya belanjaan di Titipin?',
-			a: 'Biaya belanjaan 100% mengikuti total struk kasir fisik asli toko (tanpa markup harga dari kami). Anda hanya membayar total belanja sesuai struk ditambah tarif jasa titip mitra yang disepakati di awal.'
-		},
-		{
-			q: 'Berapa kisaran tarif jasa titip (jastip)?',
-			a: 'Tarif jasa titip mulai dari Rp 10.000 untuk jarak dekat (0-3 km) dan bervariasi sesuai jarak pengantaran serta kompleksitas titipan. Rincian tarif selalu disepakati secara transparan sebelum mitra berbelanja.'
-		},
-		{
-			q: 'Apakah bisa titip ke warung tenda atau gerai kaki lima yang tidak ada struk kasirnya?',
-			a: 'Tentu bisa. Mitra kami akan mengonfirmasi harga langsung di tempat melalui foto harga daftar menu atau bukti pembayaran nota warung kepada Anda via chat sebelum membeli.'
-		},
-		{
-			q: 'Bagaimana jika barang yang dititipkan sedang habis di toko?',
-			a: 'Mitra akan segera mengabari Anda melalui chat/panggilan untuk memberikan alternatif barang, pindah ke gerai cabang terdekat, atau membatalkan titipan tanpa penalti.'
-		}
-	];
-
-	let openFaq = $state<number | null>(0);
-
-	function toggleFaq(index: number) {
-		openFaq = openFaq === index ? null : index;
-	}
 </script>
 
-<svelte:head>
-	<title>Titipin - Layanan Jastip Belanja & Pengantaran Lokal Terpercaya</title>
-	<meta
-		name="description"
-		content="Titip belanja apa pun dari resto viral, pasar pagi, apotek darurat, atau antar dokumen dengan struk toko asli dan tarif transparan."
-	/>
-</svelte:head>
-
 <div class="space-y-16 sm:space-y-24">
-	<!-- 1. HERO SECTION -->
-	<section
-		class="relative overflow-hidden border-b border-border/60 bg-muted/20 pt-8 pb-14 sm:pt-14 sm:pb-20"
-	>
+	<!-- Hero Section -->
+	<section class="relative overflow-hidden border-b border-border/60 bg-linear-to-b from-primary/5 via-background to-background pt-10 pb-16 sm:pt-16 sm:pb-24">
 		<div class="mx-auto max-w-6xl px-4 sm:px-6">
-			<div class="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
-				<!-- Hero Left: Pitch & Quick Search -->
-				<div class="space-y-6 text-center sm:text-left lg:col-span-7">
-					<!-- Active Indicator Badge -->
-					<div
-						class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
-					>
-						<span class="relative flex size-2">
-							<span
-								class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"
-							></span>
-							<span class="relative inline-flex size-2 rounded-full bg-primary"></span>
-						</span>
-						<span>Layanan Jastip Lokal Aktif di Jabodetabek</span>
+			<div class="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
+				<!-- Hero Copy -->
+				<div class="space-y-6 lg:col-span-7">
+					<div class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary">
+						<Sparkles class="size-3.5" />
+						<span>Jasa Titip Belanja Lokal & Pengantaran Cepat</span>
 					</div>
 
-					<!-- Hero Headline -->
-					<div class="space-y-3">
-						<h1
-							class="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl lg:leading-[1.15]"
-						>
-							Titip Belanja Apa Pun, Dari Mana Saja. <span class="text-primary">
-								Diantar Cepat.
-							</span>
-						</h1>
-						<p class="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-							Kuliner kaki lima tanpa ojol, sayur segar pasar subuh, obat apotek darurat, hingga
-							barang tertinggal. Mitra lokal terpercaya siap bantu dengan <strong
-								class="font-semibold text-foreground"
-							>
-								struk kasir asli
-							</strong> dan tarif transparan.
-						</p>
-					</div>
+					<h1 class="text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+						Belanja dari toko mana saja, diantar langsung oleh tetangga.
+					</h1>
 
-					<!-- Quick Search / Titip Input Box -->
-					<div class="rounded-2xl border border-border/90 bg-card p-3 shadow-md sm:p-4">
-						<div class="flex flex-col gap-2.5 sm:flex-row">
-							<!-- Location Selector -->
-							<div class="relative shrink-0 sm:w-44">
-								<MapPin class="pointer-events-none absolute top-3 left-3 size-4 text-primary" />
+					<p class="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+						Titip makanan warung kaki lima, sayur segar pasar tradisional, swalayan, hingga apotek darurat. Harga barang murni sesuai struk kasir toko asli tanpa markup tersembunyi.
+					</p>
+
+					<!-- Location Selector & Search Bar -->
+					<div class="rounded-2xl border border-border/80 bg-card p-2.5 shadow-md sm:p-3">
+						<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+							<div class="flex items-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs font-medium sm:w-48">
+								<MapPin class="size-4 shrink-0 text-primary" />
 								<select
 									bind:value={selectedLocation}
-									class="h-10 w-full rounded-xl border border-border bg-muted/40 pr-6 pl-9 text-xs font-semibold text-foreground transition-colors focus:border-primary focus:outline-none"
-									aria-label="Pilih Lokasi Wilayah"
+									class="w-full bg-transparent text-xs font-semibold text-foreground focus:outline-hidden"
 								>
-									{#each locations as loc (loc)}
+									{#each locations as loc}
 										<option value={loc}>{loc}</option>
 									{/each}
 								</select>
 							</div>
 
-							<!-- Item Input -->
 							<div class="relative flex-1">
-								<Search
-									class="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground"
-								/>
+								<Search class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
 								<Input
 									type="text"
-									enterkeyhint="search"
 									bind:value={searchQuery}
-									placeholder="Mau titip apa? Contoh: Martabak San Fransisco, Pasar Santa..."
-									class="h-10 rounded-xl border-border bg-background pl-9 text-xs sm:text-sm"
+									placeholder="Mau titip apa hari ini? (misal: martabak, obat, sayur...)"
+									class="h-10 border-border/70 pl-9 text-xs sm:text-sm"
 								/>
 							</div>
 
-							<!-- Action CTA -->
 							<a
-								href={resolve('/daftar')}
-								class="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:bg-primary/95 active:scale-98 sm:shrink-0"
+								href="#eksplor"
+								class="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-xs transition-transform hover:bg-primary/95 active:scale-98"
 							>
-								<span>Mulai Titip</span>
-								<ArrowRight class="size-4" />
+								<span>Cari Kategori</span>
 							</a>
 						</div>
-
-						<!-- Popular Search Chips -->
-						<div class="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-							<span class="font-medium text-foreground">Sering dititip:</span>
-							<button
-								type="button"
-								onclick={() => (searchQuery = 'Martabak Pecenongan 65')}
-								class="rounded-md bg-muted/60 px-2 py-0.5 transition-colors hover:bg-muted hover:text-foreground"
-							>
-								Martabak Pecenongan
-							</button>
-							<button
-								type="button"
-								onclick={() => (searchQuery = 'Sayur Segar Pasar Subuh')}
-								class="rounded-md bg-muted/60 px-2 py-0.5 transition-colors hover:bg-muted hover:text-foreground"
-							>
-								Pasar Subuh
-							</button>
-							<button
-								type="button"
-								onclick={() => (searchQuery = 'Obat Apotek K-24')}
-								class="rounded-md bg-muted/60 px-2 py-0.5 transition-colors hover:bg-muted hover:text-foreground"
-							>
-								Apotek K-24
-							</button>
-							<button
-								type="button"
-								onclick={() => (searchQuery = 'Kunci / Dokumen Tertinggal')}
-								class="rounded-md bg-muted/60 px-2 py-0.5 transition-colors hover:bg-muted hover:text-foreground"
-							>
-								Dokumen Tertinggal
-							</button>
-						</div>
 					</div>
 
-					<!-- Trust Micro-Pills -->
-					<div
-						class="flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-muted-foreground sm:justify-start"
-					>
-						<div class="flex items-center gap-1.5">
-							<Receipt class="size-4 text-primary" />
-							<span>100% Struk Kasir Asli</span>
+					<!-- Key Metrics -->
+					<div class="grid grid-cols-3 gap-4 border-t border-border/70 pt-6">
+						<div>
+							<p class="text-xl font-black text-foreground sm:text-2xl">100%</p>
+							<p class="mt-0.5 text-xs text-muted-foreground">Struk Toko Asli</p>
 						</div>
-						<div class="flex items-center gap-1.5">
-							<ShieldCheck class="size-4 text-primary" />
-							<span>Mitra Beridentitas Resmi</span>
+						<div>
+							<p class="text-xl font-black text-foreground sm:text-2xl">Rp 0</p>
+							<p class="mt-0.5 text-xs text-muted-foreground">Markup Harga Menu</p>
 						</div>
-						<div class="flex items-center gap-1.5">
-							<BadgeCheck class="size-4 text-primary" />
-							<span>Mulai Rp 10.000 / Trip</span>
+						<div>
+							<p class="text-xl font-black text-foreground sm:text-2xl">Jabodetabek</p>
+							<p class="mt-0.5 text-xs text-muted-foreground">Area Operasional</p>
 						</div>
 					</div>
 				</div>
 
-				<!-- Hero Right: Interactive Simulated Live Jastip Card -->
+				<!-- Hero Visual Product Truth Card -->
 				<div class="lg:col-span-5">
-					<div
-						class="mx-auto max-w-md rounded-2xl border border-border/80 bg-card p-5 shadow-lg sm:p-6"
-					>
-						<div class="space-y-4">
-							<!-- Header Card -->
-							<div class="flex items-center justify-between border-b border-border/70 pb-3">
-								<div class="flex items-center gap-2.5">
-									<div
-										class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"
-									>
-										<ShoppingBag class="size-4" />
-									</div>
-									<div>
-										<p class="text-xs font-bold text-foreground">Titipan Aktif #TP-8921</p>
-										<p class="text-xs text-muted-foreground">Area Kebayoran Baru • Live Update</p>
-									</div>
+					<div class="relative mx-auto max-w-md overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-xl">
+						<div class="flex items-center justify-between border-b border-border/60 pb-3">
+							<div class="flex items-center gap-2">
+								<div class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+									<Receipt class="size-4" />
 								</div>
-								<span
-									class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary"
-								>
-									<span class="size-2 rounded-full bg-primary"></span>
-									Sedang Dibelikan
-								</span>
+								<div>
+									<p class="text-xs font-bold text-foreground">Struk Kasir Toko Asli</p>
+									<p class="text-[10px] text-muted-foreground">ID Titipan #TT-84920</p>
+								</div>
 							</div>
+							<span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600">
+								<CheckCircle2 class="size-3" />
+								<span>Terverifikasi</span>
+							</span>
+						</div>
 
-							<!-- Item Details (Flattened layout without nested card container) -->
-							<div class="space-y-2 border-b border-border/70 pb-3">
-								<div class="flex items-start justify-between text-xs">
-									<div>
-										<p class="font-bold text-foreground">Gulai Tikungan (Gultik) Blok M</p>
-										<p class="text-xs text-muted-foreground">
-											3x Porsi Spesial, Kerupuk Tambah, Sambal Dipisah
-										</p>
-									</div>
-									<span class="font-bold text-foreground">Rp 60.000</span>
-								</div>
-								<div class="flex items-center justify-between pt-1 text-xs text-muted-foreground">
-									<span>Tarif Jastip Mitra</span>
-									<span class="font-medium text-foreground">Rp 15.000</span>
-								</div>
-								<div class="flex items-center justify-between pt-1 text-xs font-bold">
-									<span class="text-foreground">Total Transparan</span>
-									<span class="text-primary">Rp 75.000</span>
+						<div class="mt-4 space-y-3">
+							<div class="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs">
+								<p class="font-bold text-foreground">Martabak San Fransisco Tebet</p>
+								<p class="mt-0.5 text-[11px] text-muted-foreground">1x Martabak Manis Cokelat Keju Spesial</p>
+								<div class="mt-2 flex justify-between border-t border-border/50 pt-2 font-semibold">
+									<span>Harga Struk Toko</span>
+									<span class="text-foreground">Rp 75.000</span>
 								</div>
 							</div>
 
-							<!-- Verified Receipt Status -->
-							<div class="flex items-center gap-2 text-xs font-semibold text-foreground">
-								<Receipt class="size-4 shrink-0 text-primary" />
-								<span>Struk kasir fisik asli dari pedagang terverifikasi</span>
+							<div class="space-y-1.5 text-xs text-muted-foreground">
+								<div class="flex justify-between">
+									<span>Tarif Jastip Mitra Lokal</span>
+									<span class="font-medium text-foreground">Rp 12.000</span>
+								</div>
+								<div class="flex justify-between">
+									<span>Biaya Layanan Aplikasi</span>
+									<span class="font-medium text-foreground">Rp 1.000</span>
+								</div>
+								<div class="flex justify-between border-t border-border/60 pt-2 text-sm font-black text-foreground">
+									<span>Total Transparan</span>
+									<span class="text-primary">Rp 88.000</span>
+								</div>
 							</div>
 
-							<!-- Assigned Mitra Profile -->
-							<div class="flex items-center justify-between border-t border-border/70 pt-3">
-								<div class="flex items-center gap-2.5">
-									<div
-										class="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-xs"
-									>
-										DP
-									</div>
-									<div>
-										<p class="text-xs font-bold text-foreground">Dimas Pratama</p>
-										<div class="flex items-center gap-1 text-xs text-muted-foreground">
-											<Star class="size-3.5 fill-amber-400 text-amber-400" />
-											<span class="font-semibold text-foreground">4.95</span>
-											<span>(320+ titipan sukses)</span>
-										</div>
-									</div>
-								</div>
-								<div class="text-right">
-									<span class="block text-xs text-muted-foreground">Estimasi Tiba</span>
-									<span class="text-xs font-bold text-foreground">~15 Menit</span>
+							<div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-[11px] text-emerald-700">
+								<div class="flex items-center gap-2">
+									<ShieldCheck class="size-4 shrink-0 text-emerald-600" />
+									<span class="font-semibold">Foto bukti struk kasir toko fisik terlampir di aplikasi</span>
 								</div>
 							</div>
 						</div>
@@ -436,292 +345,129 @@
 		</div>
 	</section>
 
-	<!-- 2. VALUE METRICS STRIP -->
-	<section class="mx-auto max-w-6xl px-4 sm:px-6">
-		<div
-			class="grid grid-cols-2 gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:grid-cols-4 sm:p-6"
-		>
-			<div class="flex items-center gap-3 p-2">
-				<div
-					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<Receipt class="size-5" />
-				</div>
-				<div>
-					<p class="text-lg font-black tracking-tight text-foreground sm:text-xl">100% Asli</p>
-					<p class="text-xs text-muted-foreground">Struk toko tanpa mark-up</p>
-				</div>
-			</div>
-
-			<div class="flex items-center gap-3 p-2">
-				<div
-					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<BadgeCheck class="size-5" />
-				</div>
-				<div>
-					<p class="text-lg font-black tracking-tight text-foreground sm:text-xl">Rp 10.000</p>
-					<p class="text-xs text-muted-foreground">Tarif jastip mulai terendah</p>
-				</div>
-			</div>
-
-			<div class="flex items-center gap-3 p-2">
-				<div
-					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<Users class="size-5" />
-				</div>
-				<div>
-					<p class="text-lg font-black tracking-tight text-foreground sm:text-xl">500+ Mitra</p>
-					<p class="text-xs text-muted-foreground">Tersebar di area lokal</p>
-				</div>
-			</div>
-
-			<div class="flex items-center gap-3 p-2">
-				<div
-					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<Clock class="size-5" />
-				</div>
-				<div>
-					<p class="text-lg font-black tracking-tight text-foreground sm:text-xl">15-45 Mnt</p>
-					<p class="text-xs text-muted-foreground">Langsung dibeli & diantar</p>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<!-- 3. KATEGORI LAYANAN (#eksplor) -->
-	<section id="eksplor" class="mx-auto max-w-6xl space-y-6 px-4 sm:px-6">
-		<div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+	<!-- Categories Grid Section -->
+	<section id="eksplor" class="mx-auto max-w-6xl px-4 sm:px-6">
+		<div class="flex flex-col items-start justify-between gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-end">
 			<div>
-				<div
-					class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
-				>
-					<span>Kategori Unggulan</span>
+				<div class="inline-flex items-center gap-2 text-xs font-bold text-primary uppercase">
+					<span>Katalog Layanan</span>
 				</div>
-				<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-					Apa yang Bisa Anda Titipkan?
+				<h2 class="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+					Kategori Layanan Populer
 				</h2>
-				<p class="text-xs text-muted-foreground sm:text-sm">
-					Mitra Titipin siap mendatangi toko pilihan Anda dan membelikannya langsung.
+				<p class="mt-1 text-xs text-muted-foreground sm:text-sm">
+					Pilih kategori belanjaan yang ingin Anda titipkan ke mitra terdekat di {selectedLocation}.
 				</p>
 			</div>
 			<a
-				href={resolve('/kategori')}
-				class="inline-flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:underline"
+				href={resolve('/daftar')}
+				class="inline-flex items-center gap-1.5 text-xs font-bold text-primary transition-colors hover:underline"
 			>
-				<span>Semua Kategori</span>
+				<span>Lihat Semua Layanan</span>
 				<ChevronRight class="size-4" />
 			</a>
 		</div>
 
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each resolvedCategories as cat (cat.id)}
-				{@const IconComponent = cat.icon}
-				<div
-					class="group flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 transition-all duration-200 hover:border-primary/50 hover:shadow-md"
+		<div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			{#each filteredCategories as category}
+				{@const IconComponent = category.icon}
+				<a
+					href={resolve(`/kategori/${category.slug}`)}
+					class="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
 				>
-					<div class="space-y-3">
+					<div>
 						<div class="flex items-center justify-between">
-							<div
-								class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
-							>
+							<div class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
 								<IconComponent class="size-5" />
 							</div>
-							<span class="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
-								{cat.badge}
+							<span class="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+								{category.badge}
 							</span>
 						</div>
 
-						<div>
-							<h3
-								class="text-base font-bold text-foreground transition-colors group-hover:text-primary"
-							>
-								{cat.name}
-							</h3>
-							<p class="mt-1 text-xs leading-relaxed text-muted-foreground">
-								{cat.desc}
-							</p>
-						</div>
+						<h3 class="mt-4 text-base font-bold text-foreground transition-colors group-hover:text-primary">
+							{category.name}
+						</h3>
+						<p class="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+							{category.desc}
+						</p>
 
-						<div class="rounded-lg bg-muted/40 p-2.5 text-xs text-muted-foreground">
-							<span class="font-medium text-foreground">Contoh:</span>
-							{cat.examples}
+						<div class="mt-3 rounded-lg bg-muted/40 p-2 text-[11px] text-muted-foreground">
+							<span class="font-semibold text-foreground">Contoh:</span> {category.examples}
 						</div>
 					</div>
 
-					<div
-						class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs"
-					>
-						<span class="text-xs text-muted-foreground">{cat.activeMitra}</span>
-						<a
-							href={resolve('/kategori/[slug]', { slug: cat.slug || cat.id })}
-							class="inline-flex items-center gap-1 font-semibold text-primary transition-colors hover:underline"
-						>
-							<span>Eksplor Layanan</span>
-							<ArrowRight class="size-3.5 transition-transform group-hover:translate-x-0.5" />
-						</a>
+					<div class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs">
+						<span class="text-[11px] font-medium text-emerald-600">{category.activeMitra}</span>
+						<span class="inline-flex items-center gap-1 font-semibold text-primary transition-transform group-hover:translate-x-0.5">
+							<span>Pesan Jastip</span>
+							<ArrowRight class="size-3.5" />
+						</span>
 					</div>
-				</div>
+				</a>
 			{/each}
 		</div>
 	</section>
 
-	<!-- 4. CARA KERJA (WORKFLOW) -->
-	<section id="carakerja" class="border-y border-border/60 bg-muted/20 py-14 sm:py-20">
-		<div class="mx-auto max-w-6xl space-y-10 px-4 sm:px-6">
-			<div class="mx-auto max-w-2xl space-y-2 text-center">
-				<div
-					class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
-				>
-					<span>Proses Mudah</span>
-				</div>
-				<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-					Cara Kerja Jastip di Titipin
+	<!-- How It Works Section -->
+	<section id="carakerja" class="border-y border-border/60 bg-muted/30 py-16 sm:py-20">
+		<div class="mx-auto max-w-6xl px-4 sm:px-6">
+			<div class="text-center">
+				<span class="text-xs font-bold text-primary uppercase">Alur Transaksi</span>
+				<h2 class="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+					Cara Kerja Titipin
 				</h2>
-				<p class="text-xs text-muted-foreground sm:text-sm">
-					Tiga langkah ringkas untuk memesan apa pun tanpa repot keluar rumah.
+				<p class="mx-auto mt-2 max-w-xl text-xs text-muted-foreground sm:text-sm">
+					Tiga langkah sederhana dari membuat pesanan titip hingga barang tiba di tangan Anda dengan struk kasir asli.
 				</p>
 			</div>
 
-			<div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-				{#each workflows as flow (flow.step)}
-					<div
-						class="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs"
-					>
-						<div class="space-y-3">
-							<span class="text-3xl font-black text-primary">
-								{flow.step}
-							</span>
-							<h3 class="text-base font-bold text-foreground">
-								{flow.title}
-							</h3>
-							<p class="text-xs leading-relaxed text-muted-foreground">
-								{flow.desc}
-							</p>
-						</div>
+			<div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+				{#each steps as step}
+					<div class="relative rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+						<span class="text-3xl font-black text-primary/30">{step.number}</span>
+						<h3 class="mt-3 text-base font-bold text-foreground">{step.title}</h3>
+						<p class="mt-2 text-xs leading-relaxed text-muted-foreground">{step.desc}</p>
 					</div>
 				{/each}
 			</div>
 		</div>
 	</section>
 
-	<!-- 5. KEUNGGULAN (MENGAPA TITIPIN BERBEDA) -->
-	<section id="keunggulan" class="mx-auto max-w-6xl space-y-10 px-4 sm:px-6">
-		<div class="mx-auto max-w-2xl space-y-2 text-center">
-			<div
-				class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
-			>
-				<span>Keunggulan Nyata</span>
-			</div>
-			<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+	<!-- Comparison Section: Titipin vs Aplikasi Lain -->
+	<section id="keunggulan" class="mx-auto max-w-6xl px-4 sm:px-6">
+		<div class="text-center">
+			<span class="text-xs font-bold text-primary uppercase">Transparansi Nyata</span>
+			<h2 class="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
 				Mengapa Memilih Titipin?
 			</h2>
-			<p class="text-xs text-muted-foreground sm:text-sm">
-				Solusi personal yang fleksibel, jujur, dan tidak dibatasi oleh menu aplikasi besar.
+			<p class="mx-auto mt-2 max-w-xl text-xs text-muted-foreground sm:text-sm">
+				Perbandingan jujur antara memesan lewat Titipin dan aplikasi pesan antar konvensional.
 			</p>
 		</div>
 
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
-				<div
-					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<Store class="size-5" />
-				</div>
-				<div class="space-y-1.5">
-					<h3 class="text-base font-bold text-foreground">Bebas Pesan Dari Toko Mana Pun</h3>
-					<p class="text-xs leading-relaxed text-muted-foreground">
-						Warung gang favorit, gerai kaki lima legendaris, atau minimarket spesifik yang belum
-						bermitra dengan aplikasi pesan-antar besar tetap bisa Anda beli lewat mitra kami.
-					</p>
-				</div>
+		<div class="mt-10 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
+			<div class="grid grid-cols-12 border-b border-border/80 bg-muted/50 p-4 text-xs font-bold sm:p-5">
+				<div class="col-span-4 text-foreground">Fitur & Layanan</div>
+				<div class="col-span-4 text-primary">Titipin</div>
+				<div class="col-span-4 text-muted-foreground">Aplikasi Lain</div>
 			</div>
 
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
-				<div
-					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<Receipt class="size-5" />
-				</div>
-				<div class="space-y-1.5">
-					<h3 class="text-base font-bold text-foreground">Tanpa Markup Harga Barang</h3>
-					<p class="text-xs leading-relaxed text-muted-foreground">
-						Anda membayar harga barang riil sesuai yang tercetak di struk kasir toko. Tidak ada
-						penggelembungan harga makanan atau barang hingga 20-30%.
-					</p>
-				</div>
-			</div>
-
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
-				<div
-					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<HeartHandshake class="size-5" />
-				</div>
-				<div class="space-y-1.5">
-					<h3 class="text-base font-bold text-foreground">Bisa Request Catatan Khusus</h3>
-					<p class="text-xs leading-relaxed text-muted-foreground">
-						Bebas berikan instruksi belanja spesifik, seperti "pilih mangga yang manis", "minta
-						sambal dipisah", atau "tanyakan kasir apakah ada promo kemasan bundling".
-					</p>
-				</div>
-			</div>
-
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
-				<div
-					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-				>
-					<Users class="size-5" />
-				</div>
-				<div class="space-y-1.5">
-					<h3 class="text-base font-bold text-foreground">Dukungan Ekonomi Lokal</h3>
-					<p class="text-xs leading-relaxed text-muted-foreground">
-						Tarif jasa titip langsung menjadi penghasilan riil bagi mitra di lingkungan sekitar
-						Anda, sekaligus membantu memajukan pedagang pasar dan warung UMKM.
-					</p>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<!-- 6. TESTIMONI PENGGUNA & MITRA -->
-	<section class="border-t border-border/60 bg-muted/20 py-14 sm:py-20">
-		<div class="mx-auto max-w-6xl space-y-10 px-4 sm:px-6">
-			<div class="mx-auto max-w-2xl space-y-2 text-center">
-				<div
-					class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
-				>
-					<span>Suara Komunitas</span>
-				</div>
-				<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-					Dipercaya Pelanggan & Mitra
-				</h2>
-				<p class="text-xs text-muted-foreground sm:text-sm">
-					Pengalaman nyata mereka yang telah merasakan kemudahan titip belanja lokal.
-				</p>
-			</div>
-
-			<div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-				{#each testimonials as test (test.name)}
-					<div
-						class="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs"
-					>
-						<div class="space-y-3">
-							<div class="flex items-center gap-1 text-amber-400">
-								{#each getStars(test.rating) as starIdx (starIdx)}
-									<Star class="size-4 fill-amber-400 text-amber-400" />
-								{/each}
+			<div class="divide-y divide-border/60">
+				{#each comparisons as comp}
+					<div class="grid grid-cols-12 items-center p-4 text-xs sm:p-5">
+						<div class="col-span-4 font-semibold text-foreground">{comp.feature}</div>
+						<div class="col-span-4 pr-3 font-medium text-emerald-700">
+							<div class="flex items-start gap-1.5">
+								<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
+								<span>{comp.titipin}</span>
 							</div>
-							<p class="text-xs leading-relaxed text-foreground italic">
-								"{test.quote}"
-							</p>
 						</div>
-
-						<div class="mt-5 border-t border-border/60 pt-3">
-							<p class="text-xs font-bold text-foreground">{test.name}</p>
-							<p class="text-xs text-muted-foreground">{test.role} • {test.location}</p>
+						<div class="col-span-4 pr-3 text-muted-foreground">
+							<div class="flex items-start gap-1.5">
+								<XCircle class="mt-0.5 size-3.5 shrink-0 text-destructive/70" />
+								<span>{comp.competitor}</span>
+							</div>
 						</div>
 					</div>
 				{/each}
@@ -729,113 +475,58 @@
 		</div>
 	</section>
 
-	<!-- 7. DUAL CALL TO ACTION -->
-	<section class="mx-auto max-w-6xl px-4 sm:px-6">
-		<div class="grid gap-6 md:grid-cols-2">
-			<!-- CTA Pelanggan -->
-			<div
-				class="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-md sm:p-8"
-			>
-				<div class="space-y-3">
-					<div
-						class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs"
-					>
-						<ShoppingBag class="size-3.5" />
-						<span>Untuk Pelanggan</span>
-					</div>
-					<h3 class="text-xl font-extrabold text-white sm:text-2xl">
-						Butuh Belanjaan Tanpa Keluar Rumah?
-					</h3>
-					<p class="text-xs leading-relaxed text-white/90 sm:text-sm">
-						Daftar akun gratis dalam 30 detik. Hubungi mitra lokal dan titip apa pun dengan struk
-						asli.
-					</p>
-					<div class="pt-2">
-						<a
-							href={resolve('/daftar')}
-							class="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-bold text-primary shadow-sm transition-transform hover:bg-white/95 active:scale-98"
-						>
-							<span>Daftar Sebagai Pelanggan</span>
-							<ArrowRight class="size-4" />
-						</a>
-					</div>
-				</div>
+	<!-- Testimonials Section -->
+	<section class="border-t border-border/60 bg-muted/20 py-16 sm:py-20">
+		<div class="mx-auto max-w-6xl px-4 sm:px-6">
+			<div class="text-center">
+				<span class="text-xs font-bold text-primary uppercase">Pengalaman Pengguna</span>
+				<h2 class="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+					Cerita Nyata Pengguna Titipin
+				</h2>
 			</div>
 
-			<!-- CTA Mitra -->
-			<div
-				class="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-md sm:p-8"
-			>
-				<div class="space-y-3">
-					<div
-						class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-					>
-						<Users class="size-3.5" />
-						<span>Peluang Penghasilan</span>
+			<div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
+				{#each testimonials as test}
+					<div class="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+						<p class="text-xs leading-relaxed text-muted-foreground italic">
+							"{test.quote}"
+						</p>
+						<div class="mt-6 border-t border-border/60 pt-4">
+							<p class="text-xs font-bold text-foreground">{test.author}</p>
+							<p class="text-[11px] text-muted-foreground">{test.role} &bull; {test.location}</p>
+						</div>
 					</div>
-					<h3 class="text-xl font-extrabold text-foreground sm:text-2xl">
-						Punya Waktu Luang & Sering Jalan?
-					</h3>
-					<p class="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-						Gabung menjadi Mitra Jastip Titipin. Dapatkan komisi transparan dari setiap pesanan yang
-						Anda antarkan.
-					</p>
-					<div class="pt-2">
-						<a
-							href={resolve('/daftar')}
-							class="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition-transform hover:bg-primary/90 active:scale-98"
-						>
-							<span>Daftar Jadi Mitra Jastip</span>
-							<ArrowRight class="size-4" />
-						</a>
-					</div>
-				</div>
+				{/each}
 			</div>
 		</div>
 	</section>
 
-	<!-- 8. FAQ ACCORDION (#bantuan) -->
-	<section id="bantuan" class="mx-auto max-w-3xl space-y-6 px-4 pb-12 sm:px-6">
-		<div class="space-y-2 text-center">
-			<div
-				class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
-			>
-				<span>Tanya Jawab</span>
-			</div>
-			<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-				Pertanyaan yang Sering Diajukan
-			</h2>
-			<p class="text-xs text-muted-foreground sm:text-sm">
-				Segala hal yang perlu Anda ketahui sebelum menggunakan layanan Titipin.
-			</p>
-		</div>
-
-		<div class="space-y-3">
-			{#each faqs as faq, i (faq.q)}
-				<div class="overflow-hidden rounded-xl border border-border/80 bg-card">
-					<button
-						type="button"
-						class="flex w-full items-center justify-between p-4 text-left text-xs font-bold text-foreground transition-colors hover:bg-muted/40 sm:text-sm"
-						onclick={() => toggleFaq(i)}
-						aria-expanded={openFaq === i}
+	<!-- Closing CTA Banner -->
+	<section id="bantuan" class="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
+		<div class="overflow-hidden rounded-3xl border border-primary/20 bg-primary p-8 text-primary-foreground sm:p-12">
+			<div class="mx-auto max-w-2xl text-center">
+				<h2 class="text-2xl font-black tracking-tight text-white sm:text-3xl">
+					Siap titip belanjaan pertama Anda tanpa ribet?
+				</h2>
+				<p class="mt-3 text-xs leading-relaxed text-primary-foreground/90 sm:text-sm">
+					Daftarkan akun gratis sekarang. Titip kebutuhan warung, pasar, atau minimarket ke tetangga dengan struk kasir asli.
+				</p>
+				<div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+					<a
+						href={resolve('/daftar')}
+						class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-white px-6 text-xs font-bold text-primary shadow-xs transition-transform hover:bg-white/95 active:scale-98 sm:w-auto"
 					>
-						<span>{faq.q}</span>
-						<ChevronRight
-							class="size-4 shrink-0 text-muted-foreground transition-transform duration-200 {openFaq ===
-							i
-								? 'rotate-90'
-								: ''}"
-						/>
-					</button>
-					{#if openFaq === i}
-						<div
-							class="border-t border-border/60 bg-muted/20 p-4 text-xs leading-relaxed text-muted-foreground"
-						>
-							{faq.a}
-						</div>
-					{/if}
+						<span>Daftar Akun Gratis</span>
+						<ArrowRight class="ml-1.5 size-4" />
+					</a>
+					<a
+						href="#eksplor"
+						class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-white/30 bg-white/10 px-6 text-xs font-semibold text-white backdrop-blur-xs transition-colors hover:bg-white/20 sm:w-auto"
+					>
+						<span>Lihat Kategori Layanan</span>
+					</a>
 				</div>
-			{/each}
+			</div>
 		</div>
 	</section>
 </div>

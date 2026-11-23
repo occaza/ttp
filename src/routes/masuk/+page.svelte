@@ -15,7 +15,8 @@
 		ShieldCheck,
 		Receipt,
 		ArrowLeft,
-		ShoppingBag
+		ShoppingBag,
+		Clock
 	} from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -27,7 +28,7 @@
 	<title>Masuk ke Akun - Titipin</title>
 	<meta
 		name="description"
-		content="Masuk ke akun Titipin untuk memesan jasa titip belanja lokal atau mengelola pesanan mitra Anda."
+		content="Masuk ke akun Titipin untuk memesan jasa titip belanja lokal atau memantau pesanan aktif."
 	/>
 </svelte:head>
 
@@ -41,7 +42,6 @@
 		<div
 			class="relative hidden flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:col-span-5 md:flex lg:p-10"
 		>
-			<!-- Brand Identity Header -->
 			<div class="relative z-10 space-y-4">
 				<a
 					href={resolve('/')}
@@ -55,7 +55,7 @@
 						class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs"
 					>
 						<ShoppingBag class="size-3.5" />
-						<span>Jastip & Kurir Lokal Terpercaya</span>
+						<span>Jastip & Pengantaran Lokal</span>
 					</div>
 					<h2 class="mt-4 text-2xl font-black tracking-tight text-white lg:text-3xl">
 						Titip belanjaan apapun tanpa repot antre dan macet.
@@ -65,52 +65,55 @@
 
 			<!-- Live Order Micro-Preview -->
 			<div
-				class="relative z-10 my-6 rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-md"
+				class="relative z-10 my-6 rounded-xl border border-white/20 bg-white/10 p-4.5 backdrop-blur-md"
 			>
 				<div class="flex items-center justify-between border-b border-white/15 pb-2.5 text-xs">
-					<span class="font-semibold text-white">Simulasi Titipan Aktif</span>
+					<div class="flex items-center gap-1.5 font-semibold text-white">
+						<Clock class="size-3.5 text-emerald-300" />
+						<span>Status Titipan Aktif</span>
+					</div>
 					<span
-						class="inline-flex items-center gap-1 rounded bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white uppercase"
+						class="inline-flex items-center gap-1 rounded bg-emerald-400/25 px-2 py-0.5 text-[10px] font-bold text-emerald-200 uppercase"
 					>
 						Selesai Diantar
 					</span>
 				</div>
-				<div class="mt-2.5 space-y-1.5 text-xs text-white/90">
+				<div class="mt-3 space-y-2 text-xs text-white/90">
 					<div class="flex justify-between">
 						<span>Martabak Spesial Pecenongan</span>
-						<span class="font-medium text-white">Rp 75.000</span>
+						<span class="font-semibold text-white">Rp 75.000</span>
 					</div>
 					<div class="flex justify-between text-[11px] text-white/75">
-						<span>Tarif Jastip Mitra Lokal</span>
+						<span>Biaya Jasa Titip Flat</span>
 						<span class="font-medium text-white">Rp 12.000</span>
 					</div>
 				</div>
 				<div
-					class="mt-3 flex items-center gap-2 rounded-lg bg-black/15 p-2 text-[11px] text-white/85"
+					class="mt-3 flex items-center gap-2 rounded-lg bg-black/20 p-2 text-[11px] text-white/90"
 				>
 					<Receipt class="size-3.5 shrink-0 text-emerald-300" />
-					<span>Foto struk kasir asli terverifikasi</span>
+					<span>Foto struk kasir toko asli diverifikasi sistem</span>
 				</div>
 			</div>
 
-			<!-- Bottom Trust Highlights -->
+			<!-- Trust Points -->
 			<div
-				class="relative z-10 space-y-2 border-t border-white/15 pt-5 text-xs text-primary-foreground/90"
+				class="relative z-10 space-y-2.5 border-t border-white/15 pt-5 text-xs text-primary-foreground/90"
 			>
 				<div class="flex items-center gap-2">
 					<CheckCircle2 class="size-4 shrink-0 text-emerald-300" />
-					<span>Harga belanjaan sesuai struk toko asli</span>
+					<span>Harga belanja sesuai struk asli toko tanpa markup</span>
 				</div>
 				<div class="flex items-center gap-2">
 					<ShieldCheck class="size-4 shrink-0 text-emerald-300" />
-					<span>Mitra terverifikasi dengan identitas resmi</span>
+					<span>Mitra kurir lokal terverifikasi identitas resmi</span>
 				</div>
 			</div>
 		</div>
 
 		<!-- Right Form Column -->
 		<div class="flex flex-col justify-center p-6 sm:p-8 md:col-span-7 lg:p-10">
-			<!-- Mobile Back Button -->
+			<!-- Mobile Back Link -->
 			<div class="mb-6 flex items-center justify-between md:hidden">
 				<a
 					href={resolve('/')}
@@ -142,8 +145,7 @@
 					<div>
 						<p class="font-semibold">Pendaftaran Berhasil</p>
 						<p class="mt-0.5">
-							Akun Anda telah dibuat. Silakan periksa inbox email Anda untuk konfirmasi (jika
-							verifikasi email aktif), lalu masuk menggunakan kata sandi Anda.
+							Akun Anda telah aktif. Silakan masuk menggunakan email dan kata sandi Anda.
 						</p>
 					</div>
 				</div>
@@ -197,10 +199,10 @@
 					<div class="flex items-center justify-between">
 						<Label for="password" class="text-xs font-semibold text-foreground">Kata Sandi</Label>
 						<a
-							href="#bantuan"
+							href={resolve('/lupa-password')}
 							class="text-[11px] font-medium text-primary transition-colors hover:underline"
 						>
-							Lupa sandi?
+							Lupa kata sandi?
 						</a>
 					</div>
 					<div class="relative">
