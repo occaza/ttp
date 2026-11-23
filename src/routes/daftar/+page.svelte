@@ -41,8 +41,12 @@
 	/>
 </svelte:head>
 
-<div class="mx-auto flex min-h-[calc(100dvh-8rem)] w-full max-w-5xl items-center justify-center px-4 py-8 sm:px-6">
-	<div class="grid w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-lg md:grid-cols-12">
+<div
+	class="mx-auto flex min-h-[calc(100dvh-8rem)] w-full max-w-5xl items-center justify-center px-4 py-8 sm:px-6"
+>
+	<div
+		class="grid w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-lg md:grid-cols-12"
+	>
 		<!-- Left Visual Panel (Desktop Only) -->
 		<div
 			class="relative hidden flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:col-span-5 md:flex lg:p-10"
@@ -57,7 +61,9 @@
 					<span>Kembali ke Beranda</span>
 				</a>
 				<div class="pt-4">
-					<div class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs">
+					<div
+						class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+					>
 						<Sparkles class="size-3.5 text-amber-300" />
 						<span>Registrasi Cepat & Praktis</span>
 					</div>
@@ -72,7 +78,9 @@
 			</div>
 
 			<!-- Dynamic Role Feature Card -->
-			<div class="relative z-10 my-6 rounded-xl border border-white/20 bg-white/10 p-4.5 backdrop-blur-md">
+			<div
+				class="relative z-10 my-6 rounded-xl border border-white/20 bg-white/10 p-4.5 backdrop-blur-md"
+			>
 				{#if selectedRole === 'customer'}
 					<div class="flex items-center gap-2 text-xs font-bold text-white">
 						<ShoppingBag class="size-4 text-emerald-300" />
@@ -115,7 +123,9 @@
 			</div>
 
 			<!-- Bottom Trust Highlights -->
-			<div class="relative z-10 space-y-2 border-t border-white/15 pt-5 text-xs text-primary-foreground/90">
+			<div
+				class="relative z-10 space-y-2 border-t border-white/15 pt-5 text-xs text-primary-foreground/90"
+			>
 				<div class="flex items-center gap-2">
 					<ShieldCheck class="size-4 shrink-0 text-emerald-300" />
 					<span>Privasi dan data kontak tersimpan aman</span>
@@ -134,7 +144,9 @@
 					<ArrowLeft class="size-4" />
 					<span>Kembali ke Beranda</span>
 				</a>
-				<div class="flex size-7 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground">
+				<div
+					class="flex size-7 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground"
+				>
 					T
 				</div>
 			</div>
@@ -187,9 +199,17 @@
 								class="sr-only"
 							/>
 							<div class="flex items-center justify-between">
-								<ShoppingBag class="size-4.5 {selectedRole === 'customer' ? 'text-primary' : 'text-muted-foreground'}" />
+								<ShoppingBag
+									class="size-4.5 {selectedRole === 'customer'
+										? 'text-primary'
+										: 'text-muted-foreground'}"
+								/>
 								{#if selectedRole === 'customer'}
-									<span class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">Dipilih</span>
+									<span
+										class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
+									>
+										Dipilih
+									</span>
 								{/if}
 							</div>
 							<span class="mt-2 text-xs font-bold text-foreground">Pelanggan</span>
@@ -213,9 +233,17 @@
 								class="sr-only"
 							/>
 							<div class="flex items-center justify-between">
-								<ShieldCheck class="size-4.5 {selectedRole === 'provider' ? 'text-primary' : 'text-muted-foreground'}" />
+								<ShieldCheck
+									class="size-4.5 {selectedRole === 'provider'
+										? 'text-primary'
+										: 'text-muted-foreground'}"
+								/>
 								{#if selectedRole === 'provider'}
-									<span class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">Dipilih</span>
+									<span
+										class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
+									>
+										Dipilih
+									</span>
 								{/if}
 							</div>
 							<span class="mt-2 text-xs font-bold text-foreground">Mitra Jastip</span>
@@ -230,7 +258,9 @@
 				<div class="space-y-1.5">
 					<Label for="full_name" class="text-xs font-semibold text-foreground">Nama Lengkap</Label>
 					<div class="relative">
-						<User class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+						<User
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
 						<Input
 							id="full_name"
 							name="full_name"
@@ -249,7 +279,9 @@
 				<div class="space-y-1.5">
 					<Label for="email" class="text-xs font-semibold text-foreground">Alamat Email</Label>
 					<div class="relative">
-						<Mail class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+						<Mail
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
 						<Input
 							id="email"
 							name="email"
@@ -269,11 +301,15 @@
 				<!-- Phone Input -->
 				<div class="space-y-1.5">
 					<div class="flex items-center justify-between">
-						<Label for="phone" class="text-xs font-semibold text-foreground">Nomor WhatsApp / HP</Label>
+						<Label for="phone" class="text-xs font-semibold text-foreground">
+							Nomor WhatsApp / HP
+						</Label>
 						<span class="text-[11px] text-muted-foreground">Aktif untuk koordinasi</span>
 					</div>
 					<div class="relative">
-						<Phone class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+						<Phone
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
 						<Input
 							id="phone"
 							name="phone"
@@ -292,7 +328,9 @@
 				<div class="space-y-1.5">
 					<Label for="password" class="text-xs font-semibold text-foreground">Kata Sandi</Label>
 					<div class="relative">
-						<Lock class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+						<Lock
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
 						<Input
 							id="password"
 							name="password"
@@ -303,7 +341,7 @@
 							enterkeyhint="done"
 							placeholder="Minimal 6 karakter"
 							required
-							class="h-10 pl-9.5 pr-10 text-sm"
+							class="h-10 pr-10 pl-9.5 text-sm"
 						/>
 						<button
 							type="button"
@@ -327,7 +365,9 @@
 					disabled={loading}
 				>
 					{#if loading}
-						<span class="inline-block size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent mr-2"></span>
+						<span
+							class="mr-2 inline-block size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
+						></span>
 						<span>Membuat akun...</span>
 					{:else}
 						<span>Daftar Sebagai {selectedRole === 'customer' ? 'Pelanggan' : 'Mitra'}</span>

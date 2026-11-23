@@ -10,8 +10,7 @@
 		User as UserIcon,
 		Compass,
 		LogOut,
-		ShieldCheck,
-		HeartHandshake
+		ShieldCheck
 	} from 'lucide-svelte';
 
 	let { children, data }: LayoutProps = $props();
@@ -27,7 +26,9 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="flex min-h-[100dvh] flex-col bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+<div
+	class="flex min-h-dvh flex-col bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary"
+>
 	<!-- Desktop Header -->
 	<header
 		class="sticky top-0 z-40 w-full border-b border-border/70 bg-background/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md supports-backdrop-filter:bg-background/80"
@@ -51,9 +52,7 @@
 				class="hidden items-center gap-6 text-xs font-semibold text-muted-foreground md:flex"
 				aria-label="Navigasi Utama"
 			>
-				<a href={resolve('/')} class="transition-colors hover:text-primary">
-					Beranda
-				</a>
+				<a href={resolve('/')} class="transition-colors hover:text-primary"> Beranda </a>
 				<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">
 					Kategori Layanan
 				</a>
@@ -64,19 +63,23 @@
 					Keunggulan
 				</a>
 				{#if data?.role === 'provider' || data?.role === 'admin'}
-					<a href={resolve('/mitra/dashboard')} class="text-primary font-bold transition-colors hover:underline">
+					<a
+						href={resolve('/mitra/dashboard')}
+						class="font-bold text-primary transition-colors hover:underline"
+					>
 						Dashboard Mitra
 					</a>
 				{/if}
 				{#if data?.role === 'admin'}
-					<a href={resolve('/admin')} class="text-destructive font-bold transition-colors hover:underline">
+					<a
+						href={resolve('/admin')}
+						class="font-bold text-destructive transition-colors hover:underline"
+					>
 						Admin
 					</a>
 				{/if}
 				{#if !data?.user || data?.role === 'customer'}
-					<a href={resolve('/daftar')} class="transition-colors hover:text-primary">
-						Jadi Mitra
-					</a>
+					<a href={resolve('/daftar')} class="transition-colors hover:text-primary"> Jadi Mitra </a>
 				{/if}
 			</nav>
 
@@ -146,18 +149,23 @@
 	</main>
 
 	<!-- Desktop Footer -->
-	<footer class="hidden border-t border-border/70 bg-card/60 py-12 text-xs text-muted-foreground md:block">
+	<footer
+		class="hidden border-t border-border/70 bg-card/60 py-12 text-xs text-muted-foreground md:block"
+	>
 		<div class="mx-auto max-w-6xl px-4 sm:px-6">
 			<div class="grid grid-cols-12 gap-8 pb-8">
 				<div class="col-span-4 space-y-3">
 					<div class="flex items-center gap-2">
-						<div class="flex size-7 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-xs">
+						<div
+							class="flex size-7 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-xs"
+						>
 							T
 						</div>
 						<span class="text-base font-bold text-foreground">Titipin Indonesia</span>
 					</div>
-					<p class="text-xs leading-relaxed text-muted-foreground max-w-sm">
-						Platform jasa titip belanja & pengantaran lokal terpercaya. Hubungkan kebutuhan belanja Anda langsung ke mitra lokal dengan struk asli toko.
+					<p class="max-w-sm text-xs leading-relaxed text-muted-foreground">
+						Platform jasa titip belanja & pengantaran lokal terpercaya. Hubungkan kebutuhan belanja
+						Anda langsung ke mitra lokal dengan struk asli toko.
 					</p>
 					<div class="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
 						<ShieldCheck class="size-4 text-primary" />
@@ -168,21 +176,57 @@
 				<div class="col-span-3 space-y-2.5">
 					<p class="font-bold text-foreground">Layanan Utama</p>
 					<ul class="space-y-1.5 text-xs">
-						<li><a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">Kuliner & Warung Kaki Lima</a></li>
-						<li><a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">Pasar Pagi & Sayur Segar</a></li>
-						<li><a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">Minimarket & Swalayan</a></li>
-						<li><a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">Apotek & Farmasi Darurat</a></li>
-						<li><a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">Ambil & Antar Dokumen</a></li>
+						<li>
+							<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">
+								Kuliner & Warung Kaki Lima
+							</a>
+						</li>
+						<li>
+							<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">
+								Pasar Pagi & Sayur Segar
+							</a>
+						</li>
+						<li>
+							<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">
+								Minimarket & Swalayan
+							</a>
+						</li>
+						<li>
+							<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">
+								Apotek & Farmasi Darurat
+							</a>
+						</li>
+						<li>
+							<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-primary">
+								Ambil & Antar Dokumen
+							</a>
+						</li>
 					</ul>
 				</div>
 
 				<div class="col-span-3 space-y-2.5">
 					<p class="font-bold text-foreground">Peluang & Mitra</p>
 					<ul class="space-y-1.5 text-xs">
-						<li><a href={resolve('/daftar')} class="transition-colors hover:text-primary">Daftar Jadi Mitra Jastip</a></li>
-						<li><a href="{resolve('/')}#carakerja" class="transition-colors hover:text-primary">Alur & Cara Kerja</a></li>
-						<li><a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-primary">Transparansi Tarif Jastip</a></li>
-						<li><a href="{resolve('/')}#bantuan" class="transition-colors hover:text-primary">Pusat Bantuan</a></li>
+						<li>
+							<a href={resolve('/daftar')} class="transition-colors hover:text-primary">
+								Daftar Jadi Mitra Jastip
+							</a>
+						</li>
+						<li>
+							<a href="{resolve('/')}#carakerja" class="transition-colors hover:text-primary">
+								Alur & Cara Kerja
+							</a>
+						</li>
+						<li>
+							<a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-primary">
+								Transparansi Tarif Jastip
+							</a>
+						</li>
+						<li>
+							<a href="{resolve('/')}#bantuan" class="transition-colors hover:text-primary">
+								Pusat Bantuan
+							</a>
+						</li>
 					</ul>
 				</div>
 
@@ -198,11 +242,19 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-xs sm:flex-row">
-				<p>&copy; {new Date().getFullYear()} Titipin Indonesia. Hak cipta dilindungi undang-undang.</p>
+			<div
+				class="flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-xs sm:flex-row"
+			>
+				<p>
+					&copy; {new Date().getFullYear()} Titipin Indonesia. Hak cipta dilindungi undang-undang.
+				</p>
 				<div class="flex items-center gap-4">
-					<a href="{resolve('/')}#bantuan" class="transition-colors hover:text-foreground">Ketentuan Layanan</a>
-					<a href="{resolve('/')}#bantuan" class="transition-colors hover:text-foreground">Kebijakan Privasi</a>
+					<a href="{resolve('/')}#bantuan" class="transition-colors hover:text-foreground">
+						Ketentuan Layanan
+					</a>
+					<a href="{resolve('/')}#bantuan" class="transition-colors hover:text-foreground">
+						Kebijakan Privasi
+					</a>
 				</div>
 			</div>
 		</div>

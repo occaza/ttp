@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import {
 		Search,
@@ -17,18 +16,16 @@
 		Star,
 		ChevronRight,
 		ArrowRight,
-		CheckCircle2,
 		HeartHandshake,
 		BadgeCheck,
-		PhoneCall,
 		Users,
-		Flame,
-		ShoppingBag,
-		HelpCircle
+		ShoppingBag
 	} from 'lucide-svelte';
 
 	let searchQuery = $state('');
 	let selectedLocation = $state('Jakarta Selatan');
+
+	const getStars = (count: number) => Array.from({ length: count }, (_, i) => i);
 
 	const locations = [
 		'Jakarta Selatan',
@@ -178,15 +175,21 @@
 
 <div class="space-y-16 sm:space-y-24">
 	<!-- 1. HERO SECTION -->
-	<section class="relative overflow-hidden border-b border-border/60 bg-muted/20 pt-8 pb-14 sm:pt-14 sm:pb-20">
+	<section
+		class="relative overflow-hidden border-b border-border/60 bg-muted/20 pt-8 pb-14 sm:pt-14 sm:pb-20"
+	>
 		<div class="mx-auto max-w-6xl px-4 sm:px-6">
 			<div class="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
 				<!-- Hero Left: Pitch & Quick Search -->
 				<div class="space-y-6 text-center sm:text-left lg:col-span-7">
 					<!-- Active Indicator Badge -->
-					<div class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+					<div
+						class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
+					>
 						<span class="relative flex size-2">
-							<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+							<span
+								class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"
+							></span>
 							<span class="relative inline-flex size-2 rounded-full bg-primary"></span>
 						</span>
 						<span>Layanan Jastip Lokal Aktif di Jabodetabek</span>
@@ -194,11 +197,20 @@
 
 					<!-- Hero Headline -->
 					<div class="space-y-3">
-						<h1 class="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl lg:leading-[1.15]">
-							Titip Belanja Apa Pun, Dari Mana Saja. <span class="text-primary">Diantar Cepat.</span>
+						<h1
+							class="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl lg:leading-[1.15]"
+						>
+							Titip Belanja Apa Pun, Dari Mana Saja. <span class="text-primary">
+								Diantar Cepat.
+							</span>
 						</h1>
 						<p class="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-							Kuliner kaki lima tanpa ojol, sayur segar pasar subuh, obat apotek darurat, hingga barang tertinggal. Mitra lokal terpercaya siap bantu dengan <strong class="text-foreground font-semibold">struk kasir asli</strong> dan tarif transparan.
+							Kuliner kaki lima tanpa ojol, sayur segar pasar subuh, obat apotek darurat, hingga
+							barang tertinggal. Mitra lokal terpercaya siap bantu dengan <strong
+								class="font-semibold text-foreground"
+							>
+								struk kasir asli
+							</strong> dan tarif transparan.
 						</p>
 					</div>
 
@@ -206,14 +218,14 @@
 					<div class="rounded-2xl border border-border/90 bg-card p-3 shadow-md sm:p-4">
 						<div class="flex flex-col gap-2.5 sm:flex-row">
 							<!-- Location Selector -->
-							<div class="relative sm:w-44 shrink-0">
+							<div class="relative shrink-0 sm:w-44">
 								<MapPin class="pointer-events-none absolute top-3 left-3 size-4 text-primary" />
 								<select
 									bind:value={selectedLocation}
-									class="h-10 w-full rounded-xl border border-border bg-muted/40 pl-9 pr-6 text-xs font-semibold text-foreground transition-colors focus:border-primary focus:outline-none"
+									class="h-10 w-full rounded-xl border border-border bg-muted/40 pr-6 pl-9 text-xs font-semibold text-foreground transition-colors focus:border-primary focus:outline-none"
 									aria-label="Pilih Lokasi Wilayah"
 								>
-									{#each locations as loc}
+									{#each locations as loc (loc)}
 										<option value={loc}>{loc}</option>
 									{/each}
 								</select>
@@ -221,7 +233,9 @@
 
 							<!-- Item Input -->
 							<div class="relative flex-1">
-								<Search class="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground" />
+								<Search
+									class="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground"
+								/>
 								<Input
 									type="text"
 									enterkeyhint="search"
@@ -276,7 +290,9 @@
 					</div>
 
 					<!-- Trust Micro-Pills -->
-					<div class="flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-muted-foreground sm:justify-start">
+					<div
+						class="flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-muted-foreground sm:justify-start"
+					>
 						<div class="flex items-center gap-1.5">
 							<Receipt class="size-4 text-primary" />
 							<span>100% Struk Kasir Asli</span>
@@ -294,12 +310,16 @@
 
 				<!-- Hero Right: Interactive Simulated Live Jastip Card -->
 				<div class="lg:col-span-5">
-					<div class="mx-auto max-w-md rounded-2xl border border-border/80 bg-card p-5 shadow-lg sm:p-6">
+					<div
+						class="mx-auto max-w-md rounded-2xl border border-border/80 bg-card p-5 shadow-lg sm:p-6"
+					>
 						<div class="space-y-4">
 							<!-- Header Card -->
 							<div class="flex items-center justify-between border-b border-border/70 pb-3">
 								<div class="flex items-center gap-2.5">
-									<div class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+									<div
+										class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"
+									>
 										<ShoppingBag class="size-4" />
 									</div>
 									<div>
@@ -307,7 +327,9 @@
 										<p class="text-xs text-muted-foreground">Area Kebayoran Baru • Live Update</p>
 									</div>
 								</div>
-								<span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+								<span
+									class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary"
+								>
 									<span class="size-2 rounded-full bg-primary"></span>
 									Sedang Dibelikan
 								</span>
@@ -318,7 +340,9 @@
 								<div class="flex items-start justify-between text-xs">
 									<div>
 										<p class="font-bold text-foreground">Gulai Tikungan (Gultik) Blok M</p>
-										<p class="text-xs text-muted-foreground">3x Porsi Spesial, Kerupuk Tambah, Sambal Dipisah</p>
+										<p class="text-xs text-muted-foreground">
+											3x Porsi Spesial, Kerupuk Tambah, Sambal Dipisah
+										</p>
 									</div>
 									<span class="font-bold text-foreground">Rp 60.000</span>
 								</div>
@@ -341,7 +365,9 @@
 							<!-- Assigned Mitra Profile -->
 							<div class="flex items-center justify-between border-t border-border/70 pt-3">
 								<div class="flex items-center gap-2.5">
-									<div class="flex size-9 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground text-xs shadow-xs">
+									<div
+										class="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-xs"
+									>
 										DP
 									</div>
 									<div>
@@ -367,9 +393,13 @@
 
 	<!-- 2. VALUE METRICS STRIP -->
 	<section class="mx-auto max-w-6xl px-4 sm:px-6">
-		<div class="grid grid-cols-2 gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:grid-cols-4 sm:p-6">
+		<div
+			class="grid grid-cols-2 gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:grid-cols-4 sm:p-6"
+		>
 			<div class="flex items-center gap-3 p-2">
-				<div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+				<div
+					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<Receipt class="size-5" />
 				</div>
 				<div>
@@ -379,7 +409,9 @@
 			</div>
 
 			<div class="flex items-center gap-3 p-2">
-				<div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+				<div
+					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<BadgeCheck class="size-5" />
 				</div>
 				<div>
@@ -389,7 +421,9 @@
 			</div>
 
 			<div class="flex items-center gap-3 p-2">
-				<div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+				<div
+					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<Users class="size-5" />
 				</div>
 				<div>
@@ -399,7 +433,9 @@
 			</div>
 
 			<div class="flex items-center gap-3 p-2">
-				<div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+				<div
+					class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<Clock class="size-5" />
 				</div>
 				<div>
@@ -414,7 +450,9 @@
 	<section id="eksplor" class="mx-auto max-w-6xl space-y-6 px-4 sm:px-6">
 		<div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
 			<div>
-				<div class="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider">
+				<div
+					class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
+				>
 					<span>Kategori Unggulan</span>
 				</div>
 				<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -452,7 +490,9 @@
 						</div>
 
 						<div>
-							<h3 class="text-base font-bold text-foreground group-hover:text-primary transition-colors">
+							<h3
+								class="text-base font-bold text-foreground transition-colors group-hover:text-primary"
+							>
 								{cat.name}
 							</h3>
 							<p class="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -461,11 +501,14 @@
 						</div>
 
 						<div class="rounded-lg bg-muted/40 p-2.5 text-xs text-muted-foreground">
-							<span class="font-medium text-foreground">Contoh:</span> {cat.examples}
+							<span class="font-medium text-foreground">Contoh:</span>
+							{cat.examples}
 						</div>
 					</div>
 
-					<div class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs">
+					<div
+						class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs"
+					>
 						<span class="text-xs text-muted-foreground">{cat.activeMitra}</span>
 						<a
 							href={resolve('/daftar')}
@@ -483,8 +526,10 @@
 	<!-- 4. CARA KERJA (WORKFLOW) -->
 	<section id="carakerja" class="border-y border-border/60 bg-muted/20 py-14 sm:py-20">
 		<div class="mx-auto max-w-6xl space-y-10 px-4 sm:px-6">
-			<div class="mx-auto max-w-2xl text-center space-y-2">
-				<div class="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider">
+			<div class="mx-auto max-w-2xl space-y-2 text-center">
+				<div
+					class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
+				>
 					<span>Proses Mudah</span>
 				</div>
 				<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -496,8 +541,10 @@
 			</div>
 
 			<div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-				{#each workflows as flow}
-					<div class="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				{#each workflows as flow (flow.step)}
+					<div
+						class="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs"
+					>
 						<div class="space-y-3">
 							<span class="text-3xl font-black text-primary">
 								{flow.step}
@@ -517,8 +564,10 @@
 
 	<!-- 5. KEUNGGULAN (MENGAPA TITIPIN BERBEDA) -->
 	<section id="keunggulan" class="mx-auto max-w-6xl space-y-10 px-4 sm:px-6">
-		<div class="mx-auto max-w-2xl text-center space-y-2">
-			<div class="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider">
+		<div class="mx-auto max-w-2xl space-y-2 text-center">
+			<div
+				class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
+			>
 				<span>Keunggulan Nyata</span>
 			</div>
 			<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -530,50 +579,62 @@
 		</div>
 
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs">
-				<div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+				<div
+					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<Store class="size-5" />
 				</div>
 				<div class="space-y-1.5">
 					<h3 class="text-base font-bold text-foreground">Bebas Pesan Dari Toko Mana Pun</h3>
 					<p class="text-xs leading-relaxed text-muted-foreground">
-						Warung gang favorit, gerai kaki lima legendaris, atau minimarket spesifik yang belum bermitra dengan aplikasi pesan-antar besar tetap bisa Anda beli lewat mitra kami.
+						Warung gang favorit, gerai kaki lima legendaris, atau minimarket spesifik yang belum
+						bermitra dengan aplikasi pesan-antar besar tetap bisa Anda beli lewat mitra kami.
 					</p>
 				</div>
 			</div>
 
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs">
-				<div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+				<div
+					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<Receipt class="size-5" />
 				</div>
 				<div class="space-y-1.5">
 					<h3 class="text-base font-bold text-foreground">Tanpa Markup Harga Barang</h3>
 					<p class="text-xs leading-relaxed text-muted-foreground">
-						Anda membayar harga barang riil sesuai yang tercetak di struk kasir toko. Tidak ada penggelembungan harga makanan atau barang hingga 20-30%.
+						Anda membayar harga barang riil sesuai yang tercetak di struk kasir toko. Tidak ada
+						penggelembungan harga makanan atau barang hingga 20-30%.
 					</p>
 				</div>
 			</div>
 
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs">
-				<div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+				<div
+					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<HeartHandshake class="size-5" />
 				</div>
 				<div class="space-y-1.5">
 					<h3 class="text-base font-bold text-foreground">Bisa Request Catatan Khusus</h3>
 					<p class="text-xs leading-relaxed text-muted-foreground">
-						Bebas berikan instruksi belanja spesifik, seperti "pilih mangga yang manis", "minta sambal dipisah", atau "tanyakan kasir apakah ada promo kemasan bundling".
+						Bebas berikan instruksi belanja spesifik, seperti "pilih mangga yang manis", "minta
+						sambal dipisah", atau "tanyakan kasir apakah ada promo kemasan bundling".
 					</p>
 				</div>
 			</div>
 
-			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs">
-				<div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+			<div class="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+				<div
+					class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+				>
 					<Users class="size-5" />
 				</div>
 				<div class="space-y-1.5">
 					<h3 class="text-base font-bold text-foreground">Dukungan Ekonomi Lokal</h3>
 					<p class="text-xs leading-relaxed text-muted-foreground">
-						Tarif jasa titip langsung menjadi penghasilan riil bagi mitra di lingkungan sekitar Anda, sekaligus membantu memajukan pedagang pasar dan warung UMKM.
+						Tarif jasa titip langsung menjadi penghasilan riil bagi mitra di lingkungan sekitar
+						Anda, sekaligus membantu memajukan pedagang pasar dan warung UMKM.
 					</p>
 				</div>
 			</div>
@@ -583,8 +644,10 @@
 	<!-- 6. TESTIMONI PENGGUNA & MITRA -->
 	<section class="border-t border-border/60 bg-muted/20 py-14 sm:py-20">
 		<div class="mx-auto max-w-6xl space-y-10 px-4 sm:px-6">
-			<div class="mx-auto max-w-2xl text-center space-y-2">
-				<div class="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider">
+			<div class="mx-auto max-w-2xl space-y-2 text-center">
+				<div
+					class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
+				>
 					<span>Suara Komunitas</span>
 				</div>
 				<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -596,11 +659,13 @@
 			</div>
 
 			<div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-				{#each testimonials as test}
-					<div class="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				{#each testimonials as test (test.name)}
+					<div
+						class="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs"
+					>
 						<div class="space-y-3">
 							<div class="flex items-center gap-1 text-amber-400">
-								{#each Array(test.rating) as _}
+								{#each getStars(test.rating) as starIdx (starIdx)}
 									<Star class="size-4 fill-amber-400 text-amber-400" />
 								{/each}
 							</div>
@@ -623,9 +688,13 @@
 	<section class="mx-auto max-w-6xl px-4 sm:px-6">
 		<div class="grid gap-6 md:grid-cols-2">
 			<!-- CTA Pelanggan -->
-			<div class="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-md sm:p-8">
+			<div
+				class="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-md sm:p-8"
+			>
 				<div class="space-y-3">
-					<div class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs">
+					<div
+						class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+					>
 						<ShoppingBag class="size-3.5" />
 						<span>Untuk Pelanggan</span>
 					</div>
@@ -633,7 +702,8 @@
 						Butuh Belanjaan Tanpa Keluar Rumah?
 					</h3>
 					<p class="text-xs leading-relaxed text-white/90 sm:text-sm">
-						Daftar akun gratis dalam 30 detik. Hubungi mitra lokal dan titip apa pun dengan struk asli.
+						Daftar akun gratis dalam 30 detik. Hubungi mitra lokal dan titip apa pun dengan struk
+						asli.
 					</p>
 					<div class="pt-2">
 						<a
@@ -648,9 +718,13 @@
 			</div>
 
 			<!-- CTA Mitra -->
-			<div class="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-md sm:p-8">
+			<div
+				class="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-md sm:p-8"
+			>
 				<div class="space-y-3">
-					<div class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+					<div
+						class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
+					>
 						<Users class="size-3.5" />
 						<span>Peluang Penghasilan</span>
 					</div>
@@ -658,7 +732,8 @@
 						Punya Waktu Luang & Sering Jalan?
 					</h3>
 					<p class="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-						Gabung menjadi Mitra Jastip Titipin. Dapatkan komisi transparan dari setiap pesanan yang Anda antarkan.
+						Gabung menjadi Mitra Jastip Titipin. Dapatkan komisi transparan dari setiap pesanan yang
+						Anda antarkan.
 					</p>
 					<div class="pt-2">
 						<a
@@ -676,8 +751,10 @@
 
 	<!-- 8. FAQ ACCORDION (#bantuan) -->
 	<section id="bantuan" class="mx-auto max-w-3xl space-y-6 px-4 pb-12 sm:px-6">
-		<div class="text-center space-y-2">
-			<div class="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider">
+		<div class="space-y-2 text-center">
+			<div
+				class="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase"
+			>
 				<span>Tanya Jawab</span>
 			</div>
 			<h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -689,11 +766,11 @@
 		</div>
 
 		<div class="space-y-3">
-			{#each faqs as faq, i}
+			{#each faqs as faq, i (faq.q)}
 				<div class="overflow-hidden rounded-xl border border-border/80 bg-card">
 					<button
 						type="button"
-						class="flex w-full items-center justify-between p-4 text-left text-xs font-bold text-foreground sm:text-sm transition-colors hover:bg-muted/40"
+						class="flex w-full items-center justify-between p-4 text-left text-xs font-bold text-foreground transition-colors hover:bg-muted/40 sm:text-sm"
 						onclick={() => toggleFaq(i)}
 						aria-expanded={openFaq === i}
 					>
@@ -706,7 +783,9 @@
 						/>
 					</button>
 					{#if openFaq === i}
-						<div class="border-t border-border/60 bg-muted/20 p-4 text-xs leading-relaxed text-muted-foreground">
+						<div
+							class="border-t border-border/60 bg-muted/20 p-4 text-xs leading-relaxed text-muted-foreground"
+						>
 							{faq.a}
 						</div>
 					{/if}
