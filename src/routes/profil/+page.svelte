@@ -44,7 +44,7 @@
 	let recipientPhone = $state('');
 	let streetAddress = $state('');
 	let notes = $state('');
-	let city = $state('Jakarta Selatan');
+	let city = $state('Gatak, Sukoharjo');
 	let postalCode = $state('');
 	let isPrimary = $state(false);
 
@@ -56,7 +56,7 @@
 		recipientPhone = data.profile?.phone || '';
 		streetAddress = '';
 		notes = '';
-		city = 'Jakarta Selatan';
+		city = 'Gatak, Sukoharjo';
 		postalCode = '';
 		isPrimary = data.addresses.length === 0;
 		isAddressModalOpen = true;

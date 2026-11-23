@@ -29,16 +29,16 @@
 	let { data }: { data: PageData } = $props();
 
 	let searchQuery = $state('');
-	let selectedLocation = $state('Jakarta Selatan');
+	let selectedLocation = $state('Gatak');
 
 	const locations = [
-		'Jakarta Selatan',
-		'Jakarta Pusat',
-		'Jakarta Barat',
-		'Jakarta Timur',
-		'Tangerang Selatan',
-		'Depok',
-		'Bekasi'
+		'Gatak (Pusat)',
+		'Gawok & Blimbing',
+		'Trangsan & Luwang',
+		'Mayang & Sanggung',
+		'Kartasura & UMS',
+		'Baki & Gentan',
+		'Sawit & Sekitarnya'
 	];
 
 	const categoryIcons: Record<string, typeof Utensils> = {
@@ -67,61 +67,61 @@
 			id: 'kuliner',
 			slug: 'food-beverage',
 			name: 'Kuliner & Warung Hits',
-			desc: 'Resto viral tanpa ojol, kedai kopi legendaris, dan jajanan malam.',
-			examples: 'Gultik Blok M, Martabak San Fransisco, Warteg Warmo',
+			desc: 'Resto viral tanpa ojol, soto bebek legendaris, dan warung makan malam.',
+			examples: 'Soto Bebek Gawok, Bebek Goreng, Mie Ayam Lokal, Angkringan',
 			icon: Utensils,
 			badge: 'Paling Populer',
-			activeMitra: '42 Mitra Siap'
+			activeMitra: '15 Mitra Siap'
 		},
 		{
 			id: 'pasar',
 			slug: 'traditional-market',
 			name: 'Pasar Pagi & Sayur Segar',
-			desc: 'Belanja bahan segar subuh langsung dari pedagang pasar lokal.',
-			examples: 'Sayur bayam, daging segar, ayam potong, bumbu rempah',
+			desc: 'Belanja bahan segar subuh langsung dari pedagang pasar tradisional.',
+			examples: 'Pasar Gawok, sayur bayam, daging ayam, bumbu pawon',
 			icon: Carrot,
 			badge: 'Subuh - Siang',
-			activeMitra: '28 Mitra Siap'
+			activeMitra: '12 Mitra Siap'
 		},
 		{
 			id: 'swalayan',
 			slug: 'grocery-mart',
 			name: 'Minimarket & Swalayan',
-			desc: 'Kebutuhan rumah mendesak, air galon, popok, atau cemilan.',
-			examples: 'Indomaret, Alfamart, Superindo, toko kelontong',
+			desc: 'Kebutuhan rumah mendesak, galon air, popok, atau cemilan.',
+			examples: 'Indomaret Gatak, Alfamart Gawok, toko kelontong',
 			icon: Store,
 			badge: 'Cepat 20 Menit',
-			activeMitra: '35 Mitra Siap'
+			activeMitra: '18 Mitra Siap'
 		},
 		{
 			id: 'farmasi',
 			slug: 'pharmacy',
 			name: 'Apotek & Kebutuhan Medis',
 			desc: 'Obat bebas/resep, vitamin, termometer, dan kebutuhan darurat.',
-			examples: 'Apotek K-24, Kimia Farma, Century, Apotek Berkat',
+			examples: 'Apotek Gatak, Kimia Farma Kartasura, apotek terdekat',
 			icon: Pill,
 			badge: 'Prioritas Cepat',
-			activeMitra: '19 Mitra Siap'
+			activeMitra: '8 Mitra Siap'
 		},
 		{
 			id: 'kurir',
 			slug: 'pickup-delivery',
 			name: 'Ambil & Antar Dokumen',
-			desc: 'Kunci rumah tertinggal, berkas kantor, charger laptop, paket lokal.',
-			examples: 'Dokumen kantor, laundry selesai, barang tertinggal',
+			desc: 'Kunci rumah tertinggal, berkas kantor, tugas kampus UMS, barang lokal.',
+			examples: 'Laundry selesai, paket lokal, barang tertinggal',
 			icon: Truck,
 			badge: 'Langsung Antar',
-			activeMitra: '50 Mitra Siap'
+			activeMitra: '20 Mitra Siap'
 		},
 		{
 			id: 'custom',
 			slug: 'custom-request',
 			name: 'Titip Request Kustom',
-			desc: 'Antrean tiket, belanja toko spesifik, florist, atau titip khusus.',
-			examples: 'Toko hobi, karangan bunga, merchandise event, titip barang',
+			desc: 'Belanja toko spesifik, mebel rotan Trangsan, bibit tanaman, request unik.',
+			examples: 'Sentra rotan Trangsan, pakan burung, perlengkapan lokal',
 			icon: Sparkles,
 			badge: 'Fleksibel',
-			activeMitra: '25 Mitra Siap'
+			activeMitra: '10 Mitra Siap'
 		}
 	];
 
@@ -195,24 +195,24 @@
 	const testimonials = [
 		{
 			quote:
-				'Akhirnya bisa titip Gultik Blok M langganan pas lembur di kantor. Harganya jujur sesuai harga mangkuk di tempat, ada foto struknya.',
-			author: 'Dimas Prasetyo',
-			role: 'Pekerja Kantor',
-			location: 'Jakarta Selatan'
+				'Akhirnya bisa titip Soto Bebek Gawok pas jam kerja di rumah tanpa harus antre di warung. Harganya persis nota kasir warung.',
+			author: 'Agus Santoso',
+			role: 'Wiraswasta',
+			location: 'Gawok, Gatak'
 		},
 		{
 			quote:
-				'Belanja sayur pasar subuh jadi praktis tanpa perlu keluar rumah jam 5 pagi. Sayurannya segar dan catatan titipan dibaca teliti sama mitra.',
-			author: 'Siti Rahmawati',
+				'Belanja sayuran subuh di Pasar Gawok jadi gampang. Catatan belanjaan dibeliin lengkap dan langsung diantar ke dapur.',
+			author: 'Tri Handayani',
 			role: 'Ibu Rumah Tangga',
-			location: 'Tangerang Selatan'
+			location: 'Trangsan, Gatak'
 		},
 		{
 			quote:
-				'Kunci kosan ketinggalan di kampus langsung diantar sama mitra dalam 30 menit. Cepat, aman, dan tarifnya sangat masuk akal.',
-			author: 'Fajar Nugraha',
-			role: 'Mahasiswa',
-			location: 'Depok'
+				'Buku catatan ketinggalan di kampus UMS langsung dijemput dan diantar ke kosan di Mayang dalam 25 menit. Tarifnya pas di kantong mahasiswa.',
+			author: 'Rifki Pratama',
+			role: 'Mahasiswa UMS',
+			location: 'Mayang, Gatak'
 		}
 	];
 </script>
@@ -282,7 +282,7 @@
 							<p class="mt-0.5 text-xs text-muted-foreground">Markup Harga Menu</p>
 						</div>
 						<div>
-							<p class="text-xl font-black text-foreground sm:text-2xl">Jabodetabek</p>
+							<p class="text-xl font-black text-foreground sm:text-2xl">Gatak & Sekitar</p>
 							<p class="mt-0.5 text-xs text-muted-foreground">Area Operasional</p>
 						</div>
 					</div>
@@ -309,18 +309,18 @@
 
 						<div class="mt-4 space-y-3">
 							<div class="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs">
-								<p class="font-bold text-foreground">Martabak San Fransisco Tebet</p>
-								<p class="mt-0.5 text-[11px] text-muted-foreground">1x Martabak Manis Cokelat Keju Spesial</p>
+								<p class="font-bold text-foreground">Soto Bebek Gawok Spesial</p>
+								<p class="mt-0.5 text-[11px] text-muted-foreground">2x Soto Bebek Kuah Segar + 2x Es Teh</p>
 								<div class="mt-2 flex justify-between border-t border-border/50 pt-2 font-semibold">
 									<span>Harga Struk Toko</span>
-									<span class="text-foreground">Rp 75.000</span>
+									<span class="text-foreground">Rp 36.000</span>
 								</div>
 							</div>
 
 							<div class="space-y-1.5 text-xs text-muted-foreground">
 								<div class="flex justify-between">
 									<span>Tarif Jastip Mitra Lokal</span>
-									<span class="font-medium text-foreground">Rp 12.000</span>
+									<span class="font-medium text-foreground">Rp 8.000</span>
 								</div>
 								<div class="flex justify-between">
 									<span>Biaya Layanan Aplikasi</span>
@@ -328,7 +328,7 @@
 								</div>
 								<div class="flex justify-between border-t border-border/60 pt-2 text-sm font-black text-foreground">
 									<span>Total Transparan</span>
-									<span class="text-primary">Rp 88.000</span>
+									<span class="text-primary">Rp 45.000</span>
 								</div>
 							</div>
 

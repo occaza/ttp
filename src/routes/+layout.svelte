@@ -171,7 +171,7 @@
 				<div class="col-span-3 space-y-2">
 					<p class="font-bold text-foreground">Wilayah Operasional</p>
 					<p class="text-xs text-muted-foreground leading-relaxed">
-						Jabodetabek (Jakarta, Bogor, Depok, Tangerang, Bekasi).
+						Kecamatan Gatak, Gawok, Trangsan, Mayang, Kartasura, Baki, dan sekitarnya (Sukoharjo / Solo Raya).
 					</p>
 				</div>
 			</div>
