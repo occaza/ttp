@@ -372,7 +372,7 @@
 			{#each filteredCategories as category}
 				{@const IconComponent = category.icon}
 				<a
-					href={resolve(`/kategori/${category.slug}`)}
+					href={resolve('/kategori/[slug]', { slug: category.slug })}
 					class="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
 				>
 					<div>
