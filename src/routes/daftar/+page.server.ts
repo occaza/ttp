@@ -53,9 +53,16 @@ export const actions: Actions = {
 			});
 
 			if (signUpError) {
+				console.error('[Supabase Auth Error]', signUpError);
 				let errorMessage = signUpError.message;
 				if (signUpError.message === 'User already registered') {
 					errorMessage = 'Email ini sudah terdaftar. Silakan masuk menggunakan akun Anda.';
+				} else if (
+					signUpError.message.includes('confirmation email') ||
+					signUpError.message.includes('Error sending confirmation')
+				) {
+					errorMessage =
+						'Supabase gagal mengirim email konfirmasi (kuota email bawaan Supabase habis). Solusi: Di dashboard Supabase, buka Authentication > Providers > Email, lalu matikan toggle "Confirm email".';
 				} else if (
 					signUpError.message.includes('Database error') ||
 					signUpError.message.includes('saving new user')
