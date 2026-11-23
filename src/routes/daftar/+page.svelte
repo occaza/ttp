@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -21,13 +21,15 @@
 		BadgePercent
 	} from 'lucide-svelte';
 
-	let { form }: { form: ActionData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let loading = $state(false);
 	let showPassword = $state(false);
 	let selectedRole = $state<'customer' | 'provider'>('customer');
 
 	$effect(() => {
-		if (form?.role === 'customer' || form?.role === 'provider') {
+		if (!data.allowProviderRegistration) {
+			selectedRole = 'customer';
+		} else if (form?.role === 'customer' || form?.role === 'provider') {
 			selectedRole = form.role;
 		}
 	});
@@ -218,39 +220,59 @@
 							</span>
 						</label>
 
-						<label
-							class="flex cursor-pointer flex-col rounded-xl border p-3 text-left transition-all {selectedRole ===
-							'provider'
-								? 'border-primary bg-primary/5 ring-1 ring-primary/40'
-								: 'border-border/80 hover:border-border hover:bg-muted/30'}"
-						>
-							<input
-								type="radio"
-								name="role"
-								value="provider"
-								checked={selectedRole === 'provider'}
-								onchange={() => (selectedRole = 'provider')}
-								class="sr-only"
-							/>
-							<div class="flex items-center justify-between">
-								<ShieldCheck
-									class="size-4.5 {selectedRole === 'provider'
-										? 'text-primary'
-										: 'text-muted-foreground'}"
+						{#if data.allowProviderRegistration}
+							<label
+								class="flex cursor-pointer flex-col rounded-xl border p-3 text-left transition-all {selectedRole ===
+								'provider'
+									? 'border-primary bg-primary/5 ring-1 ring-primary/40'
+									: 'border-border/80 hover:border-border hover:bg-muted/30'}"
+							>
+								<input
+									type="radio"
+									name="role"
+									value="provider"
+									checked={selectedRole === 'provider'}
+									onchange={() => (selectedRole = 'provider')}
+									class="sr-only"
 								/>
-								{#if selectedRole === 'provider'}
+								<div class="flex items-center justify-between">
+									<ShieldCheck
+										class="size-4.5 {selectedRole === 'provider'
+											? 'text-primary'
+											: 'text-muted-foreground'}"
+									/>
+									{#if selectedRole === 'provider'}
+										<span
+											class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
+										>
+											Dipilih
+										</span>
+									{/if}
+								</div>
+								<span class="mt-2 text-xs font-bold text-foreground">Mitra Jastip</span>
+								<span class="mt-0.5 text-[11px] text-muted-foreground">
+									Sediakan jasa & dapatkan komisi
+								</span>
+							</label>
+						{:else}
+							<div
+								class="relative flex flex-col rounded-xl border border-dashed border-border/80 bg-muted/40 p-3 opacity-75"
+								title="Pendaftaran mitra sedang ditutup sementara"
+							>
+								<div class="flex items-center justify-between">
+									<ShieldCheck class="size-4.5 text-muted-foreground" />
 									<span
-										class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
+										class="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground uppercase"
 									>
-										Dipilih
+										Ditutup
 									</span>
-								{/if}
+								</div>
+								<span class="mt-2 text-xs font-bold text-muted-foreground">Mitra Jastip</span>
+								<span class="mt-0.5 text-[10px] leading-tight text-muted-foreground">
+									Ditutup sementara (fokus layanan internal)
+								</span>
 							</div>
-							<span class="mt-2 text-xs font-bold text-foreground">Mitra Jastip</span>
-							<span class="mt-0.5 text-[11px] text-muted-foreground">
-								Sediakan jasa & dapatkan komisi
-							</span>
-						</label>
+						{/if}
 					</div>
 				</div>
 

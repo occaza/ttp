@@ -1,12 +1,16 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { registerSchema } from '#lib/server/auth.js';
+import { getPlatformSettings } from '#lib/server/settings.js';
 
-export const load: PageServerLoad = ({ locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
 		throw redirect(303, '/profil');
 	}
-	return {};
+	const settings = await getPlatformSettings(locals.supabase);
+	return {
+		allowProviderRegistration: settings.allow_provider_registration
+	};
 };
 
 export const actions: Actions = {
@@ -17,6 +21,8 @@ export const actions: Actions = {
 		const phone = formData.get('phone');
 		const password = formData.get('password');
 		const role = formData.get('role');
+
+		const settings = await getPlatformSettings(locals.supabase);
 
 		const parsed = registerSchema.safeParse({
 			full_name,
@@ -35,6 +41,17 @@ export const actions: Actions = {
 				email: typeof email === 'string' ? email : '',
 				phone: typeof phone === 'string' ? phone : '',
 				role: typeof role === 'string' ? role : 'customer'
+			});
+		}
+
+		if (parsed.data.role === 'provider' && !settings.allow_provider_registration) {
+			return fail(400, {
+				error:
+					'Pendaftaran mitra saat ini ditutup sementara karena operasional dikelola langsung oleh tim internal.',
+				full_name: parsed.data.full_name,
+				email: parsed.data.email,
+				phone: parsed.data.phone || '',
+				role: 'customer'
 			});
 		}
 

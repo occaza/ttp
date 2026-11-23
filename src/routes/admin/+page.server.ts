@@ -1,12 +1,14 @@
 import type { Actions, PageServerLoad } from './$types';
 import { requireRole, categorySchema } from '#lib/server/auth.js';
 import { fail } from '@sveltejs/kit';
-import type { ServiceCategory } from '#lib/types/database.types.js';
+import type { ServiceCategory, UserRole } from '#lib/types/database.types.js';
+import { getPlatformSettings, updatePlatformSettings } from '#lib/server/settings.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	// Server-side strict authorization: only admin
+	// Server-side strict authorization: only admin/owner
 	const auth = requireRole(locals, ['admin']);
 
+	// 1. Fetch categories
 	const { data: categories } = await locals.supabase
 		.from('service_categories')
 		.select('*')
@@ -81,11 +83,36 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	];
 
+	// 2. Fetch platform settings
+	const settings = await getPlatformSettings(locals.supabase);
+
+	// 3. Fetch registered users list
+	const { data: usersData } = await locals.supabase
+		.from('profiles')
+		.select('id, full_name, phone, role, created_at')
+		.order('created_at', { ascending: false })
+		.limit(30);
+
+	const userList = usersData || [];
+	const providerCount = userList.filter((u) => u.role === 'provider').length;
+
 	return {
 		user: auth.user,
 		profile: auth.profile,
 		role: auth.role,
-		categories: categories && categories.length > 0 ? categories : fallbackCategories
+		categories: categories && categories.length > 0 ? categories : fallbackCategories,
+		settings,
+		users: userList,
+		stats: {
+			totalUsers: userList.length,
+			totalProviders: providerCount,
+			totalCategories: (categories && categories.length > 0 ? categories : fallbackCategories)
+				.length,
+			activeCategories: (categories && categories.length > 0
+				? categories
+				: fallbackCategories
+			).filter((c) => c.is_active).length
+		}
 	};
 };
 
@@ -136,7 +163,7 @@ export const actions: Actions = {
 			if (updateError) {
 				return fail(500, { error: `Gagal memperbarui kategori: ${updateError.message}` });
 			}
-			return { success: true, message: 'Kategori berhasil diperbarui' };
+			return { success: true, message: 'Kategori berhasil diperbarui.' };
 		} else {
 			const { error: insertError } = await locals.supabase.from('service_categories').insert({
 				name: dataToSave.name,
@@ -150,7 +177,7 @@ export const actions: Actions = {
 			if (insertError) {
 				return fail(500, { error: `Gagal menambahkan kategori: ${insertError.message}` });
 			}
-			return { success: true, message: 'Kategori berhasil ditambahkan' };
+			return { success: true, message: 'Kategori berhasil ditambahkan.' };
 		}
 	},
 
@@ -174,7 +201,7 @@ export const actions: Actions = {
 			return fail(500, { error: `Gagal mengubah status kategori: ${updateError.message}` });
 		}
 
-		return { success: true, message: 'Status kategori berhasil diperbarui' };
+		return { success: true, message: 'Status kategori berhasil diperbarui.' };
 	},
 
 	deleteCategory: async ({ request, locals }) => {
@@ -196,6 +223,76 @@ export const actions: Actions = {
 			return fail(500, { error: `Gagal menghapus kategori: ${deleteError.message}` });
 		}
 
-		return { success: true, message: 'Kategori berhasil dihapus' };
+		return { success: true, message: 'Kategori berhasil dihapus.' };
+	},
+
+	toggleMitraRegistration: async ({ request, locals }) => {
+		requireRole(locals, ['admin']);
+
+		const formData = await request.formData();
+		const currentStatus = formData.get('current_status') === 'true';
+		const nextStatus = !currentStatus;
+
+		await updatePlatformSettings(locals.supabase, {
+			allow_provider_registration: nextStatus
+		});
+
+		return {
+			success: true,
+			message: nextStatus
+				? 'Pendaftaran mitra berhasil DIAKTIFKAN.'
+				: 'Pendaftaran mitra berhasil DINONAKTIFKAN (fokus operasional internal).'
+		};
+	},
+
+	updateSettings: async ({ request, locals }) => {
+		requireRole(locals, ['admin']);
+
+		const formData = await request.formData();
+		const allow_provider_registration =
+			formData.get('allow_provider_registration') === 'on' ||
+			formData.get('allow_provider_registration') === 'true';
+		const platform_name = (formData.get('platform_name') as string) || 'Titipin';
+		const support_phone = (formData.get('support_phone') as string) || '081234567890';
+		const rawStatus = (formData.get('operational_status') as string) || 'active';
+		const operational_status: 'active' | 'maintenance' | 'paused' =
+			rawStatus === 'maintenance' || rawStatus === 'paused' ? rawStatus : 'active';
+
+		await updatePlatformSettings(locals.supabase, {
+			allow_provider_registration,
+			platform_name,
+			support_phone,
+			operational_status
+		});
+
+		return { success: true, message: 'Pengaturan platform berhasil disimpan.' };
+	},
+
+	updateUserRole: async ({ request, locals }) => {
+		requireRole(locals, ['admin']);
+
+		const formData = await request.formData();
+		const userId = formData.get('user_id') as string;
+		const newRole = formData.get('role') as UserRole;
+
+		if (!userId || !['customer', 'provider', 'admin'].includes(newRole)) {
+			return fail(400, { error: 'Data perubahan peran tidak valid.' });
+		}
+
+		const { error: updateError } = await locals.supabase
+			.from('profiles')
+			.update({ role: newRole, updated_at: new Date().toISOString() })
+			.eq('id', userId);
+
+		if (updateError) {
+			return fail(500, { error: `Gagal mengubah peran: ${updateError.message}` });
+		}
+
+		// Sync user_roles table
+		await locals.supabase
+			.from('user_roles')
+			.upsert({ user_id: userId, role: newRole }, { onConflict: 'user_id,role' });
+
+		return { success: true, message: `Peran pengguna berhasil diubah menjadi ${newRole}.` };
 	}
 };
