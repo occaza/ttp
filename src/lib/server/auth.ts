@@ -31,6 +31,95 @@ export const registerSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 
+export const profileUpdateSchema = z.object({
+	full_name: z
+		.string()
+		.trim()
+		.min(2, { message: 'Nama lengkap minimal 2 karakter' })
+		.max(100, { message: 'Nama lengkap maksimal 100 karakter' }),
+	phone: z
+		.string()
+		.trim()
+		.regex(/^(\+62|62|0)[0-9]{8,13}$/, {
+			message: 'Nomor telepon harus valid (contoh: 08123456789)'
+		})
+		.optional()
+		.or(z.literal('')),
+	avatar_url: z.string().trim().optional().or(z.literal(''))
+});
+
+export const addressSchema = z.object({
+	id: z.string().uuid().optional(),
+	label: z
+		.string()
+		.trim()
+		.min(1, { message: 'Label alamat harus diisi (contoh: Rumah, Kantor)' })
+		.max(50, { message: 'Label alamat maksimal 50 karakter' }),
+	recipient_name: z
+		.string()
+		.trim()
+		.min(2, { message: 'Nama penerima minimal 2 karakter' })
+		.max(100, { message: 'Nama penerima maksimal 100 karakter' }),
+	recipient_phone: z
+		.string()
+		.trim()
+		.regex(/^(\+62|62|0)[0-9]{8,13}$/, {
+			message: 'Nomor telepon penerima harus valid (contoh: 08123456789)'
+		}),
+	street_address: z
+		.string()
+		.trim()
+		.min(5, { message: 'Alamat lengkap jalan/blok minimal 5 karakter' })
+		.max(255, { message: 'Alamat lengkap maksimal 255 karakter' }),
+	notes: z
+		.string()
+		.trim()
+		.max(150, { message: 'Catatan patokan maksimal 150 karakter' })
+		.optional()
+		.or(z.literal('')),
+	city: z
+		.string()
+		.trim()
+		.min(2, { message: 'Kota/Kabupaten harus diisi' })
+		.max(100, { message: 'Kota maksimal 100 karakter' })
+		.default('Jakarta Selatan'),
+	postal_code: z.string().trim().max(10).optional().or(z.literal('')),
+	is_primary: z.boolean().default(false)
+});
+
+export const categorySchema = z.object({
+	id: z.string().uuid().optional(),
+	name: z
+		.string()
+		.trim()
+		.min(2, { message: 'Nama kategori minimal 2 karakter' })
+		.max(100, { message: 'Nama kategori maksimal 100 karakter' }),
+	slug: z
+		.string()
+		.trim()
+		.min(2, { message: 'Slug kategori minimal 2 karakter' })
+		.regex(/^[a-z0-9-]+$/, {
+			message: 'Slug hanya boleh berisi huruf kecil, angka, dan tanda minus'
+		}),
+	description: z
+		.string()
+		.trim()
+		.max(255, { message: 'Deskripsi maksimal 255 karakter' })
+		.optional()
+		.or(z.literal('')),
+	icon: z
+		.string()
+		.trim()
+		.min(2, { message: 'Nama ikon minimal 2 karakter' })
+		.default('shopping-bag'),
+	is_active: z.boolean().default(true),
+	sort_order: z.number().int().default(0)
+});
+
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+export type AddressInput = z.infer<typeof addressSchema>;
+export type CategoryInput = z.infer<typeof categorySchema>;
+
 export function requireAuth(
 	locals: App.Locals,
 	redirectTo = '/masuk'

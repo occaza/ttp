@@ -95,6 +95,93 @@ export interface Database {
 				};
 				Relationships: [];
 			};
+			service_categories: {
+				Row: {
+					id: string;
+					name: string;
+					slug: string;
+					description: string | null;
+					icon: string;
+					is_active: boolean;
+					sort_order: number;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					name: string;
+					slug: string;
+					description?: string | null;
+					icon?: string;
+					is_active?: boolean;
+					sort_order?: number;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					name?: string;
+					slug?: string;
+					description?: string | null;
+					icon?: string;
+					is_active?: boolean;
+					sort_order?: number;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			addresses: {
+				Row: {
+					id: string;
+					user_id: string;
+					label: string;
+					recipient_name: string;
+					recipient_phone: string;
+					street_address: string;
+					notes: string | null;
+					city: string;
+					postal_code: string | null;
+					latitude: number | null;
+					longitude: number | null;
+					is_primary: boolean;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					user_id: string;
+					label: string;
+					recipient_name: string;
+					recipient_phone: string;
+					street_address: string;
+					notes?: string | null;
+					city?: string;
+					postal_code?: string | null;
+					latitude?: number | null;
+					longitude?: number | null;
+					is_primary?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					user_id?: string;
+					label?: string;
+					recipient_name?: string;
+					recipient_phone?: string;
+					street_address?: string;
+					notes?: string | null;
+					city?: string;
+					postal_code?: string | null;
+					latitude?: number | null;
+					longitude?: number | null;
+					is_primary?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -118,3 +205,5 @@ export type Enums<T extends keyof Database['public']['Enums']> = Database['publi
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type ProviderProfile = Database['public']['Tables']['provider_profiles']['Row'];
 export type UserRoleRecord = Database['public']['Tables']['user_roles']['Row'];
+export type ServiceCategory = Database['public']['Tables']['service_categories']['Row'];
+export type Address = Database['public']['Tables']['addresses']['Row'];

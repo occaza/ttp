@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import {
@@ -22,6 +23,8 @@
 		ShoppingBag
 	} from 'lucide-svelte';
 
+	let { data }: { data: PageData } = $props();
+
 	let searchQuery = $state('');
 	let selectedLocation = $state('Jakarta Selatan');
 
@@ -37,9 +40,31 @@
 		'Bekasi'
 	];
 
+	const categoryIcons: Record<string, typeof Utensils> = {
+		utensils: Utensils,
+		'food-beverage': Utensils,
+		kuliner: Utensils,
+		store: Store,
+		'grocery-mart': Store,
+		swalayan: Store,
+		carrot: Carrot,
+		'traditional-market': Carrot,
+		pasar: Carrot,
+		pill: Pill,
+		pharmacy: Pill,
+		farmasi: Pill,
+		truck: Truck,
+		'pickup-delivery': Truck,
+		kurir: Truck,
+		sparkles: Sparkles,
+		'custom-request': Sparkles,
+		custom: Sparkles
+	};
+
 	const categories = [
 		{
 			id: 'kuliner',
+			slug: 'food-beverage',
 			name: 'Kuliner & Warung Hits',
 			desc: 'Resto viral tanpa ojol, kedai kopi legendaris, & jajanan malam.',
 			examples: 'Gultik Blok M, Martabak San Fransisco, Warteg Warmo',
@@ -49,6 +74,7 @@
 		},
 		{
 			id: 'pasar',
+			slug: 'traditional-market',
 			name: 'Pasar Pagi & Sayur Segar',
 			desc: 'Belanja bahan segar subuh langsung dari pedagang pasar lokal.',
 			examples: 'Sayur bayam, daging segar, ayam potong, bumbu rempah',
@@ -58,6 +84,7 @@
 		},
 		{
 			id: 'swalayan',
+			slug: 'grocery-mart',
 			name: 'Minimarket & Swalayan',
 			desc: 'Kebutuhan rumah mendesak, air galon, popok, atau cemilan.',
 			examples: 'Indomaret, Alfamart, Superindo, minimarket lokal',
@@ -67,6 +94,7 @@
 		},
 		{
 			id: 'farmasi',
+			slug: 'pharmacy',
 			name: 'Apotek & Kebutuhan Medis',
 			desc: 'Obat resep/bebas, vitamin, termometer, & kebutuhan darurat 24 jam.',
 			examples: 'Apotek K-24, Kimia Farma, Century, Apotek Berkat',
@@ -76,6 +104,7 @@
 		},
 		{
 			id: 'kurir',
+			slug: 'pickup-delivery',
 			name: 'Ambil & Antar Dokumen',
 			desc: 'Kunci rumah tertinggal, berkas kantor, charger laptop, paket lokal.',
 			examples: 'Dokumen kantor, laundry selesai, barang tertinggal di kafe',
@@ -85,6 +114,7 @@
 		},
 		{
 			id: 'custom',
+			slug: 'custom-request',
 			name: 'Titip Request Kustom',
 			desc: 'Antrean tiket, belanja toko spesifik, florist, atau titip khusus.',
 			examples: 'Toko hobi, bunga ucapan, merchandise event, request unik',
@@ -93,6 +123,21 @@
 			activeMitra: '25 Mitra Online'
 		}
 	];
+
+	const resolvedCategories = $derived(
+		data?.categories && data.categories.length > 0
+			? data.categories.map((cat, idx) => ({
+					id: cat.id,
+					slug: cat.slug,
+					name: cat.name,
+					desc: cat.description || 'Layanan titip belanja terpercaya.',
+					examples: categories[idx]?.examples || 'Belanja kebutuhan toko lokal',
+					icon: categoryIcons[cat.icon || ''] || categoryIcons[cat.slug] || Utensils,
+					badge: categories[idx]?.badge || 'Tersedia',
+					activeMitra: categories[idx]?.activeMitra || 'Mitra Siap'
+				}))
+			: categories
+	);
 
 	const workflows = [
 		{
@@ -463,16 +508,16 @@
 				</p>
 			</div>
 			<a
-				href={resolve('/daftar')}
+				href={resolve('/kategori')}
 				class="inline-flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:underline"
 			>
-				<span>Titip Kebutuhan Lainnya</span>
+				<span>Semua Kategori</span>
 				<ChevronRight class="size-4" />
 			</a>
 		</div>
 
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each categories as cat (cat.id)}
+			{#each resolvedCategories as cat (cat.id)}
 				{@const IconComponent = cat.icon}
 				<div
 					class="group flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 transition-all duration-200 hover:border-primary/50 hover:shadow-md"
@@ -511,10 +556,10 @@
 					>
 						<span class="text-xs text-muted-foreground">{cat.activeMitra}</span>
 						<a
-							href={resolve('/daftar')}
+							href={resolve('/kategori/[slug]', { slug: cat.slug || cat.id })}
 							class="inline-flex items-center gap-1 font-semibold text-primary transition-colors hover:underline"
 						>
-							<span>Titip Sekarang</span>
+							<span>Eksplor Layanan</span>
 							<ArrowRight class="size-3.5 transition-transform group-hover:translate-x-0.5" />
 						</a>
 					</div>
