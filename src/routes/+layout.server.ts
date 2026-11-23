@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/public';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '#lib/config.js';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = ({ locals }) => {
@@ -7,7 +7,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
 		user: locals.user,
 		profile: locals.profile,
 		role: locals.role,
-		supabaseUrl: env.PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-		supabaseAnonKey: env.PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+		supabaseUrl: PUBLIC_SUPABASE_URL,
+		supabaseAnonKey: PUBLIC_SUPABASE_ANON_KEY
 	};
 };

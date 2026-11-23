@@ -1,12 +1,12 @@
 import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect, error } from '@sveltejs/kit';
-import { env } from '$env/dynamic/public';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '#lib/config.js';
 import type { Database, Profile, UserRole } from '#lib/types/database.types.js';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const supabaseUrl = env.PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-	const supabaseAnonKey = env.PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+	const supabaseUrl = PUBLIC_SUPABASE_URL;
+	const supabaseAnonKey = PUBLIC_SUPABASE_ANON_KEY;
 
 	event.locals.supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
 		cookies: {
@@ -18,6 +18,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 					event.cookies.set(name, value, { ...options, path: '/' });
 				});
 			}
+		},
+		global: {
+			fetch: event.fetch
 		}
 	});
 
