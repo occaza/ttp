@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { resolve } from '$app/paths';
+	import { enhance } from '$app/forms';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
@@ -29,6 +30,8 @@
 	let isEditingProfile = $state(false);
 	let isAddressModalOpen = $state(false);
 	let editingAddress = $state<Address | null>(null);
+	let savingAddress = $state(false);
+	let modalError = $state('');
 
 	// Address modal fields
 	let addressId = $state('');
@@ -43,6 +46,7 @@
 
 	function openAddAddressModal() {
 		editingAddress = null;
+		modalError = '';
 		addressId = '';
 		addressLabel = '';
 		recipientName = data.profile?.full_name || '';
@@ -57,6 +61,7 @@
 
 	function openEditAddressModal(addr: Address) {
 		editingAddress = addr;
+		modalError = '';
 		addressId = addr.id;
 		addressLabel = addr.label;
 		recipientName = addr.recipient_name;
@@ -72,6 +77,7 @@
 	function closeModal() {
 		isAddressModalOpen = false;
 		editingAddress = null;
+		modalError = '';
 	}
 </script>
 
@@ -447,12 +453,32 @@
 				</button>
 			</div>
 
+			{#if modalError}
+				<div class="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+					<AlertCircle class="mt-0.5 size-4 shrink-0" />
+					<span>{modalError}</span>
+				</div>
+			{/if}
+
 			<form
 				method="POST"
 				action="?/saveAddress"
 				class="mt-4 space-y-3.5"
-				onsubmit={() => {
-					isAddressModalOpen = false;
+				use:enhance={() => {
+					savingAddress = true;
+					modalError = '';
+					return async ({ result, update }) => {
+						savingAddress = false;
+						if (result.type === 'failure') {
+							const resData = result.data as { addressError?: string } | undefined;
+							modalError = resData?.addressError || 'Gagal menyimpan alamat. Periksa data kembali.';
+						} else if (result.type === 'success') {
+							isAddressModalOpen = false;
+							await update();
+						} else {
+							await update();
+						}
+					};
 				}}
 			>
 				<input type="hidden" name="id" value={addressId} />
@@ -545,6 +571,7 @@
 						type="checkbox"
 						id="is_primary"
 						name="is_primary"
+						value="true"
 						bind:checked={isPrimary}
 						class="size-4 rounded border-border text-primary focus:ring-primary"
 					/>
@@ -554,11 +581,16 @@
 				</div>
 
 				<div class="flex items-center justify-end gap-2 border-t border-border/60 pt-4">
-					<Button variant="outline" size="sm" type="button" onclick={closeModal} class="text-xs">
+					<Button variant="outline" size="sm" type="button" onclick={closeModal} class="text-xs" disabled={savingAddress}>
 						Batal
 					</Button>
-					<Button size="sm" type="submit" class="text-xs font-bold">
-						{editingAddress ? 'Simpan Perubahan' : 'Tambah Alamat'}
+					<Button size="sm" type="submit" class="text-xs font-bold" disabled={savingAddress}>
+						{#if savingAddress}
+							<span class="mr-1.5 size-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+							<span>Menyimpan...</span>
+						{:else}
+							<span>{editingAddress ? 'Simpan Perubahan' : 'Tambah Alamat'}</span>
+						{/if}
 					</Button>
 				</div>
 			</form>

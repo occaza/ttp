@@ -58,12 +58,15 @@ export const actions: Actions = {
 		const id = typeof rawId === 'string' && rawId.length > 0 ? rawId : undefined;
 		const label = formData.get('label');
 		const recipient_name = formData.get('recipient_name');
-		const recipient_phone = formData.get('recipient_phone');
+		const rawPhone = formData.get('recipient_phone');
+		const recipient_phone =
+			typeof rawPhone === 'string' ? rawPhone.trim().replace(/[\s-]/g, '') : '';
 		const street_address = formData.get('street_address');
 		const notes = formData.get('notes') || '';
-		const city = formData.get('city') || 'Jakarta Selatan';
+		const city = formData.get('city') || 'Gatak, Sukoharjo';
 		const postal_code = formData.get('postal_code') || '';
-		const is_primary = formData.get('is_primary') === 'on' || formData.get('is_primary') === 'true';
+		const is_primary =
+			formData.get('is_primary') === 'on' || formData.get('is_primary') === 'true';
 
 		const parsed = addressSchema.safeParse({
 			id: id || undefined,
@@ -83,11 +86,33 @@ export const actions: Actions = {
 			return fail(400, { addressError: errorMsg });
 		}
 
-		if (parsed.data.id) {
-			// Update existing address
-			const { error: updateError } = await locals.supabase
-				.from('addresses')
-				.update({
+		try {
+			if (parsed.data.id) {
+				// Update existing address
+				const { error: updateError } = await locals.supabase
+					.from('addresses')
+					.update({
+						label: parsed.data.label,
+						recipient_name: parsed.data.recipient_name,
+						recipient_phone: parsed.data.recipient_phone,
+						street_address: parsed.data.street_address,
+						notes: parsed.data.notes || null,
+						city: parsed.data.city,
+						postal_code: parsed.data.postal_code || null,
+						is_primary: parsed.data.is_primary,
+						updated_at: new Date().toISOString()
+					})
+					.eq('id', parsed.data.id)
+					.eq('user_id', auth.user.id);
+
+				if (updateError) {
+					return fail(500, { addressError: updateError.message });
+				}
+				return { addressSuccess: 'Alamat berhasil diperbarui.' };
+			} else {
+				// Insert new address
+				const { error: insertError } = await locals.supabase.from('addresses').insert({
+					user_id: auth.user.id,
 					label: parsed.data.label,
 					recipient_name: parsed.data.recipient_name,
 					recipient_phone: parsed.data.recipient_phone,
@@ -95,34 +120,17 @@ export const actions: Actions = {
 					notes: parsed.data.notes || null,
 					city: parsed.data.city,
 					postal_code: parsed.data.postal_code || null,
-					is_primary: parsed.data.is_primary,
-					updated_at: new Date().toISOString()
-				})
-				.eq('id', parsed.data.id)
-				.eq('user_id', auth.user.id);
+					is_primary: parsed.data.is_primary
+				});
 
-			if (updateError) {
-				return fail(500, { addressError: updateError.message });
+				if (insertError) {
+					return fail(500, { addressError: insertError.message });
+				}
+				return { addressSuccess: 'Alamat baru berhasil ditambahkan.' };
 			}
-			return { addressSuccess: 'Alamat berhasil diperbarui.' };
-		} else {
-			// Insert new address
-			const { error: insertError } = await locals.supabase.from('addresses').insert({
-				user_id: auth.user.id,
-				label: parsed.data.label,
-				recipient_name: parsed.data.recipient_name,
-				recipient_phone: parsed.data.recipient_phone,
-				street_address: parsed.data.street_address,
-				notes: parsed.data.notes || null,
-				city: parsed.data.city,
-				postal_code: parsed.data.postal_code || null,
-				is_primary: parsed.data.is_primary
-			});
-
-			if (insertError) {
-				return fail(500, { addressError: insertError.message });
-			}
-			return { addressSuccess: 'Alamat baru berhasil ditambahkan.' };
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			return fail(500, { addressError: `Gagal menyimpan: ${msg}` });
 		}
 	},
 
