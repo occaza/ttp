@@ -5,14 +5,6 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
-	import { Badge } from '#lib/components/ui/badge/index.js';
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardHeader,
-		CardTitle
-	} from '#lib/components/ui/card/index.js';
 	import {
 		User,
 		Mail,
@@ -27,7 +19,8 @@
 		Edit3,
 		Star,
 		X,
-		AlertCircle
+		AlertCircle,
+		ArrowRight
 	} from 'lucide-svelte';
 	import type { Address } from '#lib/types/database.types.js';
 
@@ -83,18 +76,22 @@
 </script>
 
 <svelte:head>
-	<title>Profil Saya & Alamat - Titipin</title>
+	<title>Profil & Alamat - Titipin</title>
+	<meta
+		name="description"
+		content="Kelola data pribadi dan daftar alamat pengantaran titip belanja lokal Anda."
+	/>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-8 px-4 py-8">
-	<!-- Header -->
-	<div class="flex items-center justify-between border-b border-border/60 pb-5">
+<div class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
+	<!-- Page Header -->
+	<div class="flex flex-col gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-				Profil & Alamat
+				Pengaturan Profil & Alamat
 			</h1>
-			<p class="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-				Kelola informasi identitas akun dan alamat pengantaran belanja Anda
+			<p class="mt-1 text-xs text-muted-foreground sm:text-sm">
+				Kelola informasi identitas akun Anda dan buku alamat tujuan pengantaran belanja.
 			</p>
 		</div>
 
@@ -103,18 +100,19 @@
 				variant="outline"
 				size="sm"
 				type="submit"
-				class="gap-1.5 text-xs text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+				class="h-9 gap-2 rounded-xl text-xs font-semibold text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
 			>
 				<LogOut class="size-3.5" />
-				<span>Keluar</span>
+				<span>Keluar dari Akun</span>
 			</Button>
 		</form>
 	</div>
 
-	<!-- Alert Messages -->
+	<!-- Alert Notifications -->
 	{#if form?.profileSuccess || form?.addressSuccess}
 		<div
-			class="flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400"
+			class="flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+			role="status"
 		>
 			<CheckCircle2 class="size-4 shrink-0" />
 			<span>{form.profileSuccess || form.addressSuccess}</span>
@@ -123,130 +121,165 @@
 
 	{#if form?.profileError || form?.addressError}
 		<div
-			class="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+			class="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs font-semibold text-destructive"
+			role="alert"
 		>
 			<AlertCircle class="size-4 shrink-0" />
 			<span>{form.profileError || form.addressError}</span>
 		</div>
 	{/if}
 
-	<div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-		<!-- Left: Profile Overview & Edit -->
+	<!-- 2-Column Responsive Layout -->
+	<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+		<!-- Left Column: Identity & Account Card -->
 		<div class="space-y-6 lg:col-span-5">
-			<Card class="border-border/80 shadow-xs">
-				<CardHeader class="pb-3">
-					<div class="flex items-center justify-between">
-						<CardTitle class="text-base font-bold">Informasi Pribadi</CardTitle>
-						<Button
-							variant="ghost"
-							size="sm"
-							class="h-7 text-xs font-semibold text-primary"
-							onclick={() => (isEditingProfile = !isEditingProfile)}
-						>
-							{isEditingProfile ? 'Batal' : 'Ubah Data'}
-						</Button>
-					</div>
-					<CardDescription class="text-xs">
-						Data identitas yang terverifikasi di Titipin
-					</CardDescription>
-				</CardHeader>
+			<div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				<div class="flex items-center justify-between border-b border-border/60 pb-4">
+					<h2 class="text-sm font-bold text-foreground">Identitas Pengguna</h2>
+					<button
+						type="button"
+						class="text-xs font-semibold text-primary transition-colors hover:underline"
+						onclick={() => (isEditingProfile = !isEditingProfile)}
+					>
+						{isEditingProfile ? 'Batal' : 'Ubah Data'}
+					</button>
+				</div>
 
-				<CardContent class="space-y-4 text-xs sm:text-sm">
-					<div class="flex items-center gap-3 border-b border-border/60 pb-3">
+				<div class="mt-5 space-y-5">
+					<!-- User Header Info -->
+					<div class="flex items-center gap-4">
 						<div
-							class="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-black text-primary"
+							class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-xl font-black text-primary"
 						>
 							{data.profile?.full_name?.charAt(0).toUpperCase() || 'U'}
 						</div>
 						<div class="min-w-0 flex-1">
-							<span class="block truncate font-bold text-foreground">
+							<span class="block truncate text-base font-bold text-foreground">
 								{data.profile?.full_name || 'Pengguna'}
 							</span>
-							<Badge variant="secondary" class="mt-1 text-[10px] font-bold">
-								{data.role?.toUpperCase() || 'CUSTOMER'}
-							</Badge>
+							<div class="mt-1 flex items-center gap-2">
+								<span
+									class="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary uppercase"
+								>
+									{data.role || 'customer'}
+								</span>
+								<span class="text-[11px] text-muted-foreground">Akun Terverifikasi</span>
+							</div>
 						</div>
 					</div>
 
-					{#if data.role === 'admin' || data.role === 'provider'}
-						<div class="rounded-xl border border-border/70 bg-muted/40 p-3">
-							<p class="text-[11px] font-semibold text-muted-foreground">Hak Akses Khusus</p>
-							<div class="mt-2 flex flex-wrap gap-2">
-								{#if data.role === 'admin'}
-									<a
-										href={resolve('/admin')}
-										class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-2xs hover:bg-primary/95"
-									>
-										<ShieldCheck class="size-3.5" />
-										<span>Buka Admin Console</span>
-									</a>
-								{/if}
-								{#if data.role === 'provider' || data.role === 'admin'}
-									<a
-										href={resolve('/mitra/dashboard')}
-										class="inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
-									>
-										<LayoutDashboard class="size-3.5" />
-										<span>Dashboard Mitra</span>
-									</a>
-								{/if}
+					<!-- Role Shortcut Action (Admin / Mitra) -->
+					{#if data.role === 'admin'}
+						<div class="rounded-xl border border-border/70 bg-muted/40 p-3.5">
+							<div class="flex items-center justify-between">
+								<div class="flex items-center gap-2">
+									<ShieldCheck class="size-4 text-primary" />
+									<span class="text-xs font-bold text-foreground">Admin Console</span>
+								</div>
+								<a
+									href={resolve('/admin')}
+									class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+								>
+									<span>Buka Panel</span>
+									<ArrowRight class="size-3" />
+								</a>
 							</div>
+							<p class="mt-1 text-[11px] text-muted-foreground">
+								Kelola kategori, pengguna, dan pengaturan operasional platform.
+							</p>
+						</div>
+					{:else if data.role === 'provider'}
+						<div class="rounded-xl border border-border/70 bg-muted/40 p-3.5">
+							<div class="flex items-center justify-between">
+								<div class="flex items-center gap-2">
+									<LayoutDashboard class="size-4 text-primary" />
+									<span class="text-xs font-bold text-foreground">Dashboard Mitra</span>
+								</div>
+								<a
+									href={resolve('/mitra/dashboard')}
+									class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+								>
+									<span>Buka Dashboard</span>
+									<ArrowRight class="size-3" />
+								</a>
+							</div>
+							<p class="mt-1 text-[11px] text-muted-foreground">
+								Lihat penawaran jasa, transaksi aktif, dan penerimaan titipan belanja.
+							</p>
 						</div>
 					{/if}
 
+					<!-- Edit Form or Readonly View -->
 					{#if isEditingProfile}
-						<form method="POST" action="?/updateProfile" class="space-y-3.5 pt-1">
-							<div class="space-y-1">
-								<Label for="full_name" class="text-xs font-semibold">Nama Lengkap</Label>
+						<form method="POST" action="?/updateProfile" class="space-y-4 pt-2">
+							<div class="space-y-1.5">
+								<Label for="full_name" class="text-xs font-semibold text-foreground">
+									Nama Lengkap
+								</Label>
 								<Input
 									id="full_name"
 									name="full_name"
 									value={data.profile?.full_name || ''}
+									placeholder="Nama lengkap Anda"
 									required
-									minlength={2}
 									class="h-9 text-xs"
 								/>
 							</div>
 
-							<div class="space-y-1">
-								<Label for="phone" class="text-xs font-semibold">Nomor Telepon / WhatsApp</Label>
+							<div class="space-y-1.5">
+								<Label for="phone" class="text-xs font-semibold text-foreground">
+									Nomor WhatsApp
+								</Label>
 								<Input
 									id="phone"
 									name="phone"
 									value={data.profile?.phone || ''}
-									placeholder="Contoh: 08123456789"
+									placeholder="08123456789"
 									class="h-9 text-xs"
 								/>
 							</div>
 
-							<Button size="sm" type="submit" class="w-full text-xs font-bold">
-								Simpan Perubahan
-							</Button>
+							<div class="flex items-center justify-end gap-2 pt-2">
+								<Button
+									variant="outline"
+									size="sm"
+									type="button"
+									class="h-8 text-xs"
+									onclick={() => (isEditingProfile = false)}
+								>
+									Batal
+								</Button>
+								<Button size="sm" type="submit" class="h-8 text-xs font-semibold">
+									Simpan Perubahan
+								</Button>
+							</div>
 						</form>
 					{:else}
-						<div class="space-y-2.5">
-							<div class="flex items-center gap-3 rounded-xl bg-muted/40 p-3">
+						<div class="space-y-3 pt-1 text-xs">
+							<div class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
 								<Mail class="size-4 shrink-0 text-muted-foreground" />
 								<div class="min-w-0">
 									<span class="block text-[11px] text-muted-foreground">Email Terdaftar</span>
-									<span class="block truncate font-medium text-foreground">{data.user?.email}</span>
+									<span class="block truncate font-medium text-foreground">
+										{data.user?.email}
+									</span>
 								</div>
 							</div>
 
-							<div class="flex items-center gap-3 rounded-xl bg-muted/40 p-3">
+							<div class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
 								<Phone class="size-4 shrink-0 text-muted-foreground" />
 								<div class="min-w-0">
-									<span class="block text-[11px] text-muted-foreground">Nomor Telepon</span>
-									<span class="font-medium text-foreground">
+									<span class="block text-[11px] text-muted-foreground">Nomor WhatsApp</span>
+									<span class="block truncate font-medium text-foreground">
 										{data.profile?.phone || 'Belum ditambahkan'}
 									</span>
 								</div>
 							</div>
 
-							<div class="flex items-center gap-3 rounded-xl bg-muted/40 p-3">
+							<div class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
 								<User class="size-4 shrink-0 text-muted-foreground" />
 								<div class="min-w-0">
-									<span class="block text-[11px] text-muted-foreground">User ID</span>
+									<span class="block text-[11px] text-muted-foreground">ID Pengguna</span>
 									<span class="block truncate font-mono text-[11px] text-muted-foreground">
 										{data.user?.id}
 									</span>
@@ -254,72 +287,78 @@
 							</div>
 						</div>
 					{/if}
-				</CardContent>
-			</Card>
+				</div>
+			</div>
 		</div>
 
-		<!-- Right: Saved Addresses Section -->
+		<!-- Right Column: Saved Addresses Section -->
 		<div class="space-y-6 lg:col-span-7">
-			<Card class="border-border/80 shadow-xs">
-				<CardHeader class="pb-3">
-					<div class="flex items-center justify-between">
-						<div>
-							<CardTitle class="text-base font-bold">Alamat Tersimpan</CardTitle>
-							<CardDescription class="text-xs">
-								Daftar alamat untuk tujuan pengantaran belanjaan Anda
-							</CardDescription>
+			<div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				<div class="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+					<div>
+						<div class="flex items-center gap-2">
+							<h2 class="text-sm font-bold text-foreground">Buku Alamat Pengantaran</h2>
+							<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+								{data.addresses.length} Alamat
+							</span>
 						</div>
-
-						{#if data.addresses.length > 0}
-							<Button size="sm" class="gap-1.5 text-xs font-bold" onclick={openAddAddressModal}>
-								<Plus class="size-3.5" />
-								<span>Tambah Alamat</span>
-							</Button>
-						{/if}
+						<p class="mt-0.5 text-xs text-muted-foreground">
+							Tujuan pengantaran belanjaan titipan Anda oleh mitra lokal.
+						</p>
 					</div>
-				</CardHeader>
 
-				<CardContent class="space-y-3 pt-2">
+					{#if data.addresses.length > 0}
+						<Button size="sm" class="h-8 gap-1.5 rounded-xl text-xs font-semibold" onclick={openAddAddressModal}>
+							<Plus class="size-3.5" />
+							<span>Tambah Alamat</span>
+						</Button>
+					{/if}
+				</div>
+
+				<div class="mt-5">
 					{#if data.addresses.length === 0}
+						<!-- Clean Empty State -->
 						<div
-							class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-10 text-center"
+							class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-muted/10 py-12 text-center"
 						>
-							<MapPin class="size-8 text-muted-foreground/60" />
-							<p class="mt-2 text-xs font-semibold text-foreground">Belum ada alamat tersimpan</p>
-							<p class="max-w-xs text-[11px] text-muted-foreground">
-								Tambahkan alamat rumah, kantor, atau kost agar pesanan jastip langsung terarah
-								dengan akurat.
+							<div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+								<MapPin class="size-6" />
+							</div>
+							<h3 class="mt-3 text-sm font-bold text-foreground">Belum ada alamat tersimpan</h3>
+							<p class="mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
+								Tambahkan alamat rumah, kost, atau toko di area Gatak dan sekitarnya agar pesanan titip belanja dapat langsung diantar dengan akurat.
 							</p>
 							<Button
-								variant="outline"
 								size="sm"
-								class="mt-4 gap-1.5 text-xs font-semibold"
+								class="mt-5 h-9 gap-1.5 rounded-xl px-4 text-xs font-semibold shadow-xs"
 								onclick={openAddAddressModal}
 							>
 								<Plus class="size-3.5" />
-								<span>Tambah Alamat Sekarang</span>
+								<span>Tambah Alamat Pertama</span>
 							</Button>
 						</div>
 					{:else}
-						<div class="space-y-3">
+						<!-- Address Cards List -->
+						<div class="space-y-4">
 							{#each data.addresses as addr (addr.id)}
 								<div
 									class="relative flex flex-col justify-between rounded-xl border {addr.is_primary
-										? 'border-primary/60 bg-primary/5'
-										: 'border-border/80 bg-card'} p-4 shadow-2xs transition-all sm:flex-row sm:items-start"
+										? 'border-primary/60 bg-primary/5 ring-1 ring-primary/20'
+										: 'border-border/80 bg-card'} p-4.5 shadow-2xs transition-all hover:border-primary/40 sm:flex-row sm:items-start"
 								>
-									<div class="space-y-1.5">
+									<div class="space-y-2">
 										<div class="flex items-center gap-2">
-											<span class="text-xs font-black text-foreground">{addr.label}</span>
+											<span class="text-xs font-bold text-foreground">{addr.label}</span>
 											{#if addr.is_primary}
-												<Badge variant="default" class="h-4.5 px-1.5 text-[9px] font-bold">
-													Alamat Utama
-												</Badge>
+												<span class="inline-flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground">
+													<Star class="size-2.5 fill-current" />
+													<span>Utama</span>
+												</span>
 											{/if}
 										</div>
 
 										<p class="text-xs font-medium text-foreground">
-											<span class="font-bold">{addr.recipient_name}</span> ({addr.recipient_phone})
+											<span class="font-bold">{addr.recipient_name}</span> &bull; {addr.recipient_phone}
 										</p>
 
 										<p class="text-xs leading-relaxed text-muted-foreground">
@@ -328,41 +367,34 @@
 										</p>
 
 										{#if addr.notes}
-											<p class="text-[11px] text-muted-foreground/80 italic">
-												Patokan: {addr.notes}
-											</p>
+											<div class="rounded-lg bg-muted/40 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+												<span class="font-semibold text-foreground">Patokan:</span> {addr.notes}
+											</div>
 										{/if}
 									</div>
 
-									<div
-										class="mt-3 flex items-center gap-1.5 border-t border-border/50 pt-2.5 sm:mt-0 sm:border-0 sm:pt-0"
-									>
+									<div class="mt-3 flex items-center gap-1.5 sm:mt-0 sm:shrink-0">
 										{#if !addr.is_primary}
 											<form method="POST" action="?/setPrimaryAddress">
 												<input type="hidden" name="id" value={addr.id} />
-												<Button
-													variant="ghost"
-													size="sm"
+												<button
 													type="submit"
-													class="h-7 px-2 text-[11px] font-semibold text-primary hover:text-primary"
-													title="Jadikan Alamat Utama"
+													class="inline-flex h-7 items-center rounded-lg border border-border/70 px-2 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
 												>
-													<Star class="mr-1 size-3" />
-													<span>Utamakan</span>
-												</Button>
+													<span>Jadikan Utama</span>
+												</button>
 											</form>
 										{/if}
 
-										<Button
-											variant="ghost"
-											size="sm"
-											class="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+										<button
+											type="button"
+											class="inline-flex h-7 items-center rounded-lg border border-border/70 px-2 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
 											onclick={() => openEditAddressModal(addr)}
 											title="Edit Alamat"
 										>
 											<Edit3 class="mr-1 size-3" />
 											<span>Edit</span>
-										</Button>
+										</button>
 
 										<form
 											method="POST"
@@ -372,23 +404,22 @@
 											}}
 										>
 											<input type="hidden" name="id" value={addr.id} />
-											<Button
-												variant="ghost"
-												size="sm"
+											<button
 												type="submit"
-												class="h-7 px-2 text-[11px] font-semibold text-destructive hover:text-destructive"
+												class="inline-flex size-7 items-center justify-center rounded-lg border border-border/70 text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
 												title="Hapus Alamat"
 											>
 												<Trash2 class="size-3" />
-											</Button>
+												<span class="sr-only">Hapus</span>
+											</button>
 										</form>
 									</div>
 								</div>
 							{/each}
 						</div>
 					{/if}
-				</CardContent>
-			</Card>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
@@ -400,10 +431,10 @@
 			<div class="flex items-center justify-between border-b border-border/60 pb-3">
 				<div>
 					<h3 class="text-base font-bold text-foreground">
-						{editingAddress ? 'Ubah Alamat' : 'Tambah Alamat Baru'}
+						{editingAddress ? 'Ubah Alamat Pengantaran' : 'Tambah Alamat Baru'}
 					</h3>
 					<p class="text-[11px] text-muted-foreground">
-						Pastikan nomor telepon dan alamat jalan lengkap untuk kurir
+						Pastikan nomor kontak dan rincian jalan jelas agar kurir dapat mengantar tepat waktu.
 					</p>
 				</div>
 				<button
@@ -433,14 +464,14 @@
 							id="label"
 							name="label"
 							bind:value={addressLabel}
-							placeholder="Contoh: Rumah, Kost"
+							placeholder="Contoh: Rumah, Kost, Kantor"
 							required
 							class="h-9 text-xs"
 						/>
 					</div>
 
 					<div class="space-y-1">
-						<Label for="city" class="text-xs font-semibold">Kota / Wilayah</Label>
+						<Label for="city" class="text-xs font-semibold">Kota / Kecamatan</Label>
 						<Input id="city" name="city" bind:value={city} required class="h-9 text-xs" />
 					</div>
 				</div>
@@ -458,12 +489,12 @@
 					</div>
 
 					<div class="space-y-1">
-						<Label for="recipient_phone" class="text-xs font-semibold">No. Telepon Penerima</Label>
+						<Label for="recipient_phone" class="text-xs font-semibold">No. WhatsApp Penerima</Label>
 						<Input
 							id="recipient_phone"
 							name="recipient_phone"
 							bind:value={recipientPhone}
-							placeholder="Contoh: 08123456789"
+							placeholder="08123456789"
 							required
 							class="h-9 text-xs"
 						/>
@@ -472,13 +503,13 @@
 
 				<div class="space-y-1">
 					<Label for="street_address" class="text-xs font-semibold">
-						Alamat Lengkap (Jalan, RT/RW, No. Rumah)
+						Alamat Lengkap (Jalan, Dusun/RT/RW, No. Rumah)
 					</Label>
 					<Textarea
 						id="street_address"
 						name="street_address"
 						bind:value={streetAddress}
-						placeholder="Jl. Melati No. 45, RT 02/RW 04, Kelurahan..."
+						placeholder="Jl. Raya Gawok No. 12, RT 01/RW 03, Trangsan..."
 						required
 						rows={2}
 						class="text-xs"
@@ -487,12 +518,12 @@
 
 				<div class="grid grid-cols-3 gap-3">
 					<div class="col-span-2 space-y-1">
-						<Label for="notes" class="text-xs font-semibold">Catatan Patokan (Opsional)</Label>
+						<Label for="notes" class="text-xs font-semibold">Catatan Patokan Lokasi</Label>
 						<Input
 							id="notes"
 							name="notes"
 							bind:value={notes}
-							placeholder="Contoh: Pagar hijau depan pos satpam"
+							placeholder="Contoh: Depan gardu ronda, pagar hitam"
 							class="h-9 text-xs"
 						/>
 					</div>
@@ -503,7 +534,7 @@
 							id="postal_code"
 							name="postal_code"
 							bind:value={postalCode}
-							placeholder="12730"
+							placeholder="57557"
 							class="h-9 text-xs"
 						/>
 					</div>
