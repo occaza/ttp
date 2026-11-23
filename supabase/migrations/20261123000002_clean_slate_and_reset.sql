@@ -1,11 +1,34 @@
 -- ==============================================================================
--- TITIPIN: CLEAN SLATE & RESET SCRIPT
+-- TITIPIN: CLEAN SLATE & RESET SCRIPT (BULLETPROOF)
 -- Jalankan di: Supabase Dashboard -> SQL Editor -> New Query -> Run
 -- ==============================================================================
 
--- 1. HAPUS SEMUA TABEL LAMA YANG TIDAK BERHUBUNGAN DENGAN TITIPIN
+-- 1. LEPAS SEMUA FOREIGN KEY DI SCHEMA PUBLIC YANG MENUNJUK KE auth.users
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT tc.table_schema, tc.table_name, tc.constraint_name
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+          AND ccu.table_schema = 'auth'
+          AND ccu.table_name = 'users'
+          AND tc.table_schema = 'public'
+    ) LOOP
+        EXECUTE 'ALTER TABLE ' || quote_ident(r.table_schema) || '.' || quote_ident(r.table_name) || ' DROP CONSTRAINT IF EXISTS ' || quote_ident(r.constraint_name) || ' CASCADE;';
+    END LOOP;
+END $$;
+
+-- 2. HAPUS SEMUA TABEL LAMA YANG BUKAN MILIK TITIPIN
+DROP TABLE IF EXISTS public.transactions CASCADE;
+DROP TABLE IF EXISTS public.transaction_items CASCADE;
 DROP TABLE IF EXISTS public.products CASCADE;
 DROP TABLE IF EXISTS public.orders CASCADE;
+DROP TABLE IF EXISTS public.order_items CASCADE;
+DROP TABLE IF EXISTS public.payments CASCADE;
+DROP TABLE IF EXISTS public.invoices CASCADE;
 DROP TABLE IF EXISTS public.items CASCADE;
 DROP TABLE IF EXISTS public.todos CASCADE;
 DROP TABLE IF EXISTS public.notes CASCADE;
@@ -15,19 +38,16 @@ DROP TABLE IF EXISTS public.posts CASCADE;
 DROP TABLE IF EXISTS public.comments CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
--- 2. BERSIHKAN DATA DI TABEL TITIPIN (AGAR TIDAK MENGUNCI USER DI AUTH)
-DELETE FROM public.addresses;
-DELETE FROM public.provider_profiles;
-DELETE FROM public.user_roles;
-DELETE FROM public.profiles;
+-- 3. BERSIHKAN DATA TABEL TITIPIN
+TRUNCATE TABLE public.addresses CASCADE;
+TRUNCATE TABLE public.provider_profiles CASCADE;
+TRUNCATE TABLE public.user_roles CASCADE;
+TRUNCATE TABLE public.profiles CASCADE;
 
--- 3. HAPUS USER YANG TERSANGKUT DI AUTH.USERS
--- Menghapus semua user di auth schema
+-- 4. HAPUS USER DARI auth.users (SEKARANG DIJAMIN BERHASIL KARENA KUNCIAN SUDAH LEPAS)
 DELETE FROM auth.users;
 
--- 4. PASTIKAN SCHEMA TITIPIN BERSIH & SIAP (PHASE 2 & 3)
-
--- Profiles
+-- 5. RECONSTRUCT TABEL TITIPIN DENGAN ON DELETE CASCADE
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     full_name TEXT NOT NULL,
@@ -38,7 +58,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- User Roles
+-- Pastikan foreign key profiles terpasang dengan ON DELETE CASCADE
+ALTER TABLE public.profiles 
+    DROP CONSTRAINT IF EXISTS profiles_id_fkey,
+    ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 CREATE TABLE IF NOT EXISTS public.user_roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -47,7 +71,10 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
     CONSTRAINT user_roles_user_id_role_unique UNIQUE (user_id, role)
 );
 
--- Provider Profiles
+ALTER TABLE public.user_roles 
+    DROP CONSTRAINT IF EXISTS user_roles_user_id_fkey,
+    ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 CREATE TABLE IF NOT EXISTS public.provider_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -61,7 +88,12 @@ CREATE TABLE IF NOT EXISTS public.provider_profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Service Categories
+ALTER TABLE public.provider_profiles 
+    DROP CONSTRAINT IF EXISTS provider_profiles_id_fkey,
+    DROP CONSTRAINT IF EXISTS provider_profiles_user_id_fkey,
+    ADD CONSTRAINT provider_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE,
+    ADD CONSTRAINT provider_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 CREATE TABLE IF NOT EXISTS public.service_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
@@ -74,7 +106,6 @@ CREATE TABLE IF NOT EXISTS public.service_categories (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Addresses
 CREATE TABLE IF NOT EXISTS public.addresses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -90,14 +121,18 @@ CREATE TABLE IF NOT EXISTS public.addresses (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Enable RLS
+ALTER TABLE public.addresses 
+    DROP CONSTRAINT IF EXISTS addresses_user_id_fkey,
+    ADD CONSTRAINT addresses_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+-- 6. ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.provider_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.service_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;
 
--- 5. REFRESH TRIGGER REGISTRASI USER YANG AMAN
+-- 7. REFRESH TRIGGER REGISTRASI USER DENGAN ERROR HANDLING
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -150,7 +185,7 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 6. SEED KATEGORI LAYANAN TITIPIN (PHASE 3)
+-- 8. SEED ULANG 6 KATEGORI UTAMA TITIPIN
 INSERT INTO public.service_categories (name, slug, description, icon, is_active, sort_order)
 VALUES 
     ('Kuliner & Makanan', 'food-beverage', 'Makanan siap saji, kafe, jajanan khas', 'utensils', true, 1),
