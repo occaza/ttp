@@ -88,53 +88,27 @@
 
 <div class="mx-auto max-w-4xl space-y-8 px-4 py-8">
 	<!-- Header -->
-	<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+	<div class="flex items-center justify-between border-b border-border/60 pb-5">
 		<div>
 			<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-				Profil & Pengaturan
+				Profil & Alamat
 			</h1>
-			<p class="text-xs text-muted-foreground sm:text-sm">
-				Kelola informasi akun dan daftar alamat pengantaran Anda
+			<p class="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+				Kelola informasi identitas akun dan alamat pengantaran belanja Anda
 			</p>
 		</div>
 
-		<div class="flex items-center gap-2">
-			{#if data.role === 'provider' || data.role === 'admin'}
-				<Button
-					variant="outline"
-					size="sm"
-					href={resolve('/mitra/dashboard')}
-					class="gap-1.5 text-xs"
-				>
-					<LayoutDashboard class="size-3.5" />
-					<span>Dashboard Mitra</span>
-				</Button>
-			{/if}
-
-			{#if data.role === 'admin'}
-				<Button
-					variant="outline"
-					size="sm"
-					href={resolve('/admin')}
-					class="gap-1.5 text-xs text-destructive hover:text-destructive"
-				>
-					<ShieldCheck class="size-3.5" />
-					<span>Admin</span>
-				</Button>
-			{/if}
-
-			<form method="POST" action={resolve('/keluar')}>
-				<Button
-					variant="ghost"
-					size="sm"
-					type="submit"
-					class="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-				>
-					<LogOut class="size-3.5" />
-					<span>Keluar</span>
-				</Button>
-			</form>
-		</div>
+		<form method="POST" action={resolve('/keluar')}>
+			<Button
+				variant="outline"
+				size="sm"
+				type="submit"
+				class="gap-1.5 text-xs text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+			>
+				<LogOut class="size-3.5" />
+				<span>Keluar</span>
+			</Button>
+		</form>
 	</div>
 
 	<!-- Alert Messages -->
@@ -193,6 +167,32 @@
 							</Badge>
 						</div>
 					</div>
+
+					{#if data.role === 'admin' || data.role === 'provider'}
+						<div class="rounded-xl border border-border/70 bg-muted/40 p-3">
+							<p class="text-[11px] font-semibold text-muted-foreground">Hak Akses Khusus</p>
+							<div class="mt-2 flex flex-wrap gap-2">
+								{#if data.role === 'admin'}
+									<a
+										href={resolve('/admin')}
+										class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-2xs hover:bg-primary/95"
+									>
+										<ShieldCheck class="size-3.5" />
+										<span>Buka Admin Console</span>
+									</a>
+								{/if}
+								{#if data.role === 'provider' || data.role === 'admin'}
+									<a
+										href={resolve('/mitra/dashboard')}
+										class="inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+									>
+										<LayoutDashboard class="size-3.5" />
+										<span>Dashboard Mitra</span>
+									</a>
+								{/if}
+							</div>
+						</div>
+					{/if}
 
 					{#if isEditingProfile}
 						<form method="POST" action="?/updateProfile" class="space-y-3.5 pt-1">
@@ -270,10 +270,12 @@
 							</CardDescription>
 						</div>
 
-						<Button size="sm" class="gap-1.5 text-xs font-bold" onclick={openAddAddressModal}>
-							<Plus class="size-3.5" />
-							<span>Tambah Alamat</span>
-						</Button>
+						{#if data.addresses.length > 0}
+							<Button size="sm" class="gap-1.5 text-xs font-bold" onclick={openAddAddressModal}>
+								<Plus class="size-3.5" />
+								<span>Tambah Alamat</span>
+							</Button>
+						{/if}
 					</div>
 				</CardHeader>
 
