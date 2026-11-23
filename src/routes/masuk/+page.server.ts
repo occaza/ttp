@@ -27,17 +27,38 @@ export const actions: Actions = {
 			});
 		}
 
-		const { error: signInError } = await locals.supabase.auth.signInWithPassword({
-			email: parsed.data.email,
-			password: parsed.data.password
-		});
+		try {
+			const { error: signInError } = await locals.supabase.auth.signInWithPassword({
+				email: parsed.data.email,
+				password: parsed.data.password
+			});
 
-		if (signInError) {
-			return fail(400, {
-				error:
-					signInError.message === 'Invalid login credentials'
-						? 'Email atau kata sandi salah. Silakan coba lagi.'
-						: signInError.message,
+			if (signInError) {
+				let errorMessage = signInError.message;
+				if (signInError.message === 'Invalid login credentials') {
+					errorMessage =
+						'Email atau kata sandi salah. Pastikan Anda sudah berhasil mendaftar di halaman /daftar.';
+				} else if (signInError.message === 'Email not confirmed') {
+					errorMessage =
+						'Email belum dikonfirmasi. Silakan matikan "Confirm email" di Supabase Dashboard (Authentication > Providers > Email).';
+				} else if (signInError.message === 'fetch failed') {
+					errorMessage = 'Koneksi ke server otentikasi gagal. Silakan coba sesaat lagi.';
+				}
+
+				return fail(400, {
+					error: errorMessage,
+					email: parsed.data.email
+				});
+			}
+		} catch (err) {
+			// If redirect is thrown, rethrow it
+			if (err && typeof err === 'object' && 'status' in err && 'location' in err) {
+				throw err;
+			}
+
+			const rawMsg = err instanceof Error ? err.message : String(err);
+			return fail(500, {
+				error: `Gagal masuk: ${rawMsg}`,
 				email: parsed.data.email
 			});
 		}
