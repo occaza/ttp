@@ -34,21 +34,21 @@
 >
 	<!-- Modern Minimal Header -->
 	<header
-		class="sticky top-0 z-40 w-full border-b border-border/50 bg-background/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md"
+		class="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md"
 	>
-		<div class="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
+		<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
 			<!-- Brand & Links -->
-			<div class="flex items-center gap-7">
+			<div class="flex items-center gap-8">
 				<a
 					href={resolve('/')}
-					class="flex items-center gap-2 font-bold tracking-tight text-foreground"
+					class="flex items-center gap-2.5 font-bold tracking-tight text-foreground"
 				>
 					<div
-						class="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-black text-primary-foreground"
+						class="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-black text-primary-foreground"
 					>
 						T
 					</div>
-					<span class="text-base font-extrabold tracking-tight">Titipin</span>
+					<span class="text-lg font-black tracking-tight">Titipin</span>
 				</a>
 
 				<!-- Desktop Main Navigation -->
@@ -127,7 +127,7 @@
 	<footer
 		class="hidden border-t border-border/50 bg-card/40 py-10 text-xs text-muted-foreground md:block"
 	>
-		<div class="mx-auto max-w-5xl px-4 sm:px-6">
+		<div class="mx-auto max-w-6xl px-4 sm:px-6">
 			<div class="grid grid-cols-12 gap-8 pb-8">
 				<div class="col-span-5 space-y-3">
 					<div class="flex items-center gap-2">
