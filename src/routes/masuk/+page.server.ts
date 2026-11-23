@@ -7,7 +7,9 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		const redirectUrl = url.searchParams.get('redirect') || '/profil';
 		throw redirect(303, redirectUrl);
 	}
-	return {};
+	const registered = url.searchParams.get('registered') === 'true';
+	const email = url.searchParams.get('email') || '';
+	return { registered, email };
 };
 
 export const actions: Actions = {

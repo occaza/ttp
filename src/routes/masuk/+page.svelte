@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -18,7 +18,7 @@
 		ShoppingBag
 	} from 'lucide-svelte';
 
-	let { form }: { form: ActionData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let loading = $state(false);
 	let showPassword = $state(false);
 </script>
@@ -132,6 +132,22 @@
 					Gunakan akun terdaftar Anda untuk memesan atau memantau status titipan.
 				</p>
 			</div>
+
+			{#if data.registered}
+				<div
+					class="mt-5 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/10 p-3.5 text-xs text-primary"
+					role="status"
+				>
+					<CheckCircle2 class="mt-0.5 size-4 shrink-0" />
+					<div>
+						<p class="font-semibold">Pendaftaran Berhasil</p>
+						<p class="mt-0.5">
+							Akun Anda telah dibuat. Silakan periksa inbox email Anda untuk konfirmasi (jika
+							verifikasi email aktif), lalu masuk menggunakan kata sandi Anda.
+						</p>
+					</div>
+				</div>
+			{/if}
 
 			{#if form?.error}
 				<div

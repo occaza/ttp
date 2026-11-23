@@ -61,7 +61,7 @@
 
 	<!-- Category Header Banner -->
 	<div
-		class="rounded-2xl border border-border/80 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 sm:p-8"
+		class="rounded-2xl border border-border/80 bg-linear-to-r from-primary/10 via-primary/5 to-transparent p-6 sm:p-8"
 	>
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div class="flex items-center gap-4">
