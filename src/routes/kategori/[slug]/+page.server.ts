@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { ServiceCategory } from '#lib/types/database.types.js';
+import { getCategoryActiveServices } from '#lib/server/provider.js';
 
 const fallbackCategoryMap: Record<string, ServiceCategory> = {
 	'food-beverage': {
@@ -88,7 +89,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 	}
 
+	const providerServices = await getCategoryActiveServices(locals.supabase, foundCategory.id);
+
 	return {
-		category: foundCategory
+		category: foundCategory,
+		providerServices
 	};
 };

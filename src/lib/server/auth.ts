@@ -116,9 +116,58 @@ export const categorySchema = z.object({
 	sort_order: z.number().int().default(0)
 });
 
+export const providerServiceSchema = z.object({
+	id: z.string().uuid().optional(),
+	category_id: z.string().uuid({ message: 'Pilih kategori layanan yang valid' }),
+	title: z
+		.string()
+		.trim()
+		.min(3, { message: 'Judul layanan minimal 3 karakter (contoh: Jastip Soto Gawok)' })
+		.max(100, { message: 'Judul layanan maksimal 100 karakter' }),
+	description: z
+		.string()
+		.trim()
+		.max(300, { message: 'Deskripsi maksimal 300 karakter' })
+		.optional()
+		.or(z.literal('')),
+	base_fee: z.coerce
+		.number()
+		.min(1000, { message: 'Tarif dasar jastip minimal Rp 1.000' })
+		.max(1000000, { message: 'Tarif dasar maksimal Rp 1.000.000' }),
+	coverage_area: z
+		.string()
+		.trim()
+		.min(3, { message: 'Cakupan area minimal 3 karakter (contoh: Gatak, Gawok)' })
+		.max(200, { message: 'Cakupan area maksimal 200 karakter' })
+		.default('Gatak dan sekitarnya'),
+	is_active: z.boolean().default(true)
+});
+
+export const providerProfileUpdateSchema = z.object({
+	business_name: z
+		.string()
+		.trim()
+		.min(2, { message: 'Nama layanan/usaha minimal 2 karakter' })
+		.max(100, { message: 'Nama layanan maksimal 100 karakter' }),
+	bio: z
+		.string()
+		.trim()
+		.max(250, { message: 'Bio maksimal 250 karakter' })
+		.optional()
+		.or(z.literal('')),
+	coverage_area: z
+		.string()
+		.trim()
+		.max(200, { message: 'Cakupan area maksimal 200 karakter' })
+		.default('Gatak dan sekitarnya'),
+	is_active: z.boolean().default(true)
+});
+
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type AddressInput = z.infer<typeof addressSchema>;
 export type CategoryInput = z.infer<typeof categorySchema>;
+export type ProviderServiceInput = z.infer<typeof providerServiceSchema>;
+export type ProviderProfileUpdateInput = z.infer<typeof providerProfileUpdateSchema>;
 
 export function requireAuth(
 	locals: App.Locals,

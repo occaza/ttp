@@ -41,6 +41,7 @@ export interface Database {
 					user_id: string;
 					business_name: string | null;
 					bio: string | null;
+					coverage_area: string | null;
 					is_verified: boolean;
 					is_active: boolean;
 					rating_avg: number;
@@ -53,6 +54,7 @@ export interface Database {
 					user_id: string;
 					business_name?: string | null;
 					bio?: string | null;
+					coverage_area?: string | null;
 					is_verified?: boolean;
 					is_active?: boolean;
 					rating_avg?: number;
@@ -65,10 +67,50 @@ export interface Database {
 					user_id?: string;
 					business_name?: string | null;
 					bio?: string | null;
+					coverage_area?: string | null;
 					is_verified?: boolean;
 					is_active?: boolean;
 					rating_avg?: number;
 					rating_count?: number;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			provider_services: {
+				Row: {
+					id: string;
+					provider_id: string;
+					category_id: string;
+					title: string;
+					description: string | null;
+					base_fee: number;
+					coverage_area: string;
+					is_active: boolean;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					provider_id: string;
+					category_id: string;
+					title: string;
+					description?: string | null;
+					base_fee?: number;
+					coverage_area?: string;
+					is_active?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					provider_id?: string;
+					category_id?: string;
+					title?: string;
+					description?: string | null;
+					base_fee?: number;
+					coverage_area?: string;
+					is_active?: boolean;
 					created_at?: string;
 					updated_at?: string;
 				};
@@ -228,3 +270,4 @@ export type ProviderProfile = Database['public']['Tables']['provider_profiles'][
 export type UserRoleRecord = Database['public']['Tables']['user_roles']['Row'];
 export type ServiceCategory = Database['public']['Tables']['service_categories']['Row'];
 export type Address = Database['public']['Tables']['addresses']['Row'];
+export type ProviderService = Database['public']['Tables']['provider_services']['Row'];
