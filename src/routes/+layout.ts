@@ -14,6 +14,7 @@ export const load: LayoutLoad = ({ data, depends }) => {
 		session: data.session,
 		user: data.user,
 		profile: data.profile,
-		role: data.role
+		role: data.role,
+		unreadNotificationCount: data.unreadNotificationCount
 	};
 };

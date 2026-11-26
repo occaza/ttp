@@ -449,6 +449,108 @@ export interface Database {
 				};
 				Relationships: [];
 			};
+			order_messages: {
+				Row: {
+					id: string;
+					order_id: string;
+					sender_id: string | null;
+					sender_role: 'customer' | 'provider' | 'admin' | 'system';
+					message: string;
+					is_system: boolean;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_id: string;
+					sender_id?: string | null;
+					sender_role: 'customer' | 'provider' | 'admin' | 'system';
+					message: string;
+					is_system?: boolean;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_id?: string;
+					sender_id?: string | null;
+					sender_role?: 'customer' | 'provider' | 'admin' | 'system';
+					message?: string;
+					is_system?: boolean;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
+			order_attachments: {
+				Row: {
+					id: string;
+					order_id: string;
+					uploader_id: string;
+					attachment_type: 'receipt' | 'delivery_proof' | 'chat_image';
+					file_path: string;
+					file_name: string;
+					mime_type: string;
+					file_size: number;
+					note: string | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_id: string;
+					uploader_id: string;
+					attachment_type: 'receipt' | 'delivery_proof' | 'chat_image';
+					file_path: string;
+					file_name: string;
+					mime_type: string;
+					file_size: number;
+					note?: string | null;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_id?: string;
+					uploader_id?: string;
+					attachment_type?: 'receipt' | 'delivery_proof' | 'chat_image';
+					file_path?: string;
+					file_name?: string;
+					mime_type?: string;
+					file_size?: number;
+					note?: string | null;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
+			notifications: {
+				Row: {
+					id: string;
+					user_id: string;
+					order_id: string | null;
+					title: string;
+					body: string;
+					type: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'system';
+					is_read: boolean;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					user_id: string;
+					order_id?: string | null;
+					title: string;
+					body: string;
+					type?: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'system';
+					is_read?: boolean;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					user_id?: string;
+					order_id?: string | null;
+					title?: string;
+					body?: string;
+					type?: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'system';
+					is_read?: boolean;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -479,3 +581,6 @@ export type PricingRule = Database['public']['Tables']['pricing_rules']['Row'];
 export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
 export type OrderStatusHistory = Database['public']['Tables']['order_status_history']['Row'];
+export type OrderMessage = Database['public']['Tables']['order_messages']['Row'];
+export type OrderAttachment = Database['public']['Tables']['order_attachments']['Row'];
+export type Notification = Database['public']['Tables']['notifications']['Row'];

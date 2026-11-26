@@ -19,6 +19,7 @@ import type {
 	UserRole
 } from '#lib/types/database.types.js';
 import type { PricingSnapshot } from './pricing.ts';
+import { sendOrderMessage, createNotification } from './communication.ts';
 
 // State machine definition: allowed forward and terminal transitions
 export const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -238,6 +239,22 @@ export async function createOrder(
 					history: [initialHistory]
 				};
 				fallbackOrdersCache.set(orderId, enriched);
+
+				await sendOrderMessage(supabase, {
+					orderId,
+					senderId: null,
+					senderRole: 'system',
+					message: `Pesanan ${orderNumber} dibuat untuk ${input.origin_name}.`,
+					isSystem: true
+				});
+				await createNotification(supabase, {
+					userId: input.provider_id,
+					orderId,
+					title: `Pesanan Baru: ${orderNumber}`,
+					body: `${input.recipient_name} menitipkan belanja di ${input.origin_name}.`,
+					type: 'order_update'
+				});
+
 				return enriched;
 			}
 		} catch (err) {
@@ -252,6 +269,23 @@ export async function createOrder(
 		history: [initialHistory]
 	};
 	fallbackOrdersCache.set(orderId, enriched);
+
+	// Emit system timeline message & notification
+	await sendOrderMessage(supabase, {
+		orderId,
+		senderId: null,
+		senderRole: 'system',
+		message: `Pesanan ${orderNumber} dibuat untuk ${input.origin_name}.`,
+		isSystem: true
+	});
+	await createNotification(supabase, {
+		userId: input.provider_id,
+		orderId,
+		title: `Pesanan Baru: ${orderNumber}`,
+		body: `${input.recipient_name} menitipkan belanja di ${input.origin_name}.`,
+		type: 'order_update'
+	});
+
 	return enriched;
 }
 
@@ -333,6 +367,26 @@ export async function transitionOrderStatus(
 		history: [...order.history, historyEntry]
 	};
 	fallbackOrdersCache.set(order.id, updatedOrder);
+
+	// Emit system timeline message & notification to counterpart
+	const statusLabel = ORDER_STATUS_LABELS[toStatus]?.label || toStatus;
+	await sendOrderMessage(supabase, {
+		orderId: order.id,
+		senderId: null,
+		senderRole: 'system',
+		message: `Status pesanan berubah menjadi: ${statusLabel}.`,
+		isSystem: true
+	});
+
+	const notifyUserId = actorId === order.customer_id ? order.provider_id : order.customer_id;
+	await createNotification(supabase, {
+		userId: notifyUserId,
+		orderId: order.id,
+		title: `Update Pesanan ${order.order_number}`,
+		body: `Status pesanan Anda sekarang: ${statusLabel}.`,
+		type: 'order_update'
+	});
+
 	return updatedOrder;
 }
 

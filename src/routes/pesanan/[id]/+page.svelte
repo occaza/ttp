@@ -16,7 +16,10 @@
 		MessageSquare,
 		ArrowLeft,
 		XCircle,
-		Ban
+		Ban,
+		Send,
+		Upload,
+		FileText
 	} from 'lucide-svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -65,6 +68,12 @@
 	let isCancelling = $state(false);
 	let showCancelModal = $state(false);
 	let cancelReason = $state('Salah tulis menu / berubah pikiran');
+
+	let chatInput = $state('');
+	let sendingChat = $state(false);
+	let uploadingEvidence = $state(false);
+	let attachmentType = $state<'receipt' | 'delivery_proof' | 'chat_image'>('receipt');
+	let evidenceNote = $state('');
 </script>
 
 <svelte:head>
@@ -273,6 +282,245 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- Bukti Struk Kasir & Pengantaran (Evidence Attachments) -->
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+				<div class="flex items-center justify-between border-b border-border/60 pb-3">
+					<div class="flex items-center gap-2">
+						<div
+							class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						>
+							<Receipt class="size-4" />
+						</div>
+						<div>
+							<h2 class="text-sm font-bold text-foreground">Bukti Struk Kasir & Pengantaran</h2>
+							<p class="text-[11px] text-muted-foreground">
+								Lampiran privat hanya dapat diakses oleh pemesan dan pengelola
+							</p>
+						</div>
+					</div>
+				</div>
+
+				{#if form?.evidenceError}
+					<div
+						class="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+					>
+						<AlertCircle class="size-4 shrink-0" />
+						<span>{form.evidenceError}</span>
+					</div>
+				{/if}
+
+				{#if form?.evidenceSuccess}
+					<div
+						class="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+					>
+						<CheckCircle2 class="size-4 shrink-0" />
+						<span>{form.evidenceSuccess}</span>
+					</div>
+				{/if}
+
+				{#if data.attachments.length === 0}
+					<div
+						class="rounded-xl border border-dashed border-border/70 p-6 text-center text-xs text-muted-foreground"
+					>
+						Belum ada foto struk kasir atau bukti pengantaran yang diunggah.
+					</div>
+				{:else}
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+						{#each data.attachments as att (att.id)}
+							<div class="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3 text-xs">
+								<div class="flex items-center justify-between">
+									<span
+										class="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary"
+									>
+										{att.attachment_type === 'receipt'
+											? 'Struk Kasir Asli'
+											: att.attachment_type === 'delivery_proof'
+												? 'Bukti Pengantaran'
+												: 'Lampiran'}
+									</span>
+									<span class="text-[10px] text-muted-foreground">
+										{Math.round(att.file_size / 1024)} KB
+									</span>
+								</div>
+
+								{#if att.signedUrl && att.mime_type.startsWith('image/')}
+									<img
+										src={att.signedUrl}
+										alt={att.file_name}
+										class="h-40 w-full rounded-lg border border-border/60 object-cover"
+									/>
+								{:else}
+									<div
+										class="flex items-center gap-2 rounded-lg border border-border/60 bg-card p-3"
+									>
+										<FileText class="size-5 shrink-0 text-primary" />
+										<span class="truncate font-semibold text-foreground">{att.file_name}</span>
+									</div>
+								{/if}
+
+								{#if att.note}
+									<p class="text-[11px] text-muted-foreground">{att.note}</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Upload Form -->
+				<form
+					method="POST"
+					action="?/uploadEvidence"
+					enctype="multipart/form-data"
+					use:enhance={() => {
+						uploadingEvidence = true;
+						return async ({ update }) => {
+							uploadingEvidence = false;
+							evidenceNote = '';
+							await update();
+						};
+					}}
+					class="space-y-3 border-t border-border/60 pt-4"
+				>
+					<p class="text-xs font-bold text-foreground">
+						Unggah Bukti / Foto (JPG, PNG, WebP, PDF maks. 5 MB)
+					</p>
+					<div class="grid grid-cols-1 gap-2.5 sm:grid-cols-12">
+						<div class="sm:col-span-4">
+							<select
+								name="attachment_type"
+								bind:value={attachmentType}
+								class="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs font-medium text-foreground"
+							>
+								<option value="receipt">Struk Kasir Toko</option>
+								<option value="delivery_proof">Bukti Pengantaran</option>
+								<option value="chat_image">Gambar Tambahan</option>
+							</select>
+						</div>
+						<div class="sm:col-span-8">
+							<input
+								type="file"
+								name="file"
+								accept="image/jpeg,image/png,image/webp,application/pdf"
+								required
+								class="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-foreground hover:file:bg-muted/80"
+							/>
+						</div>
+					</div>
+
+					<div class="flex flex-col gap-2 sm:flex-row">
+						<Input
+							name="note"
+							type="text"
+							bind:value={evidenceNote}
+							placeholder="Catatan singkat (misal: Total nota kasir Rp 32.000)"
+							class="h-9 flex-1 text-xs"
+						/>
+						<Button
+							type="submit"
+							size="sm"
+							disabled={uploadingEvidence}
+							class="h-9 gap-1.5 text-xs font-bold"
+						>
+							<Upload class="size-3.5" />
+							<span>{uploadingEvidence ? 'Mengunggah...' : 'Unggah Bukti'}</span>
+						</Button>
+					</div>
+				</form>
+			</div>
+
+			<!-- Order-Scoped Chat & System Timeline -->
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+				<div class="flex items-center gap-2 border-b border-border/60 pb-3">
+					<div
+						class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"
+					>
+						<MessageSquare class="size-4" />
+					</div>
+					<div>
+						<h2 class="text-sm font-bold text-foreground">Chat & Timeline Pesanan</h2>
+						<p class="text-[11px] text-muted-foreground">
+							Komunikasi langsung terkait ketersediaan barang atau patokan pengantaran
+						</p>
+					</div>
+				</div>
+
+				{#if form?.chatError}
+					<div
+						class="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+					>
+						<AlertCircle class="size-4 shrink-0" />
+						<span>{form.chatError}</span>
+					</div>
+				{/if}
+
+				<div
+					class="max-h-80 space-y-3 overflow-y-auto rounded-xl border border-border/60 bg-muted/20 p-4"
+				>
+					{#if data.messages.length === 0}
+						<p class="py-6 text-center text-xs text-muted-foreground">
+							Belum ada percakapan. Kirim pesan jika ada catatan tambahan untuk pesanan ini.
+						</p>
+					{:else}
+						{#each data.messages as msg (msg.id)}
+							{#if msg.is_system}
+								<div class="flex justify-center">
+									<span
+										class="rounded-full border border-border/60 bg-card px-3 py-1 text-[10px] font-medium text-muted-foreground"
+									>
+										{msg.message}
+									</span>
+								</div>
+							{:else}
+								{@const isMine = msg.sender_id === data.user.id}
+								<div class="flex flex-col {isMine ? 'items-end' : 'items-start'}">
+									<div
+										class="max-w-[80%] rounded-2xl px-3.5 py-2 text-xs {isMine
+											? 'bg-primary text-primary-foreground'
+											: 'border border-border/70 bg-card text-foreground'}"
+									>
+										<p class="leading-relaxed">{msg.message}</p>
+									</div>
+									<span class="mt-1 text-[10px] text-muted-foreground">
+										{msg.sender_role === 'customer' ? 'Pemesan' : 'Titipin'} &bull;
+										{new Date(msg.created_at).toLocaleTimeString('id-ID', {
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
+									</span>
+								</div>
+							{/if}
+						{/each}
+					{/if}
+				</div>
+
+				<form
+					method="POST"
+					action="?/sendMessage"
+					use:enhance={() => {
+						sendingChat = true;
+						return async ({ update }) => {
+							sendingChat = false;
+							chatInput = '';
+							await update();
+						};
+					}}
+					class="flex gap-2"
+				>
+					<Input
+						name="message"
+						type="text"
+						bind:value={chatInput}
+						placeholder="Tulis pesan untuk pesanan ini..."
+						required
+						class="h-10 flex-1 text-xs"
+					/>
+					<Button type="submit" disabled={sendingChat} class="h-10 gap-1.5 px-4 text-xs font-bold">
+						<Send class="size-3.5" />
+						<span>{sendingChat ? 'Mengirim...' : 'Kirim'}</span>
+					</Button>
+				</form>
+			</div>
 		</div>
 
 		<!-- Right Column: Pricing Breakdown & CTAs (4 cols) -->

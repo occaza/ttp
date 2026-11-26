@@ -3,7 +3,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import type { LayoutProps } from './$types';
 	import { resolve } from '$app/paths';
-	import { Home, Compass, ShoppingBag, User as UserIcon, ShieldCheck } from 'lucide-svelte';
+	import { Home, Compass, ShoppingBag, User as UserIcon, ShieldCheck, Bell } from 'lucide-svelte';
 
 	let { children, data }: LayoutProps = $props();
 
@@ -68,6 +68,21 @@
 			<!-- User Profile Drop / Auth CTA -->
 			<div class="flex items-center gap-3">
 				{#if data?.user}
+					<a
+						href={resolve('/notifikasi')}
+						aria-label="Notifikasi"
+						class="relative inline-flex size-8 items-center justify-center rounded-full border border-border/70 bg-card text-foreground transition-all hover:border-primary/40 hover:bg-muted/40"
+					>
+						<Bell class="size-3.5 text-primary" />
+						{#if data.unreadNotificationCount > 0}
+							<span
+								class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white"
+							>
+								{data.unreadNotificationCount > 9 ? '9+' : data.unreadNotificationCount}
+							</span>
+						{/if}
+					</a>
+
 					<a
 						href={resolve('/pesanan')}
 						class="hidden items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-muted/40 sm:inline-flex"
