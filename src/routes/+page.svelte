@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import {
 		Search,
@@ -238,7 +239,17 @@
 					</p>
 
 					<!-- Location Selector & Search Bar -->
-					<div class="rounded-2xl border border-border/80 bg-card p-2.5 shadow-md sm:p-3">
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							const params = new URLSearchParams();
+							if (searchQuery.trim()) params.set('q', searchQuery.trim());
+							if (selectedLocation && selectedLocation !== 'Semua Area') params.set('area', selectedLocation);
+							const qs = params.toString();
+							goto(qs ? `/layanan?${qs}` : '/layanan');
+						}}
+						class="rounded-2xl border border-border/80 bg-card p-2.5 shadow-md sm:p-3"
+					>
 						<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
 							<div class="flex items-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs font-medium sm:w-48">
 								<MapPin class="size-4 shrink-0 text-primary" />
@@ -262,14 +273,14 @@
 								/>
 							</div>
 
-							<a
-								href="#eksplor"
+							<button
+								type="submit"
 								class="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-xs transition-transform hover:bg-primary/95 active:scale-98"
 							>
-								<span>Cari Kategori</span>
-							</a>
+								<span>Cari Layanan</span>
+							</button>
 						</div>
-					</div>
+					</form>
 
 					<!-- Key Metrics -->
 					<div class="grid grid-cols-3 gap-4 border-t border-border/70 pt-6">
@@ -360,7 +371,7 @@
 				</p>
 			</div>
 			<a
-				href={resolve('/daftar')}
+				href={resolve('/layanan')}
 				class="inline-flex items-center gap-1.5 text-xs font-bold text-primary transition-colors hover:underline"
 			>
 				<span>Lihat Semua Layanan</span>

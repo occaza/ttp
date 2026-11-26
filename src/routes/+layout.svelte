@@ -57,6 +57,12 @@
 					aria-label="Navigasi Utama"
 				>
 					<a
+						href={resolve('/layanan')}
+						class="transition-colors hover:text-foreground"
+					>
+						Cari Layanan
+					</a>
+					<a
 						href="{resolve('/')}#eksplor"
 						class="transition-colors hover:text-foreground"
 					>
