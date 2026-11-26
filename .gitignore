@@ -25,5 +25,6 @@ vite.config.ts.timestamp-*
 docs/
 .impeccable/
 .gemini/
-supabase/
+supabase/*
+!supabase/migrations/
 

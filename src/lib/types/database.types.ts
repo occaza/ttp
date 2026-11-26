@@ -245,6 +245,51 @@ export interface Database {
 				};
 				Relationships: [];
 			};
+			pricing_rules: {
+				Row: {
+					id: string;
+					name: string;
+					model: 'fixed' | 'distance_based' | 'shopping_delivery';
+					base_fee: number;
+					base_distance_km: number;
+					per_km_fee: number;
+					platform_fee: number;
+					min_order_fee: number;
+					is_active: boolean;
+					metadata: Json;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id: string;
+					name: string;
+					model: 'fixed' | 'distance_based' | 'shopping_delivery';
+					base_fee?: number;
+					base_distance_km?: number;
+					per_km_fee?: number;
+					platform_fee?: number;
+					min_order_fee?: number;
+					is_active?: boolean;
+					metadata?: Json;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					name?: string;
+					model?: 'fixed' | 'distance_based' | 'shopping_delivery';
+					base_fee?: number;
+					base_distance_km?: number;
+					per_km_fee?: number;
+					platform_fee?: number;
+					min_order_fee?: number;
+					is_active?: boolean;
+					metadata?: Json;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -271,3 +316,4 @@ export type UserRoleRecord = Database['public']['Tables']['user_roles']['Row'];
 export type ServiceCategory = Database['public']['Tables']['service_categories']['Row'];
 export type Address = Database['public']['Tables']['addresses']['Row'];
 export type ProviderService = Database['public']['Tables']['provider_services']['Row'];
+export type PricingRule = Database['public']['Tables']['pricing_rules']['Row'];
