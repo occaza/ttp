@@ -9,14 +9,29 @@ export interface EnrichedProviderService extends ProviderService {
 	provider?: (ProviderProfile & { phone?: string | null }) | null;
 }
 
+const defaultOwnerProvider = {
+	id: 'owner-titipin',
+	user_id: 'owner-titipin-uid',
+	business_name: 'Titipin Langsung (Owner)',
+	bio: 'Dijalankan dan dibelikan langsung oleh pengelola Titipin di Gatak. Belanja jujur, cepat, dan 100% nota kasir asli toko.',
+	coverage_area: 'Kecamatan Gatak & Sekitarnya',
+	is_active: true,
+	is_verified: true,
+	rating_avg: 5.0,
+	rating_count: 0,
+	created_at: new Date().toISOString(),
+	updated_at: new Date().toISOString(),
+	phone: '08161666202'
+};
+
 // Initial realistic default services for local Gatak discovery testing
 export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 	{
 		id: 'seed-1',
-		provider_id: 'provider-gatak-1',
+		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-1',
 		title: 'Jastip Soto Bebek & Kuliner Gawok',
-		description: 'Bisa titip Soto Bebek Gawok, Tengkleng, atau kuliner malam area Gawok & Pasar. Siap bungkus dan antar hangat.',
+		description: 'Bisa titip Soto Bebek Gawok, Bebek Goreng, atau kuliner malam area Gawok & sekitarnya. Dibelikan dan diantar hangat.',
 		base_fee: 8000,
 		coverage_area: 'Gatak, Gawok & Blimbing, Mayang',
 		is_active: true,
@@ -33,27 +48,14 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 			created_at: new Date().toISOString(),
 			updated_at: new Date().toISOString()
 		},
-		provider: {
-			id: 'provider-gatak-1',
-			user_id: 'user-gatak-1',
-			business_name: 'Jastip Kilat Mas Agus',
-			bio: 'Warga asli Gawok, paham seluk-beluk warung makan enak dan langganan warga.',
-			coverage_area: 'Gatak, Gawok, Trangsan, Mayang',
-			is_active: true,
-			is_verified: true,
-			rating_avg: 4.9,
-			rating_count: 28,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
-			phone: '081234567890'
-		}
+		provider: defaultOwnerProvider
 	},
 	{
 		id: 'seed-2',
-		provider_id: 'provider-gatak-2',
+		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-2',
 		title: 'Belanja Sayur Subuh Pasar Gawok',
-		description: 'Jastip belanja sayur mayur segar, bumbu pawon, ayam potong, dan kebutuhan dapur langsung dari pasar subuh.',
+		description: 'Jastip belanja sayur mayur segar, bumbu pawon, ayam potong, dan kebutuhan dapur langsung dari pasar subuh Gawok.',
 		base_fee: 10000,
 		coverage_area: 'Gatak, Gawok & Blimbing, Trangsan & Luwang',
 		is_active: true,
@@ -70,24 +72,11 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 			created_at: new Date().toISOString(),
 			updated_at: new Date().toISOString()
 		},
-		provider: {
-			id: 'provider-gatak-2',
-			user_id: 'user-gatak-2',
-			business_name: 'Mbak Sri Pasar Segar',
-			bio: 'Belanja teliti dan pilih sayur daging kualitas terbaik langsung dari pedagang langganan.',
-			coverage_area: 'Gatak, Gawok, Luwang, Trangsan',
-			is_active: true,
-			is_verified: true,
-			rating_avg: 5.0,
-			rating_count: 34,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
-			phone: '081398765432'
-		}
+		provider: defaultOwnerProvider
 	},
 	{
 		id: 'seed-3',
-		provider_id: 'provider-gatak-3',
+		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-3',
 		title: 'Titip Beli Obat Apotek & Resep',
 		description: 'Layanan cepat jastip obat bebas, vitamin, atau tebus obat apotek darurat area Gatak dan Kartasura.',
@@ -107,27 +96,14 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 			created_at: new Date().toISOString(),
 			updated_at: new Date().toISOString()
 		},
-		provider: {
-			id: 'provider-gatak-3',
-			user_id: 'user-gatak-3',
-			business_name: 'Kurir Medis Gatak',
-			bio: 'Prioritas cepat tanggap untuk kebutuhan vitamin dan obat darurat 24 jam.',
-			coverage_area: 'Gatak, Kartasura, Baki',
-			is_active: true,
-			is_verified: true,
-			rating_avg: 4.8,
-			rating_count: 19,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
-			phone: '085712349999'
-		}
+		provider: defaultOwnerProvider
 	},
 	{
 		id: 'seed-4',
-		provider_id: 'provider-gatak-4',
+		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-4',
 		title: 'Antar Jemput Berkas & Barang Kampus UMS',
-		description: 'Pengantaran dokumen kantor, tugas kuliah, kunci tertinggal, atau paket rute Gatak - Pabelan / Kampus UMS.',
+		description: 'Pengantaran dokumen, barang tertinggal, atau paket rute Gatak - Pabelan / Kampus UMS.',
 		base_fee: 9000,
 		coverage_area: 'Gatak (Pusat), Kartasura & UMS, Mayang & Sanggung',
 		is_active: true,
@@ -144,20 +120,7 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 			created_at: new Date().toISOString(),
 			updated_at: new Date().toISOString()
 		},
-		provider: {
-			id: 'provider-gatak-4',
-			user_id: 'user-gatak-4',
-			business_name: 'Express Mahasiswa Gatak-UMS',
-			bio: 'Rute harian Gatak - Kartasura - Kampus UMS Pabelan. Cepat dan aman.',
-			coverage_area: 'Gatak, Mayang, Kartasura, UMS',
-			is_active: true,
-			is_verified: true,
-			rating_avg: 4.9,
-			rating_count: 42,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString(),
-			phone: '081901234567'
-		}
+		provider: defaultOwnerProvider
 	}
 ];
 
@@ -181,8 +144,8 @@ export async function getOrCreateProviderProfile(
 		const newProfile: Database['public']['Tables']['provider_profiles']['Insert'] = {
 			id: userId,
 			user_id: userId,
-			business_name: fullName ? `Jastip ${fullName.split(' ')[0]}` : 'Mitra Jastip Gatak',
-			bio: 'Siap melayani jasa titip belanja & pengantaran cepat area Gatak dan sekitarnya.',
+			business_name: fullName ? `Titipin (${fullName.split(' ')[0]})` : 'Titipin Langsung',
+			bio: 'Dijalankan dan dibelikan langsung oleh pengelola Titipin di Gatak.',
 			coverage_area: 'Gatak, Gawok, Trangsan, Mayang, Kartasura',
 			is_active: true,
 			is_verified: true,
@@ -207,8 +170,8 @@ export async function getOrCreateProviderProfile(
 	return {
 		id: userId,
 		user_id: userId,
-		business_name: fullName ? `Jastip ${fullName.split(' ')[0]}` : 'Mitra Jastip Gatak',
-		bio: 'Siap melayani jasa titip belanja & pengantaran lokal.',
+		business_name: fullName ? `Titipin (${fullName.split(' ')[0]})` : 'Titipin Langsung',
+		bio: 'Dijalankan dan dibelikan langsung oleh pengelola Titipin di Gatak.',
 		coverage_area: 'Gatak, Gawok, Trangsan, Mayang',
 		is_active: true,
 		is_verified: true,

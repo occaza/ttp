@@ -113,7 +113,7 @@
 		>
 			<ShieldCheck class="size-4 shrink-0 text-primary" />
 			<div>
-				<span class="block font-bold text-foreground">Mitra Terverifikasi</span>
+				<span class="block font-bold text-foreground">Layanan Terverifikasi</span>
 				<span class="text-[11px] text-muted-foreground">Area jangkauan spesifik lokal</span>
 			</div>
 		</div>
@@ -124,13 +124,13 @@
 		<CardHeader>
 			<div class="flex items-center justify-between">
 				<div>
-					<CardTitle class="text-base font-bold">Daftar Mitra Jastip di Kategori Ini</CardTitle>
+					<CardTitle class="text-base font-bold">Pilihan Layanan Jastip di Kategori Ini</CardTitle>
 					<CardDescription class="text-xs">
-						Mitra lokal aktif yang siap melayani {data.category.name} di area Gatak dan sekitarnya
+						Layanan belanja langsung {data.category.name} di area Gatak dan sekitarnya
 					</CardDescription>
 				</div>
 				<span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
-					{data.providerServices?.length || 0} Mitra Siap
+					{data.providerServices?.length || 0} Layanan Tersedia
 				</span>
 			</div>
 		</CardHeader>
@@ -141,9 +141,9 @@
 					class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-12 text-center"
 				>
 					<Users class="size-10 text-primary/60" />
-					<h3 class="mt-3 text-sm font-bold text-foreground">Belum Ada Mitra yang Menawarkan Layanan</h3>
+					<h3 class="mt-3 text-sm font-bold text-foreground">Belum Ada Layanan di Kategori Ini</h3>
 					<p class="mt-1 max-w-md text-xs text-muted-foreground">
-						Mitra terverifikasi sedang menyiapkan jadwal belanja untuk kategori ini. Anda tetap dapat melakukan request titip langsung.
+						Layanan untuk kategori ini sedang disiapkan. Anda tetap dapat melakukan request titip langsung via WhatsApp.
 					</p>
 					<div class="mt-5 flex gap-2">
 						<Button variant="outline" size="sm" href={resolve('/kategori')} class="text-xs">
@@ -164,7 +164,7 @@
 								<div class="flex items-center justify-between">
 									<div class="flex items-center gap-1.5">
 										<span class="text-xs font-bold text-foreground">
-											{s.provider?.business_name || 'Mitra Titipin'}
+											{s.provider?.business_name || 'Titipin Langsung'}
 										</span>
 										{#if s.provider?.is_verified}
 											<ShieldCheck class="size-3.5 text-primary" />

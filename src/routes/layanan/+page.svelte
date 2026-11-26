@@ -102,10 +102,10 @@
 			<span>Katalog Pencarian Jastip Lokal</span>
 		</div>
 		<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-			Temukan Mitra Jastip di Sekitar Anda
+			Pilihan Layanan Jastip di Area Gatak
 		</h1>
 		<p class="max-w-2xl text-xs text-muted-foreground sm:text-sm">
-			Pilih mitra lokal yang siap belanja di warung, pasar tradisional, minimarket, atau apotek di wilayah Gatak dan sekitarnya.
+			Layanan belanja langsung ke warung, pasar tradisional, minimarket, atau apotek di wilayah Gatak dan sekitarnya dengan struk kasir asli toko.
 		</p>
 	</div>
 
@@ -119,7 +119,7 @@
 				<Input
 					type="text"
 					bind:value={searchQuery}
-					placeholder="Cari soto, pasar subuh, apotek, atau nama mitra..."
+					placeholder="Cari soto, pasar subuh, apotek, minimarket..."
 					class="h-10 border-border/70 pl-9 text-xs sm:text-sm"
 					onkeydown={(e) => {
 						if (e.key === 'Enter') applyFilters();
@@ -268,7 +268,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<span class="block truncate font-semibold text-foreground">
-									{service.provider?.business_name || 'Mitra Titipin'}
+									{service.provider?.business_name || 'Titipin Langsung'}
 								</span>
 								<span class="block truncate text-[10px] text-muted-foreground">
 									{service.coverage_area}

@@ -72,7 +72,7 @@
 			examples: 'Soto Bebek Gawok, Bebek Goreng, Mie Ayam Lokal, Angkringan',
 			icon: Utensils,
 			badge: 'Paling Populer',
-			activeMitra: '15 Mitra Siap'
+			activeMitra: 'Tersedia di Gatak'
 		},
 		{
 			id: 'pasar',
@@ -82,7 +82,7 @@
 			examples: 'Pasar Gawok, sayur bayam, daging ayam, bumbu pawon',
 			icon: Carrot,
 			badge: 'Subuh - Siang',
-			activeMitra: '12 Mitra Siap'
+			activeMitra: 'Tersedia di Gatak'
 		},
 		{
 			id: 'swalayan',
@@ -92,7 +92,7 @@
 			examples: 'Indomaret Gatak, Alfamart Gawok, toko kelontong',
 			icon: Store,
 			badge: 'Cepat 20 Menit',
-			activeMitra: '18 Mitra Siap'
+			activeMitra: 'Tersedia di Gatak'
 		},
 		{
 			id: 'farmasi',
@@ -102,7 +102,7 @@
 			examples: 'Apotek Gatak, Kimia Farma Kartasura, apotek terdekat',
 			icon: Pill,
 			badge: 'Prioritas Cepat',
-			activeMitra: '8 Mitra Siap'
+			activeMitra: 'Tersedia di Gatak'
 		},
 		{
 			id: 'kurir',
@@ -112,7 +112,7 @@
 			examples: 'Laundry selesai, paket lokal, barang tertinggal',
 			icon: Truck,
 			badge: 'Langsung Antar',
-			activeMitra: '20 Mitra Siap'
+			activeMitra: 'Tersedia di Gatak'
 		},
 		{
 			id: 'custom',
@@ -122,7 +122,7 @@
 			examples: 'Sentra rotan Trangsan, pakan burung, perlengkapan lokal',
 			icon: Sparkles,
 			badge: 'Fleksibel',
-			activeMitra: '10 Mitra Siap'
+			activeMitra: 'Tersedia di Gatak'
 		}
 	];
 
@@ -136,7 +136,7 @@
 					examples: defaultCategories[idx]?.examples || 'Belanja kebutuhan toko lokal',
 					icon: categoryIcons[cat.icon || ''] || categoryIcons[cat.slug] || Utensils,
 					badge: defaultCategories[idx]?.badge || 'Tersedia',
-					activeMitra: defaultCategories[idx]?.activeMitra || 'Mitra Siap'
+					activeMitra: 'Tersedia di Gatak'
 				}))
 			: defaultCategories
 	);
@@ -160,8 +160,8 @@
 		},
 		{
 			number: '02',
-			title: 'Mitra Belanja & Foto Struk',
-			desc: 'Mitra membelikan pesanan langsung di lokasi dan wajib mengunggah foto struk kasir asli toko sebagai bukti transaksi.'
+			title: 'Dibelikan Langsung & Foto Struk',
+			desc: 'Pesanan dibelikan langsung di lokasi toko dan bukti foto struk kasir asli toko dikirim ke Anda.'
 		},
 		{
 			number: '03',
@@ -231,7 +231,7 @@
 					</div>
 
 					<h1 class="text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-						Belanja dari toko mana saja, diantar langsung oleh tetangga.
+						Belanja dari toko mana saja, diantar langsung dengan struk asli.
 					</h1>
 
 					<p class="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -330,7 +330,7 @@
 
 							<div class="space-y-1.5 text-xs text-muted-foreground">
 								<div class="flex justify-between">
-									<span>Tarif Jastip Mitra Lokal</span>
+									<span>Tarif Jastip Flat Transparan</span>
 									<span class="font-medium text-foreground">Rp 8.000</span>
 								</div>
 								<div class="flex justify-between">
@@ -367,7 +367,7 @@
 					Kategori Layanan Populer
 				</h2>
 				<p class="mt-1 text-xs text-muted-foreground sm:text-sm">
-					Pilih kategori belanjaan yang ingin Anda titipkan ke mitra terdekat di {selectedLocation}.
+					Pilih kategori belanjaan yang ingin Anda titipkan di area {selectedLocation}.
 				</p>
 			</div>
 			<a

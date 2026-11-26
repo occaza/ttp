@@ -55,7 +55,7 @@
 				: '62' + cleanPhone;
 
 		const message = encodeURIComponent(
-			`Halo ${s.provider?.business_name || 'Mitra Titipin'}, saya melihat penawaran jastip "${s.title}" di Titipin dan ingin bertanya seputar pesanan.`
+			`Halo Titipin, saya melihat layanan "${s.title}" dan ingin memesan jastip.`
 		);
 		return `https://wa.me/${formattedPhone}?text=${message}`;
 	});
@@ -65,7 +65,7 @@
 	<title>{s.title} - Titipin Jastip Lokal</title>
 	<meta
 		name="description"
-		content="{s.title} oleh {s.provider?.business_name || 'Mitra Titipin'} di area {s.coverage_area}. Tarif jastip flat transparan dengan struk toko asli."
+		content="{s.title} di area {s.coverage_area}. Dibelikan dan diantar langsung dengan tarif jastip flat dan struk toko asli."
 	/>
 </svelte:head>
 
@@ -97,7 +97,7 @@
 
 					<span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600">
 						<span class="size-1.5 rounded-full bg-emerald-500"></span>
-						<span>Mitra Siap Antar</span>
+						<span>Layanan Aktif</span>
 					</span>
 				</div>
 
@@ -171,7 +171,7 @@
 							2
 						</span>
 						<span>
-							Mitra mengonfirmasi pesanan, berangkat menuju lokasi toko, dan memfoto struk kasir toko.
+							Pesanan dikonfirmasi, langsung dibelikan ke toko fisik tujuan, dan foto struk kasir toko asli dikirim sebagai bukti.
 						</span>
 					</li>
 					<li class="flex items-start gap-2.5">
@@ -218,7 +218,7 @@
 							class="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 dark:text-emerald-300"
 						>
 							<MessageSquare class="size-3.5" />
-							<span>Tanya Mitra via WhatsApp</span>
+							<span>Hubungi via WhatsApp</span>
 						</a>
 					{/if}
 				</div>
@@ -227,28 +227,28 @@
 			<!-- Provider Profile Box -->
 			<div class="rounded-2xl border border-border/80 bg-card p-5 shadow-xs space-y-4">
 				<div class="flex items-center justify-between border-b border-border/60 pb-3">
-					<span class="text-xs font-bold text-foreground">Profil Mitra Terverifikasi</span>
+					<span class="text-xs font-bold text-foreground">Pengelola Layanan Langsung</span>
 					<div class="flex items-center gap-1 rounded-full bg-amber-400/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
 						<Star class="size-3 fill-current text-amber-500" />
-						<span>{Number(s.provider?.rating_avg || 5.0).toFixed(1)}</span>
+						<span>5.0</span>
 					</div>
 				</div>
 
 				<div class="flex items-center gap-3">
 					<div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-lg font-black text-primary">
-						{s.provider?.business_name?.charAt(0).toUpperCase() || 'M'}
+						{s.provider?.business_name?.charAt(0).toUpperCase() || 'T'}
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center gap-1.5">
 							<span class="truncate font-bold text-foreground text-sm">
-								{s.provider?.business_name || 'Mitra Titipin'}
+								{s.provider?.business_name || 'Titipin Langsung'}
 							</span>
 							{#if s.provider?.is_verified}
 								<ShieldCheck class="size-4 shrink-0 text-primary" />
 							{/if}
 						</div>
 						<span class="block text-xs text-muted-foreground">
-							{s.provider?.rating_count || 0} Titipan Sukses
+							Pengelola Langsung Area Gatak
 						</span>
 					</div>
 				</div>
