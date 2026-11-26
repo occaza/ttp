@@ -91,7 +91,9 @@
 
 <div class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
 	<!-- Page Header -->
-	<div class="flex flex-col gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-center sm:justify-between">
+	<div
+		class="flex flex-col gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-center sm:justify-between"
+	>
 		<div>
 			<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
 				Pengaturan Profil & Alamat
@@ -262,7 +264,9 @@
 						</form>
 					{:else}
 						<div class="space-y-3 pt-1 text-xs">
-							<div class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div
+								class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
+							>
 								<Mail class="size-4 shrink-0 text-muted-foreground" />
 								<div class="min-w-0">
 									<span class="block text-[11px] text-muted-foreground">Email Terdaftar</span>
@@ -272,7 +276,9 @@
 								</div>
 							</div>
 
-							<div class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div
+								class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
+							>
 								<Phone class="size-4 shrink-0 text-muted-foreground" />
 								<div class="min-w-0">
 									<span class="block text-[11px] text-muted-foreground">Nomor WhatsApp</span>
@@ -282,7 +288,9 @@
 								</div>
 							</div>
 
-							<div class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div
+								class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
+							>
 								<User class="size-4 shrink-0 text-muted-foreground" />
 								<div class="min-w-0">
 									<span class="block text-[11px] text-muted-foreground">ID Pengguna</span>
@@ -300,11 +308,15 @@
 		<!-- Right Column: Saved Addresses Section -->
 		<div class="space-y-6 lg:col-span-7">
 			<div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
-				<div class="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+				<div
+					class="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between"
+				>
 					<div>
 						<div class="flex items-center gap-2">
 							<h2 class="text-sm font-bold text-foreground">Buku Alamat Pengantaran</h2>
-							<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+							<span
+								class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground"
+							>
 								{data.addresses.length} Alamat
 							</span>
 						</div>
@@ -314,7 +326,11 @@
 					</div>
 
 					{#if data.addresses.length > 0}
-						<Button size="sm" class="h-8 gap-1.5 rounded-xl text-xs font-semibold" onclick={openAddAddressModal}>
+						<Button
+							size="sm"
+							class="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+							onclick={openAddAddressModal}
+						>
 							<Plus class="size-3.5" />
 							<span>Tambah Alamat</span>
 						</Button>
@@ -327,12 +343,15 @@
 						<div
 							class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-muted/10 py-12 text-center"
 						>
-							<div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+							<div
+								class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"
+							>
 								<MapPin class="size-6" />
 							</div>
 							<h3 class="mt-3 text-sm font-bold text-foreground">Belum ada alamat tersimpan</h3>
 							<p class="mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
-								Tambahkan alamat rumah, kost, atau toko di area Gatak dan sekitarnya agar pesanan titip belanja dapat langsung diantar dengan akurat.
+								Tambahkan alamat rumah, kost, atau toko di area Gatak dan sekitarnya agar pesanan
+								titip belanja dapat langsung diantar dengan akurat.
 							</p>
 							<Button
 								size="sm"
@@ -356,7 +375,9 @@
 										<div class="flex items-center gap-2">
 											<span class="text-xs font-bold text-foreground">{addr.label}</span>
 											{#if addr.is_primary}
-												<span class="inline-flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground">
+												<span
+													class="inline-flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground"
+												>
 													<Star class="size-2.5 fill-current" />
 													<span>Utama</span>
 												</span>
@@ -373,8 +394,11 @@
 										</p>
 
 										{#if addr.notes}
-											<div class="rounded-lg bg-muted/40 px-2.5 py-1.5 text-[11px] text-muted-foreground">
-												<span class="font-semibold text-foreground">Patokan:</span> {addr.notes}
+											<div
+												class="rounded-lg bg-muted/40 px-2.5 py-1.5 text-[11px] text-muted-foreground"
+											>
+												<span class="font-semibold text-foreground">Patokan:</span>
+												{addr.notes}
 											</div>
 										{/if}
 									</div>
@@ -454,7 +478,9 @@
 			</div>
 
 			{#if modalError}
-				<div class="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+				<div
+					class="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+				>
 					<AlertCircle class="mt-0.5 size-4 shrink-0" />
 					<span>{modalError}</span>
 				</div>
@@ -581,12 +607,21 @@
 				</div>
 
 				<div class="flex items-center justify-end gap-2 border-t border-border/60 pt-4">
-					<Button variant="outline" size="sm" type="button" onclick={closeModal} class="text-xs" disabled={savingAddress}>
+					<Button
+						variant="outline"
+						size="sm"
+						type="button"
+						onclick={closeModal}
+						class="text-xs"
+						disabled={savingAddress}
+					>
 						Batal
 					</Button>
 					<Button size="sm" type="submit" class="text-xs font-bold" disabled={savingAddress}>
 						{#if savingAddress}
-							<span class="mr-1.5 size-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+							<span
+								class="mr-1.5 size-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
+							></span>
 							<span>Menyimpan...</span>
 						{:else}
 							<span>{editingAddress ? 'Simpan Perubahan' : 'Tambah Alamat'}</span>

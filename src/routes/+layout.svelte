@@ -3,13 +3,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import type { LayoutProps } from './$types';
 	import { resolve } from '$app/paths';
-	import {
-		Home,
-		Compass,
-		ShoppingBag,
-		User as UserIcon,
-		ShieldCheck
-	} from 'lucide-svelte';
+	import { Home, Compass, ShoppingBag, User as UserIcon, ShieldCheck } from 'lucide-svelte';
 
 	let { children, data }: LayoutProps = $props();
 
@@ -56,28 +50,16 @@
 					class="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex"
 					aria-label="Navigasi Utama"
 				>
-					<a
-						href={resolve('/layanan')}
-						class="transition-colors hover:text-foreground"
-					>
+					<a href={resolve('/layanan')} class="transition-colors hover:text-foreground">
 						Cari Layanan
 					</a>
-					<a
-						href="{resolve('/')}#eksplor"
-						class="transition-colors hover:text-foreground"
-					>
+					<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-foreground">
 						Kategori
 					</a>
-					<a
-						href="{resolve('/')}#carakerja"
-						class="transition-colors hover:text-foreground"
-					>
+					<a href="{resolve('/')}#carakerja" class="transition-colors hover:text-foreground">
 						Cara Kerja
 					</a>
-					<a
-						href="{resolve('/')}#keunggulan"
-						class="transition-colors hover:text-foreground"
-					>
+					<a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-foreground">
 						Keunggulan
 					</a>
 				</nav>
@@ -86,6 +68,14 @@
 			<!-- User Profile Drop / Auth CTA -->
 			<div class="flex items-center gap-3">
 				{#if data?.user}
+					<a
+						href={resolve('/pesanan')}
+						class="hidden items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-muted/40 sm:inline-flex"
+					>
+						<ShoppingBag class="size-3.5 text-primary" />
+						<span>Pesanan</span>
+					</a>
+
 					<a
 						href={resolve('/profil')}
 						class="group flex items-center gap-2 rounded-full border border-border/70 bg-card py-1 pr-3 pl-1 shadow-2xs transition-all hover:border-primary/40 hover:bg-muted/40"
@@ -100,7 +90,7 @@
 						</span>
 						{#if data?.role === 'admin'}
 							<span
-								class="rounded bg-primary/10 px-1.5 py-0.2 text-[9px] font-bold text-primary uppercase"
+								class="py-0.2 rounded bg-primary/10 px-1.5 text-[9px] font-bold text-primary uppercase"
 							>
 								Admin
 							</span>
@@ -145,7 +135,8 @@
 						<span class="text-sm font-bold text-foreground">Titipin Indonesia</span>
 					</div>
 					<p class="max-w-sm text-xs leading-relaxed text-muted-foreground">
-						Layanan jasa titip belanja & pengantaran lokal terpercaya dengan struk kasir toko fisik asli.
+						Layanan jasa titip belanja & pengantaran lokal terpercaya dengan struk kasir toko fisik
+						asli.
 					</p>
 					<div class="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
 						<ShieldCheck class="size-4 text-primary" />
@@ -176,8 +167,9 @@
 
 				<div class="col-span-3 space-y-2">
 					<p class="font-bold text-foreground">Wilayah Operasional</p>
-					<p class="text-xs text-muted-foreground leading-relaxed">
-						Kecamatan Gatak, Gawok, Trangsan, Mayang, Kartasura, Baki, dan sekitarnya (Sukoharjo / Solo Raya).
+					<p class="text-xs leading-relaxed text-muted-foreground">
+						Kecamatan Gatak, Gawok, Trangsan, Mayang, Kartasura, Baki, dan sekitarnya (Sukoharjo /
+						Solo Raya).
 					</p>
 				</div>
 			</div>
@@ -221,11 +213,11 @@
 				<span class="text-[11px]">Kategori</span>
 			</a>
 			<a
-				href="{resolve('/')}#carakerja"
+				href={data?.user ? resolve('/pesanan') : resolve('/masuk')}
 				class="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground transition-all hover:text-primary active:scale-95"
 			>
 				<ShoppingBag class="size-4.5" />
-				<span class="text-[11px]">Cara Kerja</span>
+				<span class="text-[11px]">Pesanan</span>
 			</a>
 			{#if data?.user}
 				<a

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ActionData, PageData } from './$types';
+	import type { ActionData } from './$types';
 	import { resolve } from '$app/paths';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -14,7 +14,7 @@
 		KeyRound
 	} from 'lucide-svelte';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { form }: { form: ActionData } = $props();
 	let loading = $state(false);
 </script>
 
@@ -104,10 +104,11 @@
 				>
 					<CheckCircle2 class="mt-0.5 size-4 shrink-0" />
 					<div>
-						<p class="font-semibold text-sm">Tautan Pemulihan Terkirim</p>
+						<p class="text-sm font-semibold">Tautan Pemulihan Terkirim</p>
 						<p class="mt-1 leading-relaxed">
-							Kami telah mengirim instruksi pengaturan ulang kata sandi ke <strong>{form.email}</strong>.
-							Silakan periksa kotak masuk atau folder spam Anda.
+							Kami telah mengirim instruksi pengaturan ulang kata sandi ke <strong>
+								{form.email}
+							</strong>. Silakan periksa kotak masuk atau folder spam Anda.
 						</p>
 					</div>
 				</div>
@@ -135,7 +136,9 @@
 					}}
 				>
 					<div class="space-y-1.5">
-						<Label for="email" class="text-xs font-semibold text-foreground">Alamat Email Terdaftar</Label>
+						<Label for="email" class="text-xs font-semibold text-foreground">
+							Alamat Email Terdaftar
+						</Label>
 						<div class="relative">
 							<Mail
 								class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"

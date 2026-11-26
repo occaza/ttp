@@ -1,6 +1,6 @@
 /**
  * Titipin - Distance Provider Abstraction
- * 
+ *
  * Safely computes route distance between merchant/origin and delivery address.
  * Conforms to Phase 6 requirements:
  * "If route-distance provider is not configured, create a safe abstraction
@@ -29,24 +29,24 @@ export interface DistanceProvider {
 
 // Known coordinates in Kecamatan Gatak and surrounding Solo Raya areas
 export const KNOWN_AREA_COORDINATES: Record<string, Coordinates> = {
-	'gatak': { latitude: -7.5878, longitude: 110.7412 },
+	gatak: { latitude: -7.5878, longitude: 110.7412 },
 	'gatak (pusat)': { latitude: -7.5878, longitude: 110.7412 },
-	'gawok': { latitude: -7.5954, longitude: 110.7321 },
+	gawok: { latitude: -7.5954, longitude: 110.7321 },
 	'gawok & blimbing': { latitude: -7.5954, longitude: 110.7321 },
-	'blimbing': { latitude: -7.6012, longitude: 110.7345 },
-	'trangsan': { latitude: -7.5789, longitude: 110.7490 },
-	'trangsan & luwang': { latitude: -7.5789, longitude: 110.7490 },
-	'luwang': { latitude: -7.5823, longitude: 110.7512 },
-	'mayang': { latitude: -7.5712, longitude: 110.7389 },
+	blimbing: { latitude: -7.6012, longitude: 110.7345 },
+	trangsan: { latitude: -7.5789, longitude: 110.749 },
+	'trangsan & luwang': { latitude: -7.5789, longitude: 110.749 },
+	luwang: { latitude: -7.5823, longitude: 110.7512 },
+	mayang: { latitude: -7.5712, longitude: 110.7389 },
 	'mayang & sanggung': { latitude: -7.5712, longitude: 110.7389 },
-	'sanggung': { latitude: -7.5654, longitude: 110.7340 },
-	'kartasura': { latitude: -7.5512, longitude: 110.7456 },
+	sanggung: { latitude: -7.5654, longitude: 110.734 },
+	kartasura: { latitude: -7.5512, longitude: 110.7456 },
 	'kartasura & ums': { latitude: -7.5512, longitude: 110.7456 },
-	'ums': { latitude: -7.5578, longitude: 110.7712 },
-	'baki': { latitude: -7.6089, longitude: 110.7789 },
+	ums: { latitude: -7.5578, longitude: 110.7712 },
+	baki: { latitude: -7.6089, longitude: 110.7789 },
 	'baki & gentan': { latitude: -7.6089, longitude: 110.7789 },
-	'gentan': { latitude: -7.5945, longitude: 110.7856 },
-	'sawit': { latitude: -7.6123, longitude: 110.7189 },
+	gentan: { latitude: -7.5945, longitude: 110.7856 },
+	sawit: { latitude: -7.6123, longitude: 110.7189 },
 	'sawit & sekitarnya': { latitude: -7.6123, longitude: 110.7189 }
 };
 
@@ -94,7 +94,7 @@ function resolveCoordinates(input: Coordinates | string): Coordinates | null {
  * this provider clearly marks results with `isMock: true`.
  */
 export class SafeLocalDistanceProvider implements DistanceProvider {
-	async calculateDistance(
+	calculateDistance(
 		origin: Coordinates | string,
 		destination: Coordinates | string
 	): Promise<DistanceCalculationResult> {
@@ -103,28 +103,27 @@ export class SafeLocalDistanceProvider implements DistanceProvider {
 
 		if (!originCoords || !destCoords) {
 			// Safe default for within Gatak neighborhood (2.0 km)
-			return {
+			return Promise.resolve({
 				distanceKm: 2.0,
 				durationMinutes: 10,
 				isMock: true,
 				source: 'local_matrix_mock',
 				providerNotes:
 					'[DEV-ONLY MOCK] Estimasi jarak default area lokal (2.0 km). Provider routing eksternal belum dikonfigurasi.'
-			};
+			});
 		}
 
 		const distanceKm = calculateHaversineDistanceKm(originCoords, destCoords);
 		// Estimate 3 minutes per km for motorbike in local roads + 5 mins buffer
 		const durationMinutes = Math.round(distanceKm * 3) + 5;
 
-		return {
+		return Promise.resolve({
 			distanceKm,
 			durationMinutes,
 			isMock: true,
 			source: 'haversine_mock',
-			providerNotes:
-				`[DEV-ONLY MOCK] Perhitungan jarak estimasi jalan lokal (${distanceKm} km). Tidak menggunakan routing GPS live.`
-		};
+			providerNotes: `[DEV-ONLY MOCK] Perhitungan jarak estimasi jalan lokal (${distanceKm} km). Tidak menggunakan routing GPS live.`
+		});
 	}
 }
 

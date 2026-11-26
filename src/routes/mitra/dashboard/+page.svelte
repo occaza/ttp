@@ -8,9 +8,7 @@
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import {
 		Store,
-		ShieldCheck,
 		CheckCircle2,
-		Clock,
 		Plus,
 		Edit3,
 		Trash2,
@@ -19,9 +17,10 @@
 		Sparkles,
 		X,
 		Star,
-		ArrowRight,
-		Power
+		Power,
+		ShoppingBag
 	} from 'lucide-svelte';
+	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
 	import type { ProviderService } from '#lib/types/database.types.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -86,7 +85,9 @@
 
 <div class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
 	<!-- Top Bar -->
-	<div class="flex flex-col gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-center sm:justify-between">
+	<div
+		class="flex flex-col gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-center sm:justify-between"
+	>
 		<div>
 			<div class="inline-flex items-center gap-2 text-xs font-bold text-primary uppercase">
 				<Store class="size-4" />
@@ -101,7 +102,12 @@
 		</div>
 
 		<div class="flex items-center gap-2">
-			<Button variant="outline" size="sm" href={resolve('/profil')} class="h-9 gap-1.5 text-xs font-semibold">
+			<Button
+				variant="outline"
+				size="sm"
+				href={resolve('/profil')}
+				class="h-9 gap-1.5 text-xs font-semibold"
+			>
 				<span>Profil Pengguna</span>
 			</Button>
 		</div>
@@ -130,7 +136,8 @@
 
 	<!-- Operational Availability Banner -->
 	<div
-		class="flex flex-col items-start justify-between gap-4 rounded-2xl border {data.providerProfile?.is_active
+		class="flex flex-col items-start justify-between gap-4 rounded-2xl border {data.providerProfile
+			?.is_active
 			? 'border-emerald-500/30 bg-emerald-500/5'
 			: 'border-border/80 bg-muted/30'} p-5 sm:flex-row sm:items-center"
 	>
@@ -138,11 +145,13 @@
 			<div class="flex items-center gap-2">
 				<span
 					class="size-2.5 rounded-full {data.providerProfile?.is_active
-						? 'bg-emerald-500 animate-pulse'
+						? 'animate-pulse bg-emerald-500'
 						: 'bg-muted-foreground'}"
 				></span>
 				<span class="text-sm font-bold text-foreground">
-					Status Operasional: {data.providerProfile?.is_active ? 'Buka (Siap Menerima Pesanan)' : 'Tutup Sementara'}
+					Status Operasional: {data.providerProfile?.is_active
+						? 'Buka (Siap Menerima Pesanan)'
+						: 'Tutup Sementara'}
 				</span>
 			</div>
 			<p class="text-xs text-muted-foreground">
@@ -264,9 +273,7 @@
 							>
 								Batal
 							</Button>
-							<Button size="sm" type="submit" class="h-8 text-xs font-bold">
-								Simpan
-							</Button>
+							<Button size="sm" type="submit" class="h-8 text-xs font-bold">Simpan</Button>
 						</div>
 					</form>
 				{:else}
@@ -298,8 +305,163 @@
 
 		<!-- Right: Services Management (8 cols) -->
 		<div class="space-y-6 lg:col-span-8">
+			<!-- Incoming & Active Orders Section -->
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				<div class="flex items-center justify-between border-b border-border/60 pb-3">
+					<div class="flex items-center gap-2">
+						<ShoppingBag class="size-4 text-primary" />
+						<h2 class="text-sm font-bold text-foreground">Pesanan Masuk & Sedang Berjalan</h2>
+					</div>
+					<span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
+						{data.orders.filter((o) => !['completed', 'cancelled', 'rejected'].includes(o.status))
+							.length} Aktif
+					</span>
+				</div>
+
+				{#if data.orders.length === 0}
+					<div
+						class="rounded-xl border border-dashed border-border/70 p-6 text-center text-xs text-muted-foreground"
+					>
+						Belum ada pesanan masuk dari pelanggan.
+					</div>
+				{:else}
+					<div class="space-y-4">
+						{#each data.orders as order (order.id)}
+							{@const statusMeta = ORDER_STATUS_LABELS[order.status] || {
+								label: order.status,
+								badgeClass: 'bg-muted text-muted-foreground'
+							}}
+							<div class="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4">
+								<div
+									class="flex flex-col gap-2 border-b border-border/50 pb-2.5 sm:flex-row sm:items-center sm:justify-between"
+								>
+									<div class="flex items-center gap-2">
+										<span class="font-mono text-xs font-bold text-foreground">
+											{order.order_number}
+										</span>
+										<span
+											class="rounded-full border px-2 py-0.5 text-[10px] font-bold {statusMeta.badgeClass}"
+										>
+											{statusMeta.label}
+										</span>
+									</div>
+									<span class="text-[10px] text-muted-foreground">
+										{new Date(order.created_at).toLocaleTimeString('id-ID', {
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
+									</span>
+								</div>
+
+								<div class="space-y-1 text-xs">
+									<p class="font-bold text-foreground">{order.origin_name}</p>
+									<p class="text-muted-foreground">{order.destination_address_text}</p>
+									<p class="text-[11px] text-muted-foreground">
+										Pemesan: <span class="font-semibold text-foreground">
+											{order.recipient_name} ({order.recipient_phone})
+										</span>
+									</p>
+									<div class="rounded-lg bg-card p-2 text-[11px] text-foreground">
+										<span class="font-semibold">Barang:</span>
+										{order.items.map((i) => `${i.name} (${i.quantity} ${i.unit})`).join(', ')}
+									</div>
+								</div>
+
+								<!-- Action transitions based on state -->
+								<div class="flex flex-wrap items-center gap-2 border-t border-border/50 pt-2.5">
+									{#if order.status === 'pending'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance class="flex gap-2">
+											<input type="hidden" name="order_id" value={order.id} />
+											<input type="hidden" name="to_status" value="accepted" />
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Terima Pesanan
+											</Button>
+										</form>
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={order.id} />
+											<input type="hidden" name="to_status" value="rejected" />
+											<Button
+												size="sm"
+												variant="outline"
+												type="submit"
+												class="h-8 text-xs text-destructive hover:bg-destructive/10"
+											>
+												Tolak
+											</Button>
+										</form>
+									{:else if order.status === 'accepted'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={order.id} />
+											<input type="hidden" name="to_status" value="shopping" />
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Mulai Belanja di Toko
+											</Button>
+										</form>
+									{:else if order.status === 'shopping'}
+										<form
+											method="POST"
+											action="?/updateOrderStatus"
+											use:enhance
+											class="flex flex-wrap items-center gap-2"
+										>
+											<input type="hidden" name="order_id" value={order.id} />
+											<input type="hidden" name="to_status" value="purchased" />
+											<Input
+												name="actual_item_cost"
+												type="number"
+												min="0"
+												step="500"
+												placeholder="Total nota fisik (Rp)"
+												class="h-8 w-36 text-xs"
+												required
+											/>
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Selesai Belanja (Ada Struk)
+											</Button>
+										</form>
+									{:else if order.status === 'purchased'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={order.id} />
+											<input type="hidden" name="to_status" value="delivering" />
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Berangkat Antar ke Alamat
+											</Button>
+										</form>
+									{:else if order.status === 'delivering'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={order.id} />
+											<input type="hidden" name="to_status" value="completed" />
+											<Button
+												size="sm"
+												type="submit"
+												class="h-8 bg-emerald-600 text-xs font-bold hover:bg-emerald-700"
+											>
+												Selesaikan Pesanan
+											</Button>
+										</form>
+									{:else}
+										<span class="text-[11px] text-muted-foreground">
+											Pesanan telah selesai/ditutup.
+										</span>
+									{/if}
+
+									<a
+										href={resolve('/pesanan/[id]', { id: order.id })}
+										class="ml-auto text-[11px] font-semibold text-primary hover:underline"
+									>
+										Lihat Detail &rarr;
+									</a>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+
 			<div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
-				<div class="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+				<div
+					class="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between"
+				>
 					<div>
 						<h2 class="text-sm font-bold text-foreground">Daftar Layanan Jastip Ditawarkan</h2>
 						<p class="text-xs text-muted-foreground">
@@ -307,7 +469,11 @@
 						</p>
 					</div>
 
-					<Button size="sm" class="h-8 gap-1.5 rounded-xl text-xs font-semibold" onclick={openAddServiceModal}>
+					<Button
+						size="sm"
+						class="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+						onclick={openAddServiceModal}
+					>
 						<Plus class="size-3.5" />
 						<span>Tambah Layanan Jastip</span>
 					</Button>
@@ -318,12 +484,15 @@
 						<div
 							class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-muted/10 py-12 text-center"
 						>
-							<div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+							<div
+								class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"
+							>
 								<Sparkles class="size-6" />
 							</div>
 							<h3 class="mt-3 text-sm font-bold text-foreground">Belum ada penawaran layanan</h3>
 							<p class="mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
-								Daftarkan penawaran jastip pertama Anda (misal: "Jastip Soto Gawok", "Belanja Pasar Subuh") agar tampil di pencarian pelanggan.
+								Daftarkan penawaran jastip pertama Anda (misal: "Jastip Soto Gawok", "Belanja Pasar
+								Subuh") agar tampil di pencarian pelanggan.
 							</p>
 							<Button
 								size="sm"
@@ -344,7 +513,9 @@
 								>
 									<div class="space-y-2">
 										<div class="flex items-center justify-between">
-											<span class="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+											<span
+												class="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary"
+											>
 												{categoryMap.get(service.category_id) || 'Kategori Jastip'}
 											</span>
 											<span
@@ -359,7 +530,7 @@
 										<h3 class="text-sm font-bold text-foreground">{service.title}</h3>
 
 										{#if service.description}
-											<p class="text-xs text-muted-foreground line-clamp-2">
+											<p class="line-clamp-2 text-xs text-muted-foreground">
 												{service.description}
 											</p>
 										{/if}
@@ -377,7 +548,9 @@
 										</div>
 									</div>
 
-									<div class="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
+									<div
+										class="mt-4 flex items-center justify-between border-t border-border/60 pt-3"
+									>
 										<form method="POST" action="?/toggleServiceActive" use:enhance>
 											<input type="hidden" name="id" value={service.id} />
 											<button
@@ -455,7 +628,9 @@
 			</div>
 
 			{#if serviceModalError}
-				<div class="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+				<div
+					class="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+				>
 					<AlertCircle class="mt-0.5 size-4 shrink-0" />
 					<span>{serviceModalError}</span>
 				</div>
@@ -493,7 +668,7 @@
 						required
 						class="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-xs focus:ring-1 focus:ring-ring"
 					>
-						{#each data.categories as cat}
+						{#each data.categories as cat (cat.id)}
 							<option value={cat.id}>{cat.name}</option>
 						{/each}
 					</select>
@@ -540,7 +715,9 @@
 				</div>
 
 				<div class="space-y-1">
-					<Label for="description" class="text-xs font-semibold">Deskripsi / Ketentuan Khusus</Label>
+					<Label for="description" class="text-xs font-semibold">
+						Deskripsi / Ketentuan Khusus
+					</Label>
 					<Textarea
 						id="description"
 						name="description"
@@ -566,12 +743,21 @@
 				</div>
 
 				<div class="flex items-center justify-end gap-2 border-t border-border/60 pt-4">
-					<Button variant="outline" size="sm" type="button" onclick={closeServiceModal} class="text-xs" disabled={savingService}>
+					<Button
+						variant="outline"
+						size="sm"
+						type="button"
+						onclick={closeServiceModal}
+						class="text-xs"
+						disabled={savingService}
+					>
 						Batal
 					</Button>
 					<Button size="sm" type="submit" class="text-xs font-bold" disabled={savingService}>
 						{#if savingService}
-							<span class="mr-1.5 size-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+							<span
+								class="mr-1.5 size-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
+							></span>
 							<span>Menyimpan...</span>
 						{:else}
 							<span>{editingService ? 'Simpan Perubahan' : 'Tambah Layanan'}</span>

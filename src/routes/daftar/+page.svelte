@@ -218,7 +218,9 @@
 										<div class="size-2 rounded-full bg-primary"></div>
 									{/if}
 								</div>
-								<p class="mt-1 text-[11px] text-muted-foreground">Bantu belanja & raih penghasilan</p>
+								<p class="mt-1 text-[11px] text-muted-foreground">
+									Bantu belanja & raih penghasilan
+								</p>
 							</button>
 						{:else}
 							<div
@@ -245,7 +247,9 @@
 				<div class="space-y-1.5">
 					<Label for="full_name" class="text-xs font-semibold text-foreground">Nama Lengkap</Label>
 					<div class="relative">
-						<User class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+						<User
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
 						<Input
 							id="full_name"
 							name="full_name"
@@ -285,7 +289,9 @@
 				<div class="space-y-1.5">
 					<Label for="email" class="text-xs font-semibold text-foreground">Alamat Email</Label>
 					<div class="relative">
-						<Mail class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+						<Mail
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
 						<Input
 							id="email"
 							name="email"
@@ -306,7 +312,9 @@
 				<div class="space-y-1.5">
 					<Label for="password" class="text-xs font-semibold text-foreground">Kata Sandi</Label>
 					<div class="relative">
-						<Lock class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+						<Lock
+							class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+						/>
 						<Input
 							id="password"
 							name="password"

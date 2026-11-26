@@ -2,12 +2,12 @@
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import {
 		Search,
 		MapPin,
 		ShieldCheck,
-		Clock,
 		Receipt,
 		Utensils,
 		Store,
@@ -15,16 +15,10 @@
 		Pill,
 		Truck,
 		Sparkles,
-		Star,
 		ChevronRight,
 		ArrowRight,
-		HeartHandshake,
-		BadgeCheck,
-		Users,
-		ShoppingBag,
 		CheckCircle2,
-		XCircle,
-		HelpCircle
+		XCircle
 	} from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -220,12 +214,16 @@
 
 <div class="space-y-16 sm:space-y-24">
 	<!-- Hero Section -->
-	<section class="relative overflow-hidden border-b border-border/60 bg-linear-to-b from-primary/5 via-background to-background pt-10 pb-16 sm:pt-16 sm:pb-24">
+	<section
+		class="relative overflow-hidden border-b border-border/60 bg-linear-to-b from-primary/5 via-background to-background pt-10 pb-16 sm:pt-16 sm:pb-24"
+	>
 		<div class="mx-auto max-w-6xl px-4 sm:px-6">
 			<div class="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
 				<!-- Hero Copy -->
 				<div class="space-y-6 lg:col-span-7">
-					<div class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary">
+					<div
+						class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary"
+					>
 						<Sparkles class="size-3.5" />
 						<span>Jasa Titip Belanja Lokal & Pengantaran Cepat</span>
 					</div>
@@ -235,36 +233,43 @@
 					</h1>
 
 					<p class="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-						Titip makanan warung kaki lima, sayur segar pasar tradisional, swalayan, hingga apotek darurat. Harga barang murni sesuai struk kasir toko asli tanpa markup tersembunyi.
+						Titip makanan warung kaki lima, sayur segar pasar tradisional, swalayan, hingga apotek
+						darurat. Harga barang murni sesuai struk kasir toko asli tanpa markup tersembunyi.
 					</p>
 
 					<!-- Location Selector & Search Bar -->
 					<form
 						onsubmit={(e) => {
 							e.preventDefault();
-							const params = new URLSearchParams();
+							const params = new SvelteURLSearchParams();
 							if (searchQuery.trim()) params.set('q', searchQuery.trim());
-							if (selectedLocation && selectedLocation !== 'Semua Area') params.set('area', selectedLocation);
+							if (selectedLocation && selectedLocation !== 'Semua Area')
+								params.set('area', selectedLocation);
 							const qs = params.toString();
-							goto(qs ? `/layanan?${qs}` : '/layanan');
+							// eslint-disable-next-line svelte/no-navigation-without-resolve
+							void goto(qs ? `${resolve('/layanan')}?${qs}` : resolve('/layanan'));
 						}}
 						class="rounded-2xl border border-border/80 bg-card p-2.5 shadow-md sm:p-3"
 					>
 						<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-							<div class="flex items-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs font-medium sm:w-48">
+							<div
+								class="flex items-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs font-medium sm:w-48"
+							>
 								<MapPin class="size-4 shrink-0 text-primary" />
 								<select
 									bind:value={selectedLocation}
 									class="w-full bg-transparent text-xs font-semibold text-foreground focus:outline-hidden"
 								>
-									{#each locations as loc}
+									{#each locations as loc (loc)}
 										<option value={loc}>{loc}</option>
 									{/each}
 								</select>
 							</div>
 
 							<div class="relative flex-1">
-								<Search class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+								<Search
+									class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+								/>
 								<Input
 									type="text"
 									bind:value={searchQuery}
@@ -301,10 +306,14 @@
 
 				<!-- Hero Visual Product Truth Card -->
 				<div class="lg:col-span-5">
-					<div class="relative mx-auto max-w-md overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-xl">
+					<div
+						class="relative mx-auto max-w-md overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-xl"
+					>
 						<div class="flex items-center justify-between border-b border-border/60 pb-3">
 							<div class="flex items-center gap-2">
-								<div class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+								<div
+									class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"
+								>
 									<Receipt class="size-4" />
 								</div>
 								<div>
@@ -312,7 +321,9 @@
 									<p class="text-[10px] text-muted-foreground">ID Titipan #TT-84920</p>
 								</div>
 							</div>
-							<span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600">
+							<span
+								class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600"
+							>
 								<CheckCircle2 class="size-3" />
 								<span>Terverifikasi</span>
 							</span>
@@ -321,7 +332,9 @@
 						<div class="mt-4 space-y-3">
 							<div class="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs">
 								<p class="font-bold text-foreground">Soto Bebek Gawok Spesial</p>
-								<p class="mt-0.5 text-[11px] text-muted-foreground">2x Soto Bebek Kuah Segar + 2x Es Teh</p>
+								<p class="mt-0.5 text-[11px] text-muted-foreground">
+									2x Soto Bebek Kuah Segar + 2x Es Teh
+								</p>
 								<div class="mt-2 flex justify-between border-t border-border/50 pt-2 font-semibold">
 									<span>Harga Struk Toko</span>
 									<span class="text-foreground">Rp 36.000</span>
@@ -337,16 +350,22 @@
 									<span>Biaya Layanan Aplikasi</span>
 									<span class="font-medium text-foreground">Rp 1.000</span>
 								</div>
-								<div class="flex justify-between border-t border-border/60 pt-2 text-sm font-black text-foreground">
+								<div
+									class="flex justify-between border-t border-border/60 pt-2 text-sm font-black text-foreground"
+								>
 									<span>Total Transparan</span>
 									<span class="text-primary">Rp 45.000</span>
 								</div>
 							</div>
 
-							<div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-[11px] text-emerald-700">
+							<div
+								class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-[11px] text-emerald-700"
+							>
 								<div class="flex items-center gap-2">
 									<ShieldCheck class="size-4 shrink-0 text-emerald-600" />
-									<span class="font-semibold">Foto bukti struk kasir toko fisik terlampir di aplikasi</span>
+									<span class="font-semibold">
+										Foto bukti struk kasir toko fisik terlampir di aplikasi
+									</span>
 								</div>
 							</div>
 						</div>
@@ -358,7 +377,9 @@
 
 	<!-- Categories Grid Section -->
 	<section id="eksplor" class="mx-auto max-w-6xl px-4 sm:px-6">
-		<div class="flex flex-col items-start justify-between gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-end">
+		<div
+			class="flex flex-col items-start justify-between gap-4 border-b border-border/60 pb-6 sm:flex-row sm:items-end"
+		>
 			<div>
 				<div class="inline-flex items-center gap-2 text-xs font-bold text-primary uppercase">
 					<span>Katalog Layanan</span>
@@ -380,7 +401,7 @@
 		</div>
 
 		<div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each filteredCategories as category}
+			{#each filteredCategories as category (category.id)}
 				{@const IconComponent = category.icon}
 				<a
 					href={resolve('/kategori/[slug]', { slug: category.slug })}
@@ -388,15 +409,21 @@
 				>
 					<div>
 						<div class="flex items-center justify-between">
-							<div class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+							<div
+								class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
+							>
 								<IconComponent class="size-5" />
 							</div>
-							<span class="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+							<span
+								class="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground"
+							>
 								{category.badge}
 							</span>
 						</div>
 
-						<h3 class="mt-4 text-base font-bold text-foreground transition-colors group-hover:text-primary">
+						<h3
+							class="mt-4 text-base font-bold text-foreground transition-colors group-hover:text-primary"
+						>
 							{category.name}
 						</h3>
 						<p class="mt-1.5 text-xs leading-relaxed text-muted-foreground">
@@ -404,13 +431,18 @@
 						</p>
 
 						<div class="mt-3 rounded-lg bg-muted/40 p-2 text-[11px] text-muted-foreground">
-							<span class="font-semibold text-foreground">Contoh:</span> {category.examples}
+							<span class="font-semibold text-foreground">Contoh:</span>
+							{category.examples}
 						</div>
 					</div>
 
-					<div class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs">
+					<div
+						class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs"
+					>
 						<span class="text-[11px] font-medium text-emerald-600">{category.activeMitra}</span>
-						<span class="inline-flex items-center gap-1 font-semibold text-primary transition-transform group-hover:translate-x-0.5">
+						<span
+							class="inline-flex items-center gap-1 font-semibold text-primary transition-transform group-hover:translate-x-0.5"
+						>
 							<span>Pesan Jastip</span>
 							<ArrowRight class="size-3.5" />
 						</span>
@@ -429,12 +461,13 @@
 					Cara Kerja Titipin
 				</h2>
 				<p class="mx-auto mt-2 max-w-xl text-xs text-muted-foreground sm:text-sm">
-					Tiga langkah sederhana dari membuat pesanan titip hingga barang tiba di tangan Anda dengan struk kasir asli.
+					Tiga langkah sederhana dari membuat pesanan titip hingga barang tiba di tangan Anda dengan
+					struk kasir asli.
 				</p>
 			</div>
 
 			<div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
-				{#each steps as step}
+				{#each steps as step (step.number)}
 					<div class="relative rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
 						<span class="text-3xl font-black text-primary/30">{step.number}</span>
 						<h3 class="mt-3 text-base font-bold text-foreground">{step.title}</h3>
@@ -458,14 +491,16 @@
 		</div>
 
 		<div class="mt-10 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
-			<div class="grid grid-cols-12 border-b border-border/80 bg-muted/50 p-4 text-xs font-bold sm:p-5">
+			<div
+				class="grid grid-cols-12 border-b border-border/80 bg-muted/50 p-4 text-xs font-bold sm:p-5"
+			>
 				<div class="col-span-4 text-foreground">Fitur & Layanan</div>
 				<div class="col-span-4 text-primary">Titipin</div>
 				<div class="col-span-4 text-muted-foreground">Aplikasi Lain</div>
 			</div>
 
 			<div class="divide-y divide-border/60">
-				{#each comparisons as comp}
+				{#each comparisons as comp (comp.feature)}
 					<div class="grid grid-cols-12 items-center p-4 text-xs sm:p-5">
 						<div class="col-span-4 font-semibold text-foreground">{comp.feature}</div>
 						<div class="col-span-4 pr-3 font-medium text-emerald-700">
@@ -497,8 +532,10 @@
 			</div>
 
 			<div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-				{#each testimonials as test}
-					<div class="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				{#each testimonials as test (test.author)}
+					<div
+						class="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs"
+					>
 						<p class="text-xs leading-relaxed text-muted-foreground italic">
 							"{test.quote}"
 						</p>
@@ -514,13 +551,16 @@
 
 	<!-- Closing CTA Banner -->
 	<section id="bantuan" class="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
-		<div class="overflow-hidden rounded-3xl border border-primary/20 bg-primary p-8 text-primary-foreground sm:p-12">
+		<div
+			class="overflow-hidden rounded-3xl border border-primary/20 bg-primary p-8 text-primary-foreground sm:p-12"
+		>
 			<div class="mx-auto max-w-2xl text-center">
 				<h2 class="text-2xl font-black tracking-tight text-white sm:text-3xl">
 					Siap titip belanjaan pertama Anda tanpa ribet?
 				</h2>
 				<p class="mt-3 text-xs leading-relaxed text-primary-foreground/90 sm:text-sm">
-					Daftarkan akun gratis sekarang. Titip kebutuhan warung, pasar, atau minimarket ke tetangga dengan struk kasir asli.
+					Daftarkan akun gratis sekarang. Titip kebutuhan warung, pasar, atau minimarket ke tetangga
+					dengan struk kasir asli.
 				</p>
 				<div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
 					<a

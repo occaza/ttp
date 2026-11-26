@@ -17,8 +17,7 @@
 		Store,
 		Carrot,
 		Pill,
-		Truck,
-		AlertCircle
+		Truck
 	} from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -74,7 +73,7 @@
 	<nav class="flex items-center gap-1.5 text-xs text-muted-foreground" aria-label="Breadcrumb">
 		<a href={resolve('/')} class="hover:text-foreground">Beranda</a>
 		<ChevronRight class="size-3.5" />
-		<a href="/layanan" class="hover:text-foreground">Layanan</a>
+		<a href={resolve('/layanan')} class="hover:text-foreground">Layanan</a>
 		<ChevronRight class="size-3.5" />
 		<span class="truncate font-semibold text-foreground">{s.title}</span>
 	</nav>
@@ -87,7 +86,9 @@
 			<div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs sm:p-8">
 				<div class="flex items-center justify-between border-b border-border/60 pb-4">
 					<div class="flex items-center gap-2">
-						<div class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+						<div
+							class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						>
 							<CategoryIcon class="size-4" />
 						</div>
 						<span class="text-xs font-bold text-muted-foreground">
@@ -95,7 +96,9 @@
 						</span>
 					</div>
 
-					<span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600">
+					<span
+						class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600"
+					>
 						<span class="size-1.5 rounded-full bg-emerald-500"></span>
 						<span>Layanan Aktif</span>
 					</span>
@@ -118,20 +121,23 @@
 			</div>
 
 			<!-- Service Description & Transparency Rules -->
-			<div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs space-y-5">
+			<div class="space-y-5 rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
 				<div>
 					<h2 class="text-base font-bold text-foreground">Deskripsi & Ketentuan Titip</h2>
 					<p class="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-						{s.description || 'Layanan jastip belanja lokal siap membelikan kebutuhan Anda di warung makan, pasar tradisional, atau toko pilihan. Barang langsung diantar ke alamat Anda.'}
+						{s.description ||
+							'Layanan jastip belanja lokal siap membelikan kebutuhan Anda di warung makan, pasar tradisional, atau toko pilihan. Barang langsung diantar ke alamat Anda.'}
 					</p>
 				</div>
 
 				<div class="border-t border-border/60 pt-5">
-					<h3 class="text-xs font-bold text-foreground uppercase tracking-wide">
+					<h3 class="text-xs font-bold tracking-wide text-foreground uppercase">
 						Standar Jaminan Layanan Titipin
 					</h3>
 					<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-						<div class="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs">
+						<div
+							class="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs"
+						>
 							<Receipt class="mt-0.5 size-4 shrink-0 text-primary" />
 							<div>
 								<span class="font-bold text-foreground">100% Struk Kasir Asli</span>
@@ -141,7 +147,9 @@
 							</div>
 						</div>
 
-						<div class="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs">
+						<div
+							class="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs"
+						>
 							<CheckCircle2 class="mt-0.5 size-4 shrink-0 text-emerald-600" />
 							<div>
 								<span class="font-bold text-foreground">Catatan Detail Dituruti</span>
@@ -155,31 +163,40 @@
 			</div>
 
 			<!-- How Ordering Works for this Service -->
-			<div class="rounded-2xl border border-border/80 bg-muted/20 p-6 space-y-4">
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-muted/20 p-6">
 				<h3 class="text-sm font-bold text-foreground">Alur Pemesanan Jastip Ini</h3>
 				<ol class="space-y-3 text-xs text-muted-foreground">
 					<li class="flex items-start gap-2.5">
-						<span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+						<span
+							class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+						>
 							1
 						</span>
 						<span>
-							Klik tombol <strong>Mulai Buat Pesanan</strong> dan tuliskan daftar belanjaan beserta alamat pengantaran Anda.
+							Klik tombol <strong>Mulai Buat Pesanan</strong> dan tuliskan daftar belanjaan beserta alamat
+							pengantaran Anda.
 						</span>
 					</li>
 					<li class="flex items-start gap-2.5">
-						<span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+						<span
+							class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+						>
 							2
 						</span>
 						<span>
-							Pesanan dikonfirmasi, langsung dibelikan ke toko fisik tujuan, dan foto struk kasir toko asli dikirim sebagai bukti.
+							Pesanan dikonfirmasi, langsung dibelikan ke toko fisik tujuan, dan foto struk kasir
+							toko asli dikirim sebagai bukti.
 						</span>
 					</li>
 					<li class="flex items-start gap-2.5">
-						<span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+						<span
+							class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+						>
 							3
 						</span>
 						<span>
-							Pesanan diantar sampai depan pintu. Anda membayar total sesuai struk asli ditambah tarif jastip.
+							Pesanan diantar sampai depan pintu. Anda membayar total sesuai struk asli ditambah
+							tarif jastip.
 						</span>
 					</li>
 				</ol>
@@ -197,24 +214,26 @@
 					</span>
 					<span class="text-xs text-muted-foreground">/ pesanan</span>
 				</div>
-				<p class="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-					Tarif jasa flat transparan untuk area {s.coverage_area}. Harga barang belanjaan dibayar terpisah sesuai struk fisik toko.
+				<p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+					Tarif jasa flat transparan untuk area {s.coverage_area}. Harga barang belanjaan dibayar
+					terpisah sesuai struk fisik toko.
 				</p>
 
 				<div class="mt-5 space-y-2.5">
 					<Button
 						class="h-11 w-full gap-2 rounded-xl text-xs font-bold shadow-xs transition-transform active:scale-98"
-						href={data.user ? resolve('/profil') : resolve('/daftar')}
+						href={data.user ? `${resolve('/pesan')}?service_id=${s.id}` : resolve('/daftar')}
 					>
 						<span>Mulai Buat Pesanan</span>
 						<ArrowRight class="size-4" />
 					</Button>
 
 					{#if s.provider?.phone}
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 						<a
 							href={whatsappUrl}
 							target="_blank"
-							rel="noopener noreferrer"
+							rel="external noopener noreferrer"
 							class="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 dark:text-emerald-300"
 						>
 							<MessageSquare class="size-3.5" />
@@ -225,36 +244,38 @@
 			</div>
 
 			<!-- Provider Profile Box -->
-			<div class="rounded-2xl border border-border/80 bg-card p-5 shadow-xs space-y-4">
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
 				<div class="flex items-center justify-between border-b border-border/60 pb-3">
 					<span class="text-xs font-bold text-foreground">Pengelola Layanan Langsung</span>
-					<div class="flex items-center gap-1 rounded-full bg-amber-400/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+					<div
+						class="flex items-center gap-1 rounded-full bg-amber-400/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300"
+					>
 						<Star class="size-3 fill-current text-amber-500" />
 						<span>5.0</span>
 					</div>
 				</div>
 
 				<div class="flex items-center gap-3">
-					<div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-lg font-black text-primary">
+					<div
+						class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-lg font-black text-primary"
+					>
 						{s.provider?.business_name?.charAt(0).toUpperCase() || 'T'}
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center gap-1.5">
-							<span class="truncate font-bold text-foreground text-sm">
+							<span class="truncate text-sm font-bold text-foreground">
 								{s.provider?.business_name || 'Titipin Langsung'}
 							</span>
 							{#if s.provider?.is_verified}
 								<ShieldCheck class="size-4 shrink-0 text-primary" />
 							{/if}
 						</div>
-						<span class="block text-xs text-muted-foreground">
-							Pengelola Langsung Area Gatak
-						</span>
+						<span class="block text-xs text-muted-foreground"> Pengelola Langsung Area Gatak </span>
 					</div>
 				</div>
 
 				{#if s.provider?.bio}
-					<p class="text-xs leading-relaxed text-muted-foreground border-t border-border/50 pt-3">
+					<p class="border-t border-border/50 pt-3 text-xs leading-relaxed text-muted-foreground">
 						"{s.provider.bio}"
 					</p>
 				{/if}

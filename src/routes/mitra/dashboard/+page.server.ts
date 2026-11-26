@@ -5,10 +5,9 @@ import {
 	providerServiceSchema,
 	providerProfileUpdateSchema
 } from '#lib/server/auth.js';
-import {
-	getOrCreateProviderProfile,
-	getProviderServices
-} from '#lib/server/provider.js';
+import { getOrCreateProviderProfile, getProviderServices } from '#lib/server/provider.js';
+import { getProviderOrders, transitionOrderStatus } from '#lib/server/order.js';
+import type { OrderStatus } from '#lib/types/database.types.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const auth = requireRole(locals, ['provider', 'admin']);
@@ -26,9 +25,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.order('sort_order', { ascending: true });
 
 	const services = await getProviderServices(locals.supabase, auth.user.id);
+	const orders = await getProviderOrders(locals.supabase, auth.user.id);
 
 	const totalServices = services.length;
 	const activeServices = services.filter((s) => s.is_active).length;
+	const pendingOrdersCount = orders.filter((o) => o.status === 'pending').length;
+	const activeOrdersCount = orders.filter((o) =>
+		['accepted', 'shopping', 'purchased', 'delivering'].includes(o.status)
+	).length;
 	const avgBaseFee =
 		activeServices > 0
 			? Math.round(
@@ -44,10 +48,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		providerProfile,
 		categories: categories || [],
 		services,
+		orders,
 		stats: {
 			totalServices,
 			activeServices,
-			avgBaseFee
+			avgBaseFee,
+			pendingOrdersCount,
+			activeOrdersCount
 		}
 	};
 };
@@ -257,6 +264,38 @@ export const actions: Actions = {
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
 			return fail(500, { providerError: `Gagal menyimpan profil: ${msg}` });
+		}
+	},
+
+	updateOrderStatus: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['provider', 'admin']);
+		const formData = await request.formData();
+		const rawOrderId = formData.get('order_id');
+		const rawToStatus = formData.get('to_status');
+		const rawNote = formData.get('note');
+		const rawActualCost = formData.get('actual_item_cost');
+
+		const orderId = typeof rawOrderId === 'string' ? rawOrderId : '';
+		const toStatus = (typeof rawToStatus === 'string' ? rawToStatus : '') as OrderStatus;
+		const note = typeof rawNote === 'string' && rawNote ? rawNote : undefined;
+		const actualItemCost =
+			typeof rawActualCost === 'string' && rawActualCost ? Number(rawActualCost) : undefined;
+
+		if (!orderId || !toStatus) {
+			return fail(400, { orderError: 'ID pesanan dan status tujuan harus diisi.' });
+		}
+
+		try {
+			await transitionOrderStatus(locals.supabase, auth.user.id, auth.role, {
+				order_id: orderId,
+				to_status: toStatus,
+				note,
+				actual_item_cost: actualItemCost
+			});
+			return { orderSuccess: `Status pesanan berhasil diubah menjadi ${toStatus}.` };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal memperbarui status pesanan.';
+			return fail(400, { orderError: msg });
 		}
 	}
 };

@@ -145,7 +145,7 @@ export async function getPricingRule(
 				.maybeSingle();
 
 			if (!error && data) {
-				return data as PricingRule;
+				return data;
 			}
 		} catch (err) {
 			console.warn('[PricingEngine] Database rule fetch fallback:', err);
@@ -342,7 +342,13 @@ export async function calculateOrderPricing(
 	const parsedInput = pricingInputSchema.parse(rawInput);
 
 	// 2. Resolve pricing rule
-	const ruleId = parsedInput.ruleId || (parsedInput.model === 'distance_based' ? 'gatak-distance' : parsedInput.model === 'shopping_delivery' ? 'gatak-shopping-delivery' : 'gatak-flat');
+	const ruleId =
+		parsedInput.ruleId ||
+		(parsedInput.model === 'distance_based'
+			? 'gatak-distance'
+			: parsedInput.model === 'shopping_delivery'
+				? 'gatak-shopping-delivery'
+				: 'gatak-flat');
 	const rule = await getPricingRule(supabase, ruleId);
 
 	// 3. Compute route distance via abstraction

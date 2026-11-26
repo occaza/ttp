@@ -4,7 +4,7 @@ import {
 	DEFAULT_GATAK_PRICING_RULES,
 	calculateOrderPricing
 } from './pricing.ts';
-import { defaultDistanceProvider, calculateHaversineDistanceKm } from './distance.ts';
+import { defaultDistanceProvider } from './distance.ts';
 
 async function runPricingVerification() {
 	console.log('Testing Phase 6 Pricing Engine Calculations & Abstractions...');
@@ -60,10 +60,15 @@ async function runPricingVerification() {
 	});
 
 	if (distWithinResult.summary.distanceSurcharge !== 0) {
-		throw new Error(`Expected 0 surcharge for 2.0 km within 2.5 km base, got ${distWithinResult.summary.distanceSurcharge}`);
+		throw new Error(
+			`Expected 0 surcharge for 2.0 km within 2.5 km base, got ${distWithinResult.summary.distanceSurcharge}`
+		);
 	}
-	if (distWithinResult.summary.totalJastipFee !== 8000) { // 7000 base + 1000 platform
-		throw new Error(`Expected 8000 total jastip fee, got ${distWithinResult.summary.totalJastipFee}`);
+	if (distWithinResult.summary.totalJastipFee !== 8000) {
+		// 7000 base + 1000 platform
+		throw new Error(
+			`Expected 8000 total jastip fee, got ${distWithinResult.summary.totalJastipFee}`
+		);
 	}
 	console.log('✔ Model 2A (Distance-based Within Base Distance) Calculation Passed');
 
@@ -85,11 +90,15 @@ async function runPricingVerification() {
 	});
 
 	if (distBeyondResult.summary.distanceSurcharge !== 5000) {
-		throw new Error(`Expected 5000 distance surcharge, got ${distBeyondResult.summary.distanceSurcharge}`);
+		throw new Error(
+			`Expected 5000 distance surcharge, got ${distBeyondResult.summary.distanceSurcharge}`
+		);
 	}
 	// 7000 base + 5000 surcharge + 1000 platform = 13000
 	if (distBeyondResult.summary.totalJastipFee !== 13000) {
-		throw new Error(`Expected 13000 total jastip fee, got ${distBeyondResult.summary.totalJastipFee}`);
+		throw new Error(
+			`Expected 13000 total jastip fee, got ${distBeyondResult.summary.totalJastipFee}`
+		);
 	}
 	console.log('✔ Model 2B (Distance-based Beyond Base Distance) Calculation Passed');
 
@@ -119,12 +128,17 @@ async function runPricingVerification() {
 		throw new Error(`Expected delivery fee 5000, got ${shoppingResult.summary.deliveryFee}`);
 	}
 	if (shoppingResult.summary.distanceSurcharge !== 2000) {
-		throw new Error(`Expected distance surcharge 2000, got ${shoppingResult.summary.distanceSurcharge}`);
+		throw new Error(
+			`Expected distance surcharge 2000, got ${shoppingResult.summary.distanceSurcharge}`
+		);
 	}
 	if (shoppingResult.summary.totalJastipFee !== 16000) {
-		throw new Error(`Expected 16000 total jastip fee, got ${shoppingResult.summary.totalJastipFee}`);
+		throw new Error(
+			`Expected 16000 total jastip fee, got ${shoppingResult.summary.totalJastipFee}`
+		);
 	}
-	if (shoppingResult.summary.grandTotalEstimate !== 66000) { // 16000 + 50000
+	if (shoppingResult.summary.grandTotalEstimate !== 66000) {
+		// 16000 + 50000
 		throw new Error(`Expected 66000 grand total, got ${shoppingResult.summary.grandTotalEstimate}`);
 	}
 	console.log('✔ Model 3 (Shopping + Delivery Multi-Item) Calculation Passed');
@@ -160,7 +174,9 @@ async function runPricingVerification() {
 	if (distCheck.distanceKm <= 0) {
 		throw new Error('Distance must be positive');
 	}
-	console.log(`✔ Distance Provider Abstraction Passed (Computed ${distCheck.distanceKm} km, isMock: ${distCheck.isMock})`);
+	console.log(
+		`✔ Distance Provider Abstraction Passed (Computed ${distCheck.distanceKm} km, isMock: ${distCheck.isMock})`
+	);
 
 	// 7. Test Zod Validation Schema
 	const validParsed = pricingInputSchema.safeParse({

@@ -1,5 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database, ProviderProfile, ProviderService, ServiceCategory } from '#lib/types/database.types.js';
+import type {
+	Database,
+	ProviderProfile,
+	ProviderService,
+	ServiceCategory
+} from '#lib/types/database.types.js';
 
 // Fallback in-memory cache to guarantee zero downtime if migration is not yet applied
 const fallbackServicesCache = new Map<string, ProviderService[]>();
@@ -31,7 +36,8 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-1',
 		title: 'Jastip Soto Bebek & Kuliner Gawok',
-		description: 'Bisa titip Soto Bebek Gawok, Bebek Goreng, atau kuliner malam area Gawok & sekitarnya. Dibelikan dan diantar hangat.',
+		description:
+			'Bisa titip Soto Bebek Gawok, Bebek Goreng, atau kuliner malam area Gawok & sekitarnya. Dibelikan dan diantar hangat.',
 		base_fee: 8000,
 		coverage_area: 'Gatak, Gawok & Blimbing, Mayang',
 		is_active: true,
@@ -55,7 +61,8 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-2',
 		title: 'Belanja Sayur Subuh Pasar Gawok',
-		description: 'Jastip belanja sayur mayur segar, bumbu pawon, ayam potong, dan kebutuhan dapur langsung dari pasar subuh Gawok.',
+		description:
+			'Jastip belanja sayur mayur segar, bumbu pawon, ayam potong, dan kebutuhan dapur langsung dari pasar subuh Gawok.',
 		base_fee: 10000,
 		coverage_area: 'Gatak, Gawok & Blimbing, Trangsan & Luwang',
 		is_active: true,
@@ -79,7 +86,8 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-3',
 		title: 'Titip Beli Obat Apotek & Resep',
-		description: 'Layanan cepat jastip obat bebas, vitamin, atau tebus obat apotek darurat area Gatak dan Kartasura.',
+		description:
+			'Layanan cepat jastip obat bebas, vitamin, atau tebus obat apotek darurat area Gatak dan Kartasura.',
 		base_fee: 7000,
 		coverage_area: 'Gatak (Pusat), Kartasura & UMS, Baki',
 		is_active: true,
@@ -103,7 +111,8 @@ export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
 		provider_id: 'owner-titipin',
 		category_id: 'seed-cat-4',
 		title: 'Antar Jemput Berkas & Barang Kampus UMS',
-		description: 'Pengantaran dokumen, barang tertinggal, atau paket rute Gatak - Pabelan / Kampus UMS.',
+		description:
+			'Pengantaran dokumen, barang tertinggal, atau paket rute Gatak - Pabelan / Kampus UMS.',
 		base_fee: 9000,
 		coverage_area: 'Gatak (Pusat), Kartasura & UMS, Mayang & Sanggung',
 		is_active: true,
@@ -252,10 +261,7 @@ export async function searchServices(
 	let results: EnrichedProviderService[] = [];
 
 	try {
-		let query = supabase
-			.from('provider_services')
-			.select('*')
-			.eq('is_active', true);
+		let query = supabase.from('provider_services').select('*').eq('is_active', true);
 
 		if (filters.sortBy === 'cheapest') {
 			query = query.order('base_fee', { ascending: true });
@@ -314,7 +320,7 @@ export async function searchServices(
 	}
 
 	if (filters.area && filters.area !== 'all' && filters.area !== 'Semua Area') {
-		const areaTerm = filters.area.toLowerCase().replace(/[\(\)&]/g, ' ');
+		const areaTerm = filters.area.toLowerCase().replace(/[()&]/g, ' ');
 		const tokens = areaTerm.split(/\s+/).filter((t) => t.length > 2);
 		results = results.filter((s) =>
 			tokens.some((token) => s.coverage_area.toLowerCase().includes(token))

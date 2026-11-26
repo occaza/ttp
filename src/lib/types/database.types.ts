@@ -1,6 +1,15 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type UserRole = 'customer' | 'provider' | 'admin';
+export type OrderStatus =
+	| 'pending'
+	| 'accepted'
+	| 'rejected'
+	| 'shopping'
+	| 'purchased'
+	| 'delivering'
+	| 'completed'
+	| 'cancelled';
 
 export interface Database {
 	public: {
@@ -290,6 +299,156 @@ export interface Database {
 				};
 				Relationships: [];
 			};
+			orders: {
+				Row: {
+					id: string;
+					order_number: string;
+					customer_id: string;
+					provider_id: string;
+					service_id: string | null;
+					category_id: string | null;
+					status: OrderStatus;
+					origin_name: string;
+					origin_address: string | null;
+					destination_address_id: string | null;
+					destination_address_text: string;
+					recipient_name: string;
+					recipient_phone: string;
+					pricing_snapshot: Json;
+					estimated_item_cost: number;
+					actual_item_cost: number | null;
+					jastip_fee: number;
+					total_estimated: number;
+					actual_total: number | null;
+					customer_notes: string | null;
+					cancellation_reason: string | null;
+					cancelled_by: string | null;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_number: string;
+					customer_id: string;
+					provider_id: string;
+					service_id?: string | null;
+					category_id?: string | null;
+					status?: OrderStatus;
+					origin_name: string;
+					origin_address?: string | null;
+					destination_address_id?: string | null;
+					destination_address_text: string;
+					recipient_name: string;
+					recipient_phone: string;
+					pricing_snapshot: Json;
+					estimated_item_cost?: number;
+					actual_item_cost?: number | null;
+					jastip_fee?: number;
+					total_estimated?: number;
+					actual_total?: number | null;
+					customer_notes?: string | null;
+					cancellation_reason?: string | null;
+					cancelled_by?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_number?: string;
+					customer_id?: string;
+					provider_id?: string;
+					service_id?: string | null;
+					category_id?: string | null;
+					status?: OrderStatus;
+					origin_name?: string;
+					origin_address?: string | null;
+					destination_address_id?: string | null;
+					destination_address_text?: string;
+					recipient_name?: string;
+					recipient_phone?: string;
+					pricing_snapshot?: Json;
+					estimated_item_cost?: number;
+					actual_item_cost?: number | null;
+					jastip_fee?: number;
+					total_estimated?: number;
+					actual_total?: number | null;
+					customer_notes?: string | null;
+					cancellation_reason?: string | null;
+					cancelled_by?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			order_items: {
+				Row: {
+					id: string;
+					order_id: string;
+					name: string;
+					quantity: number;
+					unit: string;
+					notes: string | null;
+					estimated_price: number | null;
+					actual_price: number | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_id: string;
+					name: string;
+					quantity?: number;
+					unit?: string;
+					notes?: string | null;
+					estimated_price?: number | null;
+					actual_price?: number | null;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_id?: string;
+					name?: string;
+					quantity?: number;
+					unit?: string;
+					notes?: string | null;
+					estimated_price?: number | null;
+					actual_price?: number | null;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
+			order_status_history: {
+				Row: {
+					id: string;
+					order_id: string;
+					from_status: string | null;
+					to_status: string;
+					actor_id: string;
+					actor_role: 'customer' | 'provider' | 'admin' | 'system';
+					note: string | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_id: string;
+					from_status?: string | null;
+					to_status: string;
+					actor_id: string;
+					actor_role: 'customer' | 'provider' | 'admin' | 'system';
+					note?: string | null;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_id?: string;
+					from_status?: string | null;
+					to_status?: string;
+					actor_id?: string;
+					actor_role?: 'customer' | 'provider' | 'admin' | 'system';
+					note?: string | null;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -317,3 +476,6 @@ export type ServiceCategory = Database['public']['Tables']['service_categories']
 export type Address = Database['public']['Tables']['addresses']['Row'];
 export type ProviderService = Database['public']['Tables']['provider_services']['Row'];
 export type PricingRule = Database['public']['Tables']['pricing_rules']['Row'];
+export type Order = Database['public']['Tables']['orders']['Row'];
+export type OrderItem = Database['public']['Tables']['order_items']['Row'];
+export type OrderStatusHistory = Database['public']['Tables']['order_status_history']['Row'];

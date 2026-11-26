@@ -65,8 +65,7 @@ export const actions: Actions = {
 		const notes = formData.get('notes') || '';
 		const city = formData.get('city') || 'Gatak, Sukoharjo';
 		const postal_code = formData.get('postal_code') || '';
-		const is_primary =
-			formData.get('is_primary') === 'on' || formData.get('is_primary') === 'true';
+		const is_primary = formData.get('is_primary') === 'on' || formData.get('is_primary') === 'true';
 
 		const parsed = addressSchema.safeParse({
 			id: id || undefined,
