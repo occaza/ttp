@@ -33,15 +33,18 @@
 		Clock,
 		ShieldCheck,
 		Wallet,
-		ShoppingBag
+		ShoppingBag,
+		AlertTriangle,
+		FileText,
+		BadgeCheck
 	} from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Active tab state: 'overview' | 'orders' | 'payments' | 'categories' | 'users' | 'settings'
-	let activeTab = $state<'overview' | 'orders' | 'payments' | 'categories' | 'users' | 'settings'>(
-		'overview'
-	);
+	// Active tab state
+	let activeTab = $state<
+		'overview' | 'orders' | 'payments' | 'disputes' | 'categories' | 'users' | 'settings' | 'audit'
+	>('overview');
 
 	let isCategoryModalOpen = $state(false);
 	let isSubmitting = $state(false);
@@ -222,7 +225,36 @@
 				: 'border-transparent text-muted-foreground hover:text-foreground'}"
 		>
 			<Users class="size-4" />
-			<span>Daftar Pengguna ({data.users.length})</span>
+			<span>Pengguna & Mitra ({data.users.length})</span>
+		</button>
+
+		<button
+			type="button"
+			onclick={() => (activeTab = 'disputes')}
+			class="inline-flex items-center gap-2 border-b-2 px-4 py-2.5 whitespace-nowrap transition-colors {activeTab ===
+			'disputes'
+				? 'border-primary font-bold text-primary'
+				: 'border-transparent text-muted-foreground hover:text-foreground'}"
+		>
+			<AlertTriangle class="size-4" />
+			<span>
+				Laporan
+				{#if data.stats.openDisputes > 0}
+					({data.stats.openDisputes} Aktif)
+				{/if}
+			</span>
+		</button>
+
+		<button
+			type="button"
+			onclick={() => (activeTab = 'audit')}
+			class="inline-flex items-center gap-2 border-b-2 px-4 py-2.5 whitespace-nowrap transition-colors {activeTab ===
+			'audit'
+				? 'border-primary font-bold text-primary'
+				: 'border-transparent text-muted-foreground hover:text-foreground'}"
+		>
+			<FileText class="size-4" />
+			<span>Audit Log ({data.auditLogs.length})</span>
 		</button>
 	</div>
 
@@ -619,6 +651,129 @@
 				</form>
 			</CardContent>
 		</Card>
+
+		<!-- Pricing Rules Management -->
+		<Card class="mt-6 border-border/80">
+			<CardHeader>
+				<CardTitle class="text-base font-bold">Pengaturan Aturan Tarif (Pricing Engine)</CardTitle>
+				<p class="text-xs text-muted-foreground">
+					Sesuaikan tarif dasar, jarak dasar, tarif per km, dan biaya platform untuk perhitungan
+					server-side.
+				</p>
+			</CardHeader>
+			<CardContent class="space-y-4">
+				{#each data.pricingRules as rule (rule.id)}
+					<form
+						method="POST"
+						action="?/updatePricingRule"
+						class="space-y-3 rounded-xl border border-border/80 bg-muted/10 p-4"
+						use:enhance={() => {
+							isSubmitting = true;
+							return async ({ update }) => {
+								await update();
+								isSubmitting = false;
+							};
+						}}
+					>
+						<input type="hidden" name="id" value={rule.id} />
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<div class="flex items-center gap-2">
+								<Badge variant="outline" class="font-mono text-[10px]">{rule.id}</Badge>
+								<Badge variant="secondary" class="text-[10px]">{rule.model}</Badge>
+							</div>
+							<label class="flex items-center gap-1.5 text-xs font-medium">
+								<input
+									type="checkbox"
+									name="is_active"
+									checked={rule.is_active}
+									class="size-4 rounded border-border text-primary"
+								/>
+								<span>Aktif</span>
+							</label>
+						</div>
+
+						<div class="grid gap-3 sm:grid-cols-3">
+							<div class="space-y-1 sm:col-span-3">
+								<Label class="text-[11px] font-semibold">Nama Aturan</Label>
+								<Input name="name" value={rule.name} class="h-8 text-xs" required />
+							</div>
+							<div class="space-y-1">
+								<Label class="text-[11px] font-semibold">Tarif Dasar (Rp)</Label>
+								<Input
+									type="number"
+									name="base_fee"
+									value={rule.base_fee}
+									min="0"
+									step="500"
+									class="h-8 text-xs"
+									required
+								/>
+							</div>
+							<div class="space-y-1">
+								<Label class="text-[11px] font-semibold">Jarak Dasar (km)</Label>
+								<Input
+									type="number"
+									name="base_distance_km"
+									value={rule.base_distance_km}
+									min="0"
+									step="0.5"
+									class="h-8 text-xs"
+									required
+								/>
+							</div>
+							<div class="space-y-1">
+								<Label class="text-[11px] font-semibold">Tarif / km (Rp)</Label>
+								<Input
+									type="number"
+									name="per_km_fee"
+									value={rule.per_km_fee}
+									min="0"
+									step="500"
+									class="h-8 text-xs"
+									required
+								/>
+							</div>
+							<div class="space-y-1">
+								<Label class="text-[11px] font-semibold">Biaya Platform (Rp)</Label>
+								<Input
+									type="number"
+									name="platform_fee"
+									value={rule.platform_fee}
+									min="0"
+									step="500"
+									class="h-8 text-xs"
+									required
+								/>
+							</div>
+							<div class="space-y-1">
+								<Label class="text-[11px] font-semibold">Minimum Order Fee (Rp)</Label>
+								<Input
+									type="number"
+									name="min_order_fee"
+									value={rule.min_order_fee}
+									min="0"
+									step="500"
+									class="h-8 text-xs"
+									required
+								/>
+							</div>
+						</div>
+
+						<div class="flex justify-end pt-1">
+							<Button
+								type="submit"
+								size="sm"
+								variant="outline"
+								disabled={isSubmitting}
+								class="h-8 text-xs font-semibold"
+							>
+								Simpan Aturan
+							</Button>
+						</div>
+					</form>
+				{/each}
+			</CardContent>
+		</Card>
 	{/if}
 
 	<!-- TAB: ORDERS MANAGEMENT -->
@@ -983,50 +1138,252 @@
 		</Card>
 	{/if}
 
-	<!-- TAB 4: USERS -->
+	<!-- TAB 4: USERS & PROVIDERS -->
 	{#if activeTab === 'users'}
+		<div class="space-y-6">
+			<!-- Provider Moderation -->
+			<Card class="border-border/80">
+				<CardHeader>
+					<CardTitle class="flex items-center gap-2 text-base font-bold">
+						<BadgeCheck class="size-4 text-primary" />
+						<span>Moderasi Mitra & Kurir ({data.providers.length})</span>
+					</CardTitle>
+					<p class="text-xs text-muted-foreground">
+						Verifikasi akun mitra dan kelola status aktif layanan mereka. Setiap aksi tercatat di
+						Audit Log.
+					</p>
+				</CardHeader>
+				<CardContent>
+					{#if data.providers.length === 0}
+						<div class="py-6 text-center text-xs text-muted-foreground">
+							Belum ada profil mitra yang terdaftar.
+						</div>
+					{:else}
+						<div class="divide-y divide-border/60 rounded-xl border border-border/80">
+							{#each data.providers as prov (prov.id)}
+								<div class="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
+									<div>
+										<div class="flex flex-wrap items-center gap-2">
+											<span class="text-xs font-bold text-foreground">{prov.business_name}</span>
+											{#if prov.is_verified}
+												<Badge class="bg-emerald-600 text-[10px] text-white">Terverifikasi</Badge>
+											{:else}
+												<Badge variant="outline" class="text-[10px]">Belum Verifikasi</Badge>
+											{/if}
+											{#if prov.is_active}
+												<Badge variant="secondary" class="text-[10px]">Aktif</Badge>
+											{:else}
+												<Badge variant="destructive" class="text-[10px]">Nonaktif</Badge>
+											{/if}
+										</div>
+										<div
+											class="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground"
+										>
+											<span>Pemilik: {prov.full_name}</span>
+											<span>Area: {prov.coverage_area || '-'}</span>
+											<span>Layanan: {prov.services_count}</span>
+											<span>
+												Rating: {Number(prov.rating_avg).toFixed(1)} ({prov.rating_count})
+											</span>
+										</div>
+									</div>
+
+									<div class="flex flex-wrap items-center gap-2">
+										<form
+											method="POST"
+											action="?/moderateProvider"
+											use:enhance={() => {
+												isSubmitting = true;
+												return async ({ update }) => {
+													await update();
+													isSubmitting = false;
+												};
+											}}
+										>
+											<input type="hidden" name="provider_id" value={prov.id} />
+											<input type="hidden" name="is_verified" value={String(!prov.is_verified)} />
+											<Button
+												type="submit"
+												variant="outline"
+												size="sm"
+												disabled={isSubmitting}
+												class="h-8 text-[11px]"
+											>
+												{prov.is_verified ? 'Cabut Verifikasi' : 'Verifikasi Mitra'}
+											</Button>
+										</form>
+										<form
+											method="POST"
+											action="?/moderateProvider"
+											use:enhance={() => {
+												isSubmitting = true;
+												return async ({ update }) => {
+													await update();
+													isSubmitting = false;
+												};
+											}}
+										>
+											<input type="hidden" name="provider_id" value={prov.id} />
+											<input type="hidden" name="is_active" value={String(!prov.is_active)} />
+											<Button
+												type="submit"
+												variant={prov.is_active ? 'destructive' : 'default'}
+												size="sm"
+												disabled={isSubmitting}
+												class="h-8 text-[11px]"
+											>
+												{prov.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+											</Button>
+										</form>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</CardContent>
+			</Card>
+
+			<Card class="border-border/80">
+				<CardHeader>
+					<CardTitle class="text-base font-bold">Daftar Pengguna & Hak Akses</CardTitle>
+					<p class="text-xs text-muted-foreground">
+						Pantau akun yang terdaftar serta modifikasi peran pengguna secara langsung.
+					</p>
+				</CardHeader>
+				<CardContent>
+					{#if data.users.length === 0}
+						<div class="py-8 text-center text-xs text-muted-foreground">
+							Belum ada akun lain yang terdaftar.
+						</div>
+					{:else}
+						<div class="divide-y divide-border/60 rounded-xl border border-border/80">
+							{#each data.users as u (u.id)}
+								<div class="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
+									<div>
+										<div class="flex items-center gap-2">
+											<span class="text-xs font-bold text-foreground">{u.full_name}</span>
+											{#if u.role === 'admin'}
+												<Badge variant="destructive" class="text-[10px]">Owner / Admin</Badge>
+											{:else if u.role === 'provider'}
+												<Badge variant="secondary" class="text-[10px]">Mitra Jastip</Badge>
+											{:else}
+												<Badge variant="outline" class="text-[10px]">Pelanggan</Badge>
+											{/if}
+										</div>
+										<div
+											class="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground"
+										>
+											<span>
+												ID: <code class="font-mono text-[10px]">{u.id.slice(0, 8)}...</code>
+											</span>
+											<span>Telp: {u.phone || 'Tidak dicantumkan'}</span>
+										</div>
+									</div>
+
+									<!-- Change Role Quick Form -->
+									<form
+										method="POST"
+										action="?/updateUserRole"
+										class="flex items-center gap-2"
+										use:enhance={() => {
+											isSubmitting = true;
+											return async ({ update }) => {
+												await update();
+												isSubmitting = false;
+											};
+										}}
+									>
+										<input type="hidden" name="user_id" value={u.id} />
+										<select
+											name="role"
+											value={u.role}
+											class="h-8 rounded-md border border-input bg-background px-2 text-[11px] shadow-xs"
+										>
+											<option value="customer">Pelanggan</option>
+											<option value="provider">Mitra</option>
+											<option value="admin">Admin / Owner</option>
+										</select>
+										<Button
+											type="submit"
+											variant="outline"
+											size="sm"
+											disabled={isSubmitting}
+											class="h-8 text-[11px]"
+										>
+											Ubah
+										</Button>
+									</form>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</CardContent>
+			</Card>
+		</div>
+	{/if}
+
+	<!-- TAB: DISPUTES & REPORTS -->
+	{#if activeTab === 'disputes'}
 		<Card class="border-border/80">
 			<CardHeader>
-				<CardTitle class="text-base font-bold">Daftar Pengguna & Hak Akses</CardTitle>
+				<CardTitle class="flex items-center gap-2 text-base font-bold">
+					<AlertTriangle class="size-4 text-amber-600" />
+					<span>Laporan & Sengketa Pesanan ({data.disputes.length})</span>
+				</CardTitle>
 				<p class="text-xs text-muted-foreground">
-					Pantau akun yang terdaftar serta modifikasi peran pengguna secara langsung.
+					Tindak lanjuti laporan kendala dari pelanggan maupun mitra. Setiap perubahan status
+					tercatat di Audit Log.
 				</p>
 			</CardHeader>
 			<CardContent>
-				{#if data.users.length === 0}
-					<div class="py-8 text-center text-xs text-muted-foreground">
-						Belum ada akun lain yang terdaftar.
+				{#if data.disputes.length === 0}
+					<div class="py-10 text-center text-xs text-muted-foreground">
+						Belum ada laporan atau sengketa pesanan yang masuk.
 					</div>
 				{:else}
-					<div class="divide-y divide-border/60 rounded-xl border border-border/80">
-						{#each data.users as u (u.id)}
-							<div class="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
-								<div>
-									<div class="flex items-center gap-2">
-										<span class="text-xs font-bold text-foreground">{u.full_name}</span>
-										{#if u.role === 'admin'}
-											<Badge variant="destructive" class="text-[10px]">Owner / Admin</Badge>
-										{:else if u.role === 'provider'}
-											<Badge variant="secondary" class="text-[10px]">Mitra Jastip</Badge>
-										{:else}
-											<Badge variant="outline" class="text-[10px]">Pelanggan</Badge>
-										{/if}
-									</div>
-									<div
-										class="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground"
-									>
-										<span>
-											ID: <code class="font-mono text-[10px]">{u.id.slice(0, 8)}...</code>
-										</span>
-										<span>Telp: {u.phone || 'Tidak dicantumkan'}</span>
+					<div class="space-y-4">
+						{#each data.disputes as disp (disp.id)}
+							<div class="space-y-3 rounded-xl border border-border/80 p-4">
+								<div class="flex flex-wrap items-start justify-between gap-2">
+									<div>
+										<div class="flex flex-wrap items-center gap-2">
+											<span class="text-xs font-bold text-foreground">{disp.reason}</span>
+											<Badge
+												variant={disp.status === 'resolved'
+													? 'secondary'
+													: disp.status === 'open'
+														? 'destructive'
+														: 'outline'}
+												class="text-[10px] uppercase"
+											>
+												{disp.status}
+											</Badge>
+										</div>
+										<p class="mt-1 text-xs text-muted-foreground">{disp.description}</p>
+										<div
+											class="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground"
+										>
+											<span>Pelapor: {disp.reporter_name} ({disp.reporter_role})</span>
+											<span>
+												Pesanan:
+												<a
+													href={resolve('/pesanan/[id]', {
+														id: disp.order_number || disp.order_id
+													})}
+													class="font-semibold text-primary underline"
+												>
+													{disp.order_number || disp.order_id.slice(0, 8)}
+												</a>
+											</span>
+											<span>{new Date(disp.created_at).toLocaleString('id-ID')}</span>
+										</div>
 									</div>
 								</div>
 
-								<!-- Change Role Quick Form -->
 								<form
 									method="POST"
-									action="?/updateUserRole"
-									class="flex items-center gap-2"
+									action="?/updateDisputeStatus"
+									class="flex flex-col gap-2 border-t border-border/60 pt-3 sm:flex-row sm:items-center"
 									use:enhance={() => {
 										isSubmitting = true;
 										return async ({ update }) => {
@@ -1035,26 +1392,81 @@
 										};
 									}}
 								>
-									<input type="hidden" name="user_id" value={u.id} />
+									<input type="hidden" name="dispute_id" value={disp.id} />
 									<select
-										name="role"
-										value={u.role}
-										class="h-8 rounded-md border border-input bg-background px-2 text-[11px] shadow-xs"
+										name="status"
+										value={disp.status}
+										class="h-8 rounded-md border border-input bg-background px-2 text-xs"
 									>
-										<option value="customer">Pelanggan</option>
-										<option value="provider">Mitra</option>
-										<option value="admin">Admin / Owner</option>
+										<option value="open">Open</option>
+										<option value="investigating">Investigating</option>
+										<option value="resolved">Resolved</option>
+										<option value="dismissed">Dismissed</option>
 									</select>
+									<Input
+										name="resolution_note"
+										value={disp.resolution_note || ''}
+										placeholder="Catatan penyelesaian admin..."
+										class="h-8 flex-1 text-xs"
+									/>
 									<Button
 										type="submit"
-										variant="outline"
 										size="sm"
 										disabled={isSubmitting}
-										class="h-8 text-[11px]"
+										class="h-8 text-xs font-semibold"
 									>
-										Ubah
+										Perbarui Status
 									</Button>
 								</form>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</CardContent>
+		</Card>
+	{/if}
+
+	<!-- TAB: AUDIT LOGS -->
+	{#if activeTab === 'audit'}
+		<Card class="border-border/80">
+			<CardHeader>
+				<CardTitle class="flex items-center gap-2 text-base font-bold">
+					<FileText class="size-4 text-primary" />
+					<span>Audit Log Aktivitas Admin ({data.auditLogs.length})</span>
+				</CardTitle>
+				<p class="text-xs text-muted-foreground">
+					Jejak audit append-only untuk seluruh tindakan konfigurasi, moderasi, dan verifikasi
+					admin.
+				</p>
+			</CardHeader>
+			<CardContent>
+				{#if data.auditLogs.length === 0}
+					<div class="py-10 text-center text-xs text-muted-foreground">
+						Belum ada catatan aktivitas admin.
+					</div>
+				{:else}
+					<div class="divide-y divide-border/60 rounded-xl border border-border/80">
+						{#each data.auditLogs as log (log.id)}
+							<div class="flex flex-col justify-between gap-2 p-3.5 sm:flex-row sm:items-center">
+								<div class="space-y-1">
+									<div class="flex flex-wrap items-center gap-2">
+										<Badge variant="outline" class="font-mono text-[10px]">{log.action}</Badge>
+										<span class="text-xs font-semibold text-foreground">
+											{log.actor_name || 'Admin'}
+										</span>
+										<span class="text-[11px] text-muted-foreground">
+											→ {log.target_type}{log.target_id ? ` (${log.target_id.slice(0, 12)})` : ''}
+										</span>
+									</div>
+									{#if log.metadata && Object.keys(log.metadata).length > 0}
+										<p class="font-mono text-[10px] text-muted-foreground">
+											{JSON.stringify(log.metadata)}
+										</p>
+									{/if}
+								</div>
+								<span class="shrink-0 text-[11px] text-muted-foreground">
+									{new Date(log.created_at).toLocaleString('id-ID')}
+								</span>
 							</div>
 						{/each}
 					</div>

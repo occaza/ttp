@@ -21,6 +21,7 @@ import {
 	getOrderReview,
 	submitOrderReview
 } from '#lib/server/review_earnings.js';
+import { createDispute, getDisputesForOrder } from '#lib/server/admin.js';
 import type { OrderStatus, PaymentMethod } from '#lib/types/database.types.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -47,11 +48,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw redirect(302, `/pesanan/${order.order_number}`);
 	}
 
-	const [messages, attachments, payment, review] = await Promise.all([
+	const [messages, attachments, payment, review, disputes] = await Promise.all([
 		getOrderMessages(locals.supabase, order.id),
 		getOrderAttachments(locals.supabase, order.id),
 		getPaymentByOrderId(locals.supabase, order.id),
-		getOrderReview(locals.supabase, order.id)
+		getOrderReview(locals.supabase, order.id),
+		getDisputesForOrder(locals.supabase, order.id)
 	]);
 
 	const reviewEligibility = checkReviewEligibilityFromOrder(auth.user.id, order, review);
@@ -66,6 +68,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		payment,
 		review,
 		reviewEligibility,
+		disputes,
 		isCustomer,
 		isProvider,
 		isAdmin
@@ -417,6 +420,31 @@ export const actions: Actions = {
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : 'Gagal mengirim ulasan.';
 			return fail(400, { reviewError: msg });
+		}
+	},
+
+	reportDispute: async ({ request, locals, params }) => {
+		const auth = requireAuth(locals);
+		const { id } = params;
+		const order = await getOrderDetails(locals.supabase, id);
+		if (!order) {
+			return fail(404, { disputeError: 'Pesanan tidak ditemukan.' });
+		}
+
+		const formData = await request.formData();
+		const reason = (formData.get('reason') as string) || '';
+		const description = (formData.get('description') as string) || '';
+
+		try {
+			await createDispute(locals.supabase, auth.user.id, auth.role, {
+				order_id: order.id,
+				reason,
+				description
+			});
+			return { disputeSuccess: 'Laporan masalah berhasil dikirim ke Admin Titipin.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal mengirim laporan.';
+			return fail(400, { disputeError: msg });
 		}
 	}
 };

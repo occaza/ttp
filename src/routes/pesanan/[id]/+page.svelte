@@ -8,6 +8,7 @@
 	import type { PaymentMethod } from '#lib/types/database.types.js';
 	import {
 		AlertCircle,
+		AlertTriangle,
 		ArrowLeft,
 		CheckCircle2,
 		Clock,
@@ -44,6 +45,11 @@
 
 	const pricingSnapshot = $derived(o.pricing_snapshot as unknown as PricingSnapshot);
 	const expectedTotalAmount = $derived(Number(o.actual_total || o.total_estimated || 0));
+
+	let showDisputeForm = $state(false);
+	let submittingDispute = $state(false);
+	let disputeReason = $state('');
+	let disputeDescription = $state('');
 
 	// Simplified 4-step progress mapping (folds accepted->shopping and purchased->delivering)
 	const stepNumber = $derived.by(() => {
@@ -1267,5 +1273,106 @@
 				{/if}
 			</div>
 		{/if}
+	{/if}
+
+	<!-- Fondasi Laporan Masalah / Sengketa -->
+	{#if data.isCustomer || data.isProvider}
+		<section class="space-y-3 rounded-2xl border border-border/70 bg-card/60 p-4">
+			<div class="flex items-center justify-between gap-2">
+				<div class="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+					<AlertTriangle class="size-3.5 text-amber-600" />
+					<span>Ada kendala dengan pesanan ini?</span>
+				</div>
+				<button
+					type="button"
+					onclick={() => (showDisputeForm = !showDisputeForm)}
+					class="text-xs font-semibold text-primary hover:underline"
+				>
+					{showDisputeForm ? 'Tutup' : 'Laporkan ke Admin'}
+				</button>
+			</div>
+
+			{#if form?.disputeError}
+				<div
+					role="alert"
+					class="rounded-lg bg-destructive/10 p-2.5 text-xs font-semibold text-destructive"
+				>
+					{form.disputeError}
+				</div>
+			{/if}
+			{#if form?.disputeSuccess}
+				<div
+					role="status"
+					class="rounded-lg bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-700"
+				>
+					{form.disputeSuccess}
+				</div>
+			{/if}
+
+			{#if data.disputes && data.disputes.length > 0}
+				<div class="space-y-2">
+					{#each data.disputes as disp (disp.id)}
+						<div class="rounded-xl border border-border/70 bg-background p-3 text-xs">
+							<div class="flex items-center justify-between gap-2">
+								<span class="font-bold text-foreground">{disp.reason}</span>
+								<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase">
+									{disp.status}
+								</span>
+							</div>
+							<p class="mt-1 text-muted-foreground">{disp.description}</p>
+							{#if disp.resolution_note}
+								<p class="mt-1.5 border-t border-border/60 pt-1.5 text-[11px] text-primary">
+									Catatan Admin: {disp.resolution_note}
+								</p>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			{#if showDisputeForm}
+				<form
+					method="POST"
+					action="?/reportDispute"
+					class="space-y-2.5 pt-1"
+					use:enhance={() => {
+						submittingDispute = true;
+						return async ({ update }) => {
+							submittingDispute = false;
+							disputeReason = '';
+							disputeDescription = '';
+							showDisputeForm = false;
+							await update();
+						};
+					}}
+				>
+					<Input
+						name="reason"
+						bind:value={disputeReason}
+						placeholder="Ringkasan kendala (misal: Barang kurang / salah kirim)"
+						required
+						class="h-9 text-xs"
+					/>
+					<Input
+						name="description"
+						bind:value={disputeDescription}
+						placeholder="Jelaskan detail kendala agar Admin dapat menindaklanjuti..."
+						required
+						class="h-9 text-xs"
+					/>
+					<div class="flex justify-end">
+						<Button
+							type="submit"
+							size="sm"
+							variant="outline"
+							disabled={submittingDispute}
+							class="h-8 text-xs font-semibold"
+						>
+							{submittingDispute ? 'Mengirim...' : 'Kirim Laporan'}
+						</Button>
+					</div>
+				</form>
+			{/if}
+		</section>
 	{/if}
 </div>

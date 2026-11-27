@@ -1,6 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type UserRole = 'customer' | 'provider' | 'admin';
+export type DisputeStatus = 'open' | 'investigating' | 'resolved' | 'dismissed';
 export type OrderStatus =
 	| 'pending'
 	| 'accepted'
@@ -748,6 +749,84 @@ export interface Database {
 				};
 				Relationships: [];
 			};
+			disputes: {
+				Row: {
+					id: string;
+					order_id: string;
+					reporter_id: string;
+					reporter_role: UserRole;
+					reason: string;
+					description: string;
+					status: DisputeStatus;
+					resolution_note: string | null;
+					resolved_by: string | null;
+					resolved_at: string | null;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_id: string;
+					reporter_id: string;
+					reporter_role: UserRole;
+					reason: string;
+					description: string;
+					status?: DisputeStatus;
+					resolution_note?: string | null;
+					resolved_by?: string | null;
+					resolved_at?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_id?: string;
+					reporter_id?: string;
+					reporter_role?: UserRole;
+					reason?: string;
+					description?: string;
+					status?: DisputeStatus;
+					resolution_note?: string | null;
+					resolved_by?: string | null;
+					resolved_at?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			audit_logs: {
+				Row: {
+					id: string;
+					actor_id: string | null;
+					actor_role: string;
+					action: string;
+					target_type: string;
+					target_id: string | null;
+					metadata: Json;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					actor_id?: string | null;
+					actor_role: string;
+					action: string;
+					target_type: string;
+					target_id?: string | null;
+					metadata?: Json;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					actor_id?: string | null;
+					actor_role?: string;
+					action?: string;
+					target_type?: string;
+					target_id?: string | null;
+					metadata?: Json;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -785,3 +864,5 @@ export type Payment = Database['public']['Tables']['payments']['Row'];
 export type PaymentEvent = Database['public']['Tables']['payment_events']['Row'];
 export type Review = Database['public']['Tables']['reviews']['Row'];
 export type ProviderPayout = Database['public']['Tables']['provider_payouts']['Row'];
+export type Dispute = Database['public']['Tables']['disputes']['Row'];
+export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
