@@ -293,7 +293,7 @@ export async function createNotification(
 		orderId?: string | null;
 		title: string;
 		body: string;
-		type?: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'system';
+		type?: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'payment_update' | 'system';
 	}
 ): Promise<Notification> {
 	const now = new Date().toISOString();

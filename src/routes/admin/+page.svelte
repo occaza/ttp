@@ -10,6 +10,7 @@
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import type { ServiceCategory } from '#lib/types/database.types.js';
+	import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
 	import {
 		Users,
 		Store,
@@ -29,13 +30,14 @@
 		ArrowRight,
 		CircleCheck,
 		Clock,
-		ShieldCheck
+		ShieldCheck,
+		Wallet
 	} from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Active tab state: 'overview' | 'categories' | 'users' | 'settings'
-	let activeTab = $state<'overview' | 'categories' | 'users' | 'settings'>('overview');
+	// Active tab state: 'overview' | 'payments' | 'categories' | 'users' | 'settings'
+	let activeTab = $state<'overview' | 'payments' | 'categories' | 'users' | 'settings'>('overview');
 
 	let isCategoryModalOpen = $state(false);
 	let isSubmitting = $state(false);
@@ -145,6 +147,23 @@
 		>
 			<LayoutDashboard class="size-4" />
 			<span>Ikhtisar Platform</span>
+		</button>
+
+		<button
+			type="button"
+			onclick={() => (activeTab = 'payments')}
+			class="inline-flex items-center gap-2 border-b-2 px-4 py-2.5 whitespace-nowrap transition-colors {activeTab ===
+			'payments'
+				? 'border-primary font-bold text-primary'
+				: 'border-transparent text-muted-foreground hover:text-foreground'}"
+		>
+			<Wallet class="size-4" />
+			<span>
+				Verifikasi Pembayaran
+				{#if data.stats.awaitingPayments > 0}
+					({data.stats.awaitingPayments} Menunggu)
+				{/if}
+			</span>
 		</button>
 
 		<button
@@ -575,6 +594,139 @@
 						</Button>
 					</div>
 				</form>
+			</CardContent>
+		</Card>
+	{/if}
+
+	<!-- TAB: PAYMENTS VERIFICATION -->
+	{#if activeTab === 'payments'}
+		<Card class="border-border/80">
+			<CardHeader>
+				<CardTitle class="text-base font-bold">Antrean Verifikasi Pembayaran Manual</CardTitle>
+				<p class="text-xs text-muted-foreground">
+					Periksa bukti transfer atau konfirmasi COD secara manual. Bukti yang diunggah tidak pernah
+					otomatis lunas sebelum verifikasi Admin.
+				</p>
+			</CardHeader>
+			<CardContent>
+				{#if data.payments.length === 0}
+					<div class="py-8 text-center text-xs text-muted-foreground">
+						Belum ada catatan transaksi pembayaran manual.
+					</div>
+				{:else}
+					<div class="space-y-3">
+						{#each data.payments as pay (pay.id)}
+							{@const pMeta = PAYMENT_STATUS_LABELS[pay.status]}
+							<div class="space-y-3 rounded-xl border border-border/80 bg-muted/20 p-4 text-xs">
+								<div class="flex flex-wrap items-center justify-between gap-2">
+									<div class="flex items-center gap-2">
+										<span class="font-mono font-bold text-foreground">
+											{pay.payment_reference}
+										</span>
+										<span
+											class="rounded-full border px-2 py-0.5 text-[10px] font-bold {pMeta.badgeClass}"
+										>
+											{pMeta.label}
+										</span>
+										<span
+											class="rounded bg-card px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+										>
+											{PAYMENT_METHOD_LABELS[pay.method].shortLabel}
+										</span>
+									</div>
+									<a
+										href={resolve('/pesanan/[id]', { id: pay.order_id })}
+										class="text-[11px] font-semibold text-primary hover:underline"
+									>
+										Detail Pesanan &rarr;
+									</a>
+								</div>
+
+								<div class="grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-3">
+									<div>
+										<span class="text-muted-foreground">Tagihan:</span>
+										<strong class="text-foreground">
+											Rp {Number(pay.expected_amount).toLocaleString('id-ID')}
+										</strong>
+									</div>
+									<div>
+										<span class="text-muted-foreground">Pengirim:</span>
+										<strong class="text-foreground">{pay.payer_name || '-'}</strong>
+									</div>
+									<div>
+										<span class="text-muted-foreground">Ref Eksternal:</span>
+										<strong class="font-mono text-foreground">
+											{pay.external_reference || '-'}
+										</strong>
+									</div>
+								</div>
+
+								{#if pay.proofSignedUrl && pay.proof_mime_type?.startsWith('image/')}
+									<img
+										src={pay.proofSignedUrl}
+										alt={pay.proof_file_name || 'Bukti transfer'}
+										class="max-h-40 rounded-lg border border-border/60 bg-background object-contain"
+									/>
+								{/if}
+
+								{#if pay.status === 'awaiting_verification' || pay.status === 'unpaid'}
+									<div class="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+										<form
+											method="POST"
+											action="?/verifyOrderPayment"
+											use:enhance
+											class="flex items-center gap-2"
+										>
+											<input type="hidden" name="order_id" value={pay.order_id} />
+											<input
+												type="number"
+												name="paid_amount"
+												value={pay.expected_amount}
+												min="0"
+												step="500"
+												class="h-8 w-32 rounded-md border border-input bg-background px-2 text-xs"
+												required
+											/>
+											<Button
+												type="submit"
+												size="sm"
+												class="h-8 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+											>
+												Verifikasi Lunas
+											</Button>
+										</form>
+
+										{#if pay.status === 'awaiting_verification'}
+											<form
+												method="POST"
+												action="?/rejectOrderPayment"
+												use:enhance
+												class="flex items-center gap-2"
+											>
+												<input type="hidden" name="order_id" value={pay.order_id} />
+												<Input
+													name="rejection_reason"
+													type="text"
+													placeholder="Alasan tolak..."
+													required
+													class="h-8 w-44 bg-background text-xs"
+												/>
+												<Button
+													type="submit"
+													size="sm"
+													variant="destructive"
+													class="h-8 text-xs font-bold"
+												>
+													Tolak
+												</Button>
+											</form>
+										{/if}
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</CardContent>
 		</Card>
 	{/if}

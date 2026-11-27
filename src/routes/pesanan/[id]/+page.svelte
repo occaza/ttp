@@ -3,7 +3,9 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
+	import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
 	import type { PricingSnapshot } from '#lib/server/pricing.js';
+	import type { PaymentMethod } from '#lib/types/database.types.js';
 	import {
 		ShoppingBag,
 		MapPin,
@@ -19,7 +21,9 @@
 		Ban,
 		Send,
 		Upload,
-		FileText
+		FileText,
+		Wallet,
+		ShieldCheck
 	} from 'lucide-svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -74,6 +78,38 @@
 	let uploadingEvidence = $state(false);
 	let attachmentType = $state<'receipt' | 'delivery_proof' | 'chat_image'>('receipt');
 	let evidenceNote = $state('');
+
+	// Phase 9 Payment MVP state
+	const p = $derived(data.payment);
+	const paymentStatusMeta = $derived(
+		p ? PAYMENT_STATUS_LABELS[p.status] : PAYMENT_STATUS_LABELS.unpaid
+	);
+	const expectedTotalAmount = $derived(Number(o.actual_total || o.total_estimated || 0));
+
+	let selectedMethod = $state<PaymentMethod>('cash_on_delivery');
+	let payerName = $state('');
+	let paymentExternalRef = $state('');
+	let paymentNotes = $state('');
+	let submittingPayment = $state(false);
+
+	let verifyAmount = $state('');
+	let verifyExtRef = $state('');
+	let verifyNote = $state('');
+	let rejectReason = $state('');
+	let refundNote = $state('');
+	let processingPrivilegePayment = $state(false);
+
+	$effect(() => {
+		if (p) {
+			selectedMethod = p.method;
+			payerName = p.payer_name || '';
+			paymentExternalRef = p.external_reference || '';
+		} else {
+			selectedMethod = 'cash_on_delivery';
+			payerName = o.recipient_name || '';
+		}
+		verifyAmount = String(expectedTotalAmount);
+	});
 </script>
 
 <svelte:head>
@@ -282,6 +318,415 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- Pembayaran Manual MVP (Status Terpisah dari Status Pesanan) -->
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+				<div
+					class="flex flex-col gap-3 border-b border-border/60 pb-3 sm:flex-row sm:items-center sm:justify-between"
+				>
+					<div class="flex items-center gap-2">
+						<div
+							class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						>
+							<Wallet class="size-4" />
+						</div>
+						<div>
+							<h2 class="text-sm font-bold text-foreground">Pembayaran Manual (Pilot Titipin)</h2>
+							<p class="text-[11px] text-muted-foreground">
+								Status pembayaran dikelola terpisah dari status pengiriman pesanan
+							</p>
+						</div>
+					</div>
+
+					<span
+						class="self-start rounded-full border px-2.5 py-0.5 text-[11px] font-bold sm:self-auto {paymentStatusMeta.badgeClass}"
+					>
+						{paymentStatusMeta.label}
+					</span>
+				</div>
+
+				{#if form?.paymentError}
+					<div
+						class="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+					>
+						<AlertCircle class="size-4 shrink-0" />
+						<span>{form.paymentError}</span>
+					</div>
+				{/if}
+
+				{#if form?.paymentSuccess}
+					<div
+						class="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+					>
+						<CheckCircle2 class="size-4 shrink-0" />
+						<span>{form.paymentSuccess}</span>
+					</div>
+				{/if}
+
+				<!-- Ringkasan Referensi & Status -->
+				<div
+					class="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 text-xs sm:grid-cols-3"
+				>
+					<div>
+						<span class="block text-[10px] font-semibold text-muted-foreground uppercase">
+							Referensi Pembayaran
+						</span>
+						<span class="font-mono font-bold text-foreground">
+							{p?.payment_reference || 'Belum dibuat'}
+						</span>
+					</div>
+					<div>
+						<span class="block text-[10px] font-semibold text-muted-foreground uppercase">
+							Metode Terpilih
+						</span>
+						<span class="font-bold text-foreground">
+							{p ? PAYMENT_METHOD_LABELS[p.method].shortLabel : 'Belum dipilih'}
+						</span>
+					</div>
+					<div>
+						<span class="block text-[10px] font-semibold text-muted-foreground uppercase">
+							Tagihan / Terverifikasi
+						</span>
+						<span class="font-bold text-primary">
+							Rp {Number(p?.paid_amount ?? expectedTotalAmount).toLocaleString('id-ID')}
+						</span>
+					</div>
+				</div>
+
+				{#if p?.status === 'awaiting_verification'}
+					<div
+						class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] leading-relaxed text-amber-800 dark:text-amber-300"
+					>
+						<strong>Menunggu Pemeriksaan Resmi:</strong> Bukti atau referensi transfer yang Anda kirim
+						belum dianggap lunas otomatis hingga diverifikasi secara manual oleh Admin atau Kurir Titipin.
+					</div>
+				{:else if p?.status === 'rejected' && p.rejection_reason}
+					<div
+						class="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-[11px] leading-relaxed text-rose-800 dark:text-rose-300"
+					>
+						<strong>Bukti Pembayaran Ditolak:</strong>
+						{p.rejection_reason}
+					</div>
+				{:else if p?.status === 'verified' && p.verified_at}
+					<div
+						class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300"
+					>
+						<strong>Pembayaran Dikonfirmasi Lunas</strong> pada
+						{new Date(p.verified_at).toLocaleString('id-ID')}.
+						{#if p.external_reference}
+							Referensi eksternal: <span class="font-mono font-semibold">
+								{p.external_reference}
+							</span>.
+						{/if}
+					</div>
+				{/if}
+
+				{#if p?.proofSignedUrl && p.proof_mime_type?.startsWith('image/')}
+					<div class="space-y-1.5">
+						<span class="text-[11px] font-semibold text-muted-foreground">
+							Bukti Pembayaran Terunggah ({p.proof_file_name})
+						</span>
+						<img
+							src={p.proofSignedUrl}
+							alt={p.proof_file_name || 'Bukti pembayaran'}
+							class="max-h-52 w-full rounded-xl border border-border/70 bg-muted/20 object-contain"
+						/>
+					</div>
+				{:else if p?.proof_file_name}
+					<div
+						class="flex items-center gap-2 rounded-xl border border-border/70 bg-muted/20 p-3 text-xs"
+					>
+						<FileText class="size-4 text-primary" />
+						<span class="font-semibold text-foreground">{p.proof_file_name}</span>
+						{#if p.external_reference}
+							<span class="ml-auto font-mono text-[11px] text-muted-foreground">
+								Ref: {p.external_reference}
+							</span>
+						{/if}
+					</div>
+				{/if}
+
+				<!-- Customer Payment Submission Form (blocked once verified or refunded) -->
+				{#if (!p || (p.status !== 'verified' && p.status !== 'refunded')) && (data.isCustomer || data.isAdmin)}
+					<form
+						method="POST"
+						action="?/submitPayment"
+						enctype="multipart/form-data"
+						use:enhance={() => {
+							submittingPayment = true;
+							return async ({ update }) => {
+								submittingPayment = false;
+								await update();
+							};
+						}}
+						class="space-y-3 border-t border-border/60 pt-4"
+					>
+						<p class="text-xs font-bold text-foreground">
+							Pilih Metode & Kirim Konfirmasi Pembayaran
+						</p>
+
+						<div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+							{#each Object.entries(PAYMENT_METHOD_LABELS) as [mKey, mMeta] (mKey)}
+								<label
+									class="flex cursor-pointer items-start gap-2 rounded-xl border p-2.5 text-xs transition-colors {selectedMethod ===
+									mKey
+										? 'border-primary bg-primary/5 font-semibold'
+										: 'border-border/70 hover:bg-muted/30'}"
+								>
+									<input
+										type="radio"
+										name="method"
+										value={mKey}
+										bind:group={selectedMethod}
+										class="mt-0.5 accent-primary"
+									/>
+									<span>{mMeta.shortLabel}</span>
+								</label>
+							{/each}
+						</div>
+
+						<p
+							class="rounded-lg bg-muted/40 p-2.5 text-[11px] leading-relaxed text-muted-foreground"
+						>
+							{PAYMENT_METHOD_LABELS[selectedMethod].instructions}
+						</p>
+
+						{#if selectedMethod !== 'cash_on_delivery'}
+							<div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+								<div>
+									<label for="payer_name" class="mb-1 block text-[11px] font-semibold">
+										Nama Pengirim Rekening / E-Wallet
+									</label>
+									<Input
+										id="payer_name"
+										name="payer_name"
+										type="text"
+										bind:value={payerName}
+										placeholder="Contoh: Budi Santoso"
+										class="h-9 text-xs"
+									/>
+								</div>
+								<div>
+									<label for="external_reference" class="mb-1 block text-[11px] font-semibold">
+										Nomor Referensi / ID Transaksi Bank
+									</label>
+									<Input
+										id="external_reference"
+										name="external_reference"
+										type="text"
+										bind:value={paymentExternalRef}
+										placeholder="Contoh: TRF-20261127-001"
+										class="h-9 text-xs"
+									/>
+								</div>
+							</div>
+
+							<div>
+								<label for="proof_file" class="mb-1 block text-[11px] font-semibold">
+									Unggah Bukti Transfer (JPG, PNG, WebP, PDF maks. 5 MB)
+								</label>
+								<input
+									id="proof_file"
+									type="file"
+									name="proof_file"
+									accept="image/jpeg,image/png,image/webp,application/pdf"
+									class="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-foreground hover:file:bg-muted/80"
+								/>
+							</div>
+						{/if}
+
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<Input
+								name="notes"
+								type="text"
+								bind:value={paymentNotes}
+								placeholder="Catatan pembayaran (opsional)"
+								class="h-9 flex-1 text-xs"
+							/>
+							<Button
+								type="submit"
+								size="sm"
+								disabled={submittingPayment}
+								class="h-9 gap-1.5 text-xs font-bold"
+							>
+								<Wallet class="size-3.5" />
+								<span>
+									{submittingPayment
+										? 'Menyimpan...'
+										: selectedMethod === 'cash_on_delivery'
+											? 'Konfirmasi Pilih COD'
+											: 'Kirim Bukti Pembayaran'}
+								</span>
+							</Button>
+						</div>
+					</form>
+				{/if}
+
+				<!-- Privileged Verification Controls (Admin or Assigned Provider ONLY) -->
+				{#if data.isAdmin || data.isProvider}
+					<div class="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-4">
+						<div class="flex items-center gap-1.5 text-xs font-bold text-primary">
+							<ShieldCheck class="size-4" />
+							<span>Panel Verifikasi Pembayaran (Hak Akses Admin / Kurir)</span>
+						</div>
+
+						{#if !p || p.status !== 'verified'}
+							{#if p?.status !== 'refunded'}
+								<form
+									method="POST"
+									action="?/verifyPayment"
+									use:enhance={() => {
+										processingPrivilegePayment = true;
+										return async ({ update }) => {
+											processingPrivilegePayment = false;
+											await update();
+										};
+									}}
+									class="grid grid-cols-1 gap-2 sm:grid-cols-12"
+								>
+									<div class="sm:col-span-4">
+										<Input
+											name="paid_amount"
+											type="number"
+											min="0"
+											step="500"
+											bind:value={verifyAmount}
+											placeholder="Nominal diterima (Rp)"
+											required
+											class="h-8 bg-background text-xs"
+										/>
+									</div>
+									<div class="sm:col-span-4">
+										<Input
+											name="external_reference"
+											type="text"
+											bind:value={verifyExtRef}
+											placeholder="Ref mutasi / tunai"
+											class="h-8 bg-background text-xs"
+										/>
+									</div>
+									<div class="sm:col-span-4">
+										<Button
+											type="submit"
+											size="sm"
+											disabled={processingPrivilegePayment}
+											class="h-8 w-full bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+										>
+											Verifikasi Lunas
+										</Button>
+									</div>
+									<div class="sm:col-span-12">
+										<Input
+											name="note"
+											type="text"
+											bind:value={verifyNote}
+											placeholder="Catatan audit verifikasi (opsional)"
+											class="h-8 bg-background text-xs"
+										/>
+									</div>
+								</form>
+							{/if}
+						{/if}
+
+						{#if p && p.status === 'awaiting_verification'}
+							<form
+								method="POST"
+								action="?/rejectPayment"
+								use:enhance={() => {
+									processingPrivilegePayment = true;
+									return async ({ update }) => {
+										processingPrivilegePayment = false;
+										rejectReason = '';
+										await update();
+									};
+								}}
+								class="flex flex-col gap-2 border-t border-primary/15 pt-2 sm:flex-row"
+							>
+								<Input
+									name="rejection_reason"
+									type="text"
+									bind:value={rejectReason}
+									placeholder="Alasan tolak bukti (misal: nominal tidak sesuai)"
+									required
+									class="h-8 flex-1 bg-background text-xs"
+								/>
+								<Button
+									type="submit"
+									size="sm"
+									variant="destructive"
+									disabled={processingPrivilegePayment}
+									class="h-8 text-xs font-bold"
+								>
+									Tolak Bukti
+								</Button>
+							</form>
+						{/if}
+
+						{#if p && p.status === 'verified'}
+							<form
+								method="POST"
+								action="?/refundPayment"
+								use:enhance={() => {
+									processingPrivilegePayment = true;
+									return async ({ update }) => {
+										processingPrivilegePayment = false;
+										refundNote = '';
+										await update();
+									};
+								}}
+								class="flex flex-col gap-2 pt-1 sm:flex-row"
+							>
+								<Input
+									name="note"
+									type="text"
+									bind:value={refundNote}
+									placeholder="Catatan pengembalian dana (refund)..."
+									required
+									class="h-8 flex-1 bg-background text-xs"
+								/>
+								<Button
+									type="submit"
+									size="sm"
+									variant="outline"
+									disabled={processingPrivilegePayment}
+									class="h-8 border-rose-500/40 text-xs font-bold text-rose-600 hover:bg-rose-500/10"
+								>
+									Catat Refund
+								</Button>
+							</form>
+						{/if}
+					</div>
+				{/if}
+
+				<!-- Immutable Payment Audit Trail -->
+				{#if p && p.events.length > 0}
+					<div class="space-y-2 border-t border-border/60 pt-3">
+						<span class="text-[11px] font-bold text-foreground">Jejak Audit Pembayaran</span>
+						<div class="space-y-1.5">
+							{#each p.events as ev (ev.id)}
+								<div
+									class="flex items-start justify-between gap-2 rounded-lg bg-muted/30 px-3 py-1.5 text-[11px]"
+								>
+									<div class="space-y-0.5">
+										<span class="font-semibold text-foreground">
+											{ev.event_type} ({ev.to_status})
+										</span>
+										{#if ev.note}
+											<p class="text-muted-foreground">{ev.note}</p>
+										{/if}
+									</div>
+									<span class="shrink-0 text-[10px] text-muted-foreground">
+										{new Date(ev.created_at).toLocaleTimeString('id-ID', {
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
+									</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
 
 			<!-- Bukti Struk Kasir & Pengantaran (Evidence Attachments) -->
 			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
@@ -558,6 +1003,15 @@
 						<span class="text-foreground">Total Estimasi</span>
 						<span class="text-primary">
 							Rp {Number(o.actual_total || o.total_estimated).toLocaleString('id-ID')}
+						</span>
+					</div>
+
+					<div class="flex items-center justify-between border-t border-border/40 pt-2.5">
+						<span class="text-[11px] font-semibold text-muted-foreground">Status Pembayaran</span>
+						<span
+							class="rounded-full border px-2 py-0.5 text-[10px] font-bold {paymentStatusMeta.badgeClass}"
+						>
+							{paymentStatusMeta.label}
 						</span>
 					</div>
 				</div>

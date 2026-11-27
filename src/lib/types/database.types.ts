@@ -11,6 +11,18 @@ export type OrderStatus =
 	| 'completed'
 	| 'cancelled';
 
+export type PaymentMethod = 'cash_on_delivery' | 'bank_transfer' | 'qris_manual';
+export type PaymentStatus =
+	'unpaid' | 'awaiting_verification' | 'verified' | 'rejected' | 'refunded';
+export type PaymentEventType =
+	| 'created'
+	| 'method_selected'
+	| 'proof_submitted'
+	| 'verified'
+	| 'rejected'
+	| 'refunded'
+	| 'note_added';
+
 export interface Database {
 	public: {
 		Tables: {
@@ -525,7 +537,7 @@ export interface Database {
 					order_id: string | null;
 					title: string;
 					body: string;
-					type: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'system';
+					type: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'payment_update' | 'system';
 					is_read: boolean;
 					created_at: string;
 				};
@@ -535,7 +547,8 @@ export interface Database {
 					order_id?: string | null;
 					title: string;
 					body: string;
-					type?: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'system';
+					type?:
+						'order_update' | 'chat_message' | 'evidence_uploaded' | 'payment_update' | 'system';
 					is_read?: boolean;
 					created_at?: string;
 				};
@@ -545,8 +558,123 @@ export interface Database {
 					order_id?: string | null;
 					title?: string;
 					body?: string;
-					type?: 'order_update' | 'chat_message' | 'evidence_uploaded' | 'system';
+					type?:
+						'order_update' | 'chat_message' | 'evidence_uploaded' | 'payment_update' | 'system';
 					is_read?: boolean;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
+			payments: {
+				Row: {
+					id: string;
+					order_id: string;
+					payment_reference: string;
+					customer_id: string;
+					method: PaymentMethod;
+					status: PaymentStatus;
+					expected_amount: number;
+					paid_amount: number | null;
+					external_reference: string | null;
+					payer_name: string | null;
+					proof_file_path: string | null;
+					proof_file_name: string | null;
+					proof_mime_type: string | null;
+					proof_file_size: number | null;
+					verified_by: string | null;
+					verified_at: string | null;
+					rejection_reason: string | null;
+					notes: string | null;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_id: string;
+					payment_reference: string;
+					customer_id: string;
+					method: PaymentMethod;
+					status?: PaymentStatus;
+					expected_amount?: number;
+					paid_amount?: number | null;
+					external_reference?: string | null;
+					payer_name?: string | null;
+					proof_file_path?: string | null;
+					proof_file_name?: string | null;
+					proof_mime_type?: string | null;
+					proof_file_size?: number | null;
+					verified_by?: string | null;
+					verified_at?: string | null;
+					rejection_reason?: string | null;
+					notes?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_id?: string;
+					payment_reference?: string;
+					customer_id?: string;
+					method?: PaymentMethod;
+					status?: PaymentStatus;
+					expected_amount?: number;
+					paid_amount?: number | null;
+					external_reference?: string | null;
+					payer_name?: string | null;
+					proof_file_path?: string | null;
+					proof_file_name?: string | null;
+					proof_mime_type?: string | null;
+					proof_file_size?: number | null;
+					verified_by?: string | null;
+					verified_at?: string | null;
+					rejection_reason?: string | null;
+					notes?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			payment_events: {
+				Row: {
+					id: string;
+					payment_id: string;
+					order_id: string;
+					event_type: PaymentEventType;
+					from_status: string | null;
+					to_status: string;
+					actor_id: string | null;
+					actor_role: 'customer' | 'provider' | 'admin' | 'system';
+					amount: number | null;
+					external_reference: string | null;
+					note: string | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					payment_id: string;
+					order_id: string;
+					event_type: PaymentEventType;
+					from_status?: string | null;
+					to_status: string;
+					actor_id?: string | null;
+					actor_role: 'customer' | 'provider' | 'admin' | 'system';
+					amount?: number | null;
+					external_reference?: string | null;
+					note?: string | null;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					payment_id?: string;
+					order_id?: string;
+					event_type?: PaymentEventType;
+					from_status?: string | null;
+					to_status?: string;
+					actor_id?: string | null;
+					actor_role?: 'customer' | 'provider' | 'admin' | 'system';
+					amount?: number | null;
+					external_reference?: string | null;
+					note?: string | null;
 					created_at?: string;
 				};
 				Relationships: [];
@@ -584,3 +712,5 @@ export type OrderStatusHistory = Database['public']['Tables']['order_status_hist
 export type OrderMessage = Database['public']['Tables']['order_messages']['Row'];
 export type OrderAttachment = Database['public']['Tables']['order_attachments']['Row'];
 export type Notification = Database['public']['Tables']['notifications']['Row'];
+export type Payment = Database['public']['Tables']['payments']['Row'];
+export type PaymentEvent = Database['public']['Tables']['payment_events']['Row'];

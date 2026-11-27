@@ -9,6 +9,14 @@ import {
 	uploadOrderEvidence,
 	createNotification
 } from '#lib/server/communication.js';
+import {
+	getPaymentByOrderId,
+	submitCustomerPayment,
+	verifyPayment,
+	rejectPayment,
+	refundPayment
+} from '#lib/server/payment.js';
+import type { PaymentMethod } from '#lib/types/database.types.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const auth = requireAuth(locals);
@@ -29,9 +37,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(403, { message: 'Anda tidak memiliki hak akses untuk melihat pesanan ini.' });
 	}
 
-	const [messages, attachments] = await Promise.all([
+	const [messages, attachments, payment] = await Promise.all([
 		getOrderMessages(locals.supabase, id),
-		getOrderAttachments(locals.supabase, id)
+		getOrderAttachments(locals.supabase, id),
+		getPaymentByOrderId(locals.supabase, id)
 	]);
 
 	return {
@@ -41,6 +50,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		order,
 		messages,
 		attachments,
+		payment,
 		isCustomer,
 		isProvider,
 		isAdmin
@@ -191,6 +201,134 @@ export const actions: Actions = {
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : 'Gagal mengunggah bukti.';
 			return fail(400, { evidenceError: msg });
+		}
+	},
+
+	submitPayment: async ({ request, locals, params }) => {
+		const auth = requireAuth(locals);
+		const { id } = params;
+		const formData = await request.formData();
+
+		const rawMethod = formData.get('method');
+		const rawPayer = formData.get('payer_name');
+		const rawExtRef = formData.get('external_reference');
+		const rawNotes = formData.get('notes');
+		const proofFile = formData.get('proof_file');
+
+		const methodStr = typeof rawMethod === 'string' ? rawMethod : '';
+		const method: PaymentMethod =
+			methodStr === 'bank_transfer' || methodStr === 'qris_manual' ? methodStr : 'cash_on_delivery';
+		const payerName = typeof rawPayer === 'string' && rawPayer.trim() ? rawPayer.trim() : undefined;
+		const externalReference =
+			typeof rawExtRef === 'string' && rawExtRef.trim() ? rawExtRef.trim() : undefined;
+		const notes = typeof rawNotes === 'string' && rawNotes.trim() ? rawNotes.trim() : undefined;
+
+		try {
+			let fileName: string | undefined;
+			let mimeType: string | undefined;
+			let fileSize: number | undefined;
+			let fileBuffer: ArrayBuffer | undefined;
+
+			if (proofFile instanceof File && proofFile.size > 0) {
+				fileName = proofFile.name;
+				mimeType = proofFile.type || 'application/octet-stream';
+				fileSize = proofFile.size;
+				fileBuffer = await proofFile.arrayBuffer();
+			}
+
+			const result = await submitCustomerPayment(locals.supabase, auth.user.id, auth.role, {
+				orderId: id,
+				method,
+				payerName,
+				externalReference,
+				notes,
+				fileName,
+				mimeType,
+				fileSize,
+				fileBuffer
+			});
+
+			return {
+				paymentSuccess:
+					result.status === 'awaiting_verification'
+						? 'Bukti pembayaran berhasil dikirim dan sedang menunggu verifikasi resmi.'
+						: 'Metode pembayaran berhasil disimpan.'
+			};
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal mengirim data pembayaran.';
+			return fail(400, { paymentError: msg });
+		}
+	},
+
+	verifyPayment: async ({ request, locals, params }) => {
+		const auth = requireAuth(locals);
+		const { id } = params;
+		const formData = await request.formData();
+
+		const rawAmount = formData.get('paid_amount');
+		const rawExtRef = formData.get('external_reference');
+		const rawNote = formData.get('note');
+
+		const paidAmount = typeof rawAmount === 'string' && rawAmount ? Number(rawAmount) : NaN;
+		if (!Number.isFinite(paidAmount) || paidAmount < 0) {
+			return fail(400, { paymentError: 'Nominal pembayaran yang diverifikasi tidak valid.' });
+		}
+
+		const externalReference =
+			typeof rawExtRef === 'string' && rawExtRef.trim() ? rawExtRef.trim() : undefined;
+		const note = typeof rawNote === 'string' && rawNote.trim() ? rawNote.trim() : undefined;
+
+		try {
+			await verifyPayment(locals.supabase, auth.user.id, auth.role, {
+				order_id: id,
+				paid_amount: paidAmount,
+				external_reference: externalReference,
+				note
+			});
+			return { paymentSuccess: 'Pembayaran berhasil diverifikasi lunas.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal memverifikasi pembayaran.';
+			return fail(403, { paymentError: msg });
+		}
+	},
+
+	rejectPayment: async ({ request, locals, params }) => {
+		const auth = requireAuth(locals);
+		const { id } = params;
+		const formData = await request.formData();
+
+		const rawReason = formData.get('rejection_reason');
+		const rejectionReason = typeof rawReason === 'string' ? rawReason.trim() : '';
+
+		try {
+			await rejectPayment(locals.supabase, auth.user.id, auth.role, {
+				order_id: id,
+				rejection_reason: rejectionReason
+			});
+			return { paymentSuccess: 'Bukti pembayaran ditolak dan pemesan telah diberitahu.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menolak bukti pembayaran.';
+			return fail(400, { paymentError: msg });
+		}
+	},
+
+	refundPayment: async ({ request, locals, params }) => {
+		const auth = requireAuth(locals);
+		const { id } = params;
+		const formData = await request.formData();
+
+		const rawNote = formData.get('note');
+		const note = typeof rawNote === 'string' ? rawNote.trim() : '';
+
+		try {
+			await refundPayment(locals.supabase, auth.user.id, auth.role, {
+				order_id: id,
+				note
+			});
+			return { paymentSuccess: 'Status pembayaran berhasil dicatat sebagai dana dikembalikan.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal mencatat pengembalian dana.';
+			return fail(400, { paymentError: msg });
 		}
 	}
 };

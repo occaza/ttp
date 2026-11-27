@@ -3,6 +3,7 @@ import { requireRole, categorySchema } from '#lib/server/auth.js';
 import { fail } from '@sveltejs/kit';
 import type { ServiceCategory, UserRole } from '#lib/types/database.types.js';
 import { getPlatformSettings, updatePlatformSettings } from '#lib/server/settings.js';
+import { getAllPayments, verifyPayment, rejectPayment } from '#lib/server/payment.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Server-side strict authorization: only admin/owner
@@ -86,6 +87,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// 2. Fetch platform settings
 	const settings = await getPlatformSettings(locals.supabase);
 
+	// 2b. Fetch manual payments queue for audit & privileged verification
+	const payments = await getAllPayments(locals.supabase, 50);
+
 	// 3. Fetch registered users list
 	const { data: usersData } = await locals.supabase
 		.from('profiles')
@@ -95,6 +99,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const userList = usersData || [];
 	const providerCount = userList.filter((u) => u.role === 'provider').length;
+	const awaitingPaymentsCount = payments.filter((p) => p.status === 'awaiting_verification').length;
 
 	return {
 		user: auth.user,
@@ -102,10 +107,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		role: auth.role,
 		categories: categories && categories.length > 0 ? categories : fallbackCategories,
 		settings,
+		payments,
 		users: userList,
 		stats: {
 			totalUsers: userList.length,
 			totalProviders: providerCount,
+			awaitingPayments: awaitingPaymentsCount,
 			totalCategories: (categories && categories.length > 0 ? categories : fallbackCategories)
 				.length,
 			activeCategories: (categories && categories.length > 0
@@ -294,5 +301,64 @@ export const actions: Actions = {
 			.upsert({ user_id: userId, role: newRole }, { onConflict: 'user_id,role' });
 
 		return { success: true, message: `Peran pengguna berhasil diubah menjadi ${newRole}.` };
+	},
+
+	verifyOrderPayment: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+
+		const rawOrderId = formData.get('order_id');
+		const rawAmount = formData.get('paid_amount');
+		const rawExtRef = formData.get('external_reference');
+		const rawNote = formData.get('note');
+
+		const orderId = typeof rawOrderId === 'string' ? rawOrderId : '';
+		const paidAmount = typeof rawAmount === 'string' && rawAmount ? Number(rawAmount) : NaN;
+		const externalReference =
+			typeof rawExtRef === 'string' && rawExtRef.trim() ? rawExtRef.trim() : undefined;
+		const note = typeof rawNote === 'string' && rawNote.trim() ? rawNote.trim() : undefined;
+
+		if (!orderId || !Number.isFinite(paidAmount) || paidAmount < 0) {
+			return fail(400, { error: 'ID pesanan dan nominal pembayaran wajib valid.' });
+		}
+
+		try {
+			await verifyPayment(locals.supabase, auth.user.id, auth.role, {
+				order_id: orderId,
+				paid_amount: paidAmount,
+				external_reference: externalReference,
+				note
+			});
+			return { success: true, message: 'Pembayaran pesanan berhasil diverifikasi lunas.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal memverifikasi pembayaran.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	rejectOrderPayment: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+
+		const rawOrderId = formData.get('order_id');
+		const rawReason = formData.get('rejection_reason');
+
+		const orderId = typeof rawOrderId === 'string' ? rawOrderId : '';
+		const rejectionReason = typeof rawReason === 'string' ? rawReason.trim() : '';
+
+		if (!orderId) {
+			return fail(400, { error: 'ID pesanan wajib diisi.' });
+		}
+
+		try {
+			await rejectPayment(locals.supabase, auth.user.id, auth.role, {
+				order_id: orderId,
+				rejection_reason: rejectionReason
+			});
+			return { success: true, message: 'Bukti pembayaran ditolak dan pemesan diberitahu.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menolak bukti pembayaran.';
+			return fail(400, { error: msg });
+		}
 	}
 };

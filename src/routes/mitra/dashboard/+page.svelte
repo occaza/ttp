@@ -21,6 +21,7 @@
 		ShoppingBag
 	} from 'lucide-svelte';
 	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
+	import { PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
 	import type { ProviderService } from '#lib/types/database.types.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -331,11 +332,12 @@
 								label: order.status,
 								badgeClass: 'bg-muted text-muted-foreground'
 							}}
+							{@const payMeta = PAYMENT_STATUS_LABELS[order.paymentStatus]}
 							<div class="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4">
 								<div
 									class="flex flex-col gap-2 border-b border-border/50 pb-2.5 sm:flex-row sm:items-center sm:justify-between"
 								>
-									<div class="flex items-center gap-2">
+									<div class="flex flex-wrap items-center gap-2">
 										<span class="font-mono text-xs font-bold text-foreground">
 											{order.order_number}
 										</span>
@@ -343,6 +345,11 @@
 											class="rounded-full border px-2 py-0.5 text-[10px] font-bold {statusMeta.badgeClass}"
 										>
 											{statusMeta.label}
+										</span>
+										<span
+											class="rounded-full border px-2 py-0.5 text-[10px] font-bold {payMeta.badgeClass}"
+										>
+											Bayar: {payMeta.label}
 										</span>
 									</div>
 									<span class="text-[10px] text-muted-foreground">
