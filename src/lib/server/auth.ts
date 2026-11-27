@@ -2,6 +2,27 @@ import { error, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { UserRole, Profile } from '#lib/types/database.types.js';
 
+/**
+ * Prevent open redirect attacks by allowing only safe relative paths.
+ */
+export function sanitizeRedirectPath(
+	rawPath: string | null | undefined,
+	fallback: string = '/profil'
+): string {
+	if (!rawPath) return fallback;
+	const trimmed = rawPath.trim();
+	if (
+		!trimmed.startsWith('/') ||
+		trimmed.startsWith('//') ||
+		trimmed.startsWith('/\\') ||
+		trimmed.includes('://') ||
+		/[\r\n]/.test(trimmed)
+	) {
+		return fallback;
+	}
+	return trimmed;
+}
+
 export const loginSchema = z.object({
 	email: z.string().trim().email({ message: 'Alamat email tidak valid' }),
 	password: z.string().min(6, { message: 'Kata sandi minimal 6 karakter' })

@@ -1,10 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { loginSchema } from '#lib/server/auth.js';
+import { loginSchema, sanitizeRedirectPath } from '#lib/server/auth.js';
 
 export const load: PageServerLoad = ({ locals, url }) => {
 	if (locals.user) {
-		const redirectUrl = url.searchParams.get('redirect') || '/profil';
+		const redirectUrl = sanitizeRedirectPath(url.searchParams.get('redirect'), '/profil');
 		throw redirect(303, redirectUrl);
 	}
 	const registered = url.searchParams.get('registered') === 'true';
@@ -63,7 +63,7 @@ export const actions: Actions = {
 			});
 		}
 
-		const redirectUrl = url.searchParams.get('redirect') || '/profil';
+		const redirectUrl = sanitizeRedirectPath(url.searchParams.get('redirect'), '/profil');
 		throw redirect(303, redirectUrl);
 	}
 };

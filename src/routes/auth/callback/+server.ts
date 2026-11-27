@@ -1,8 +1,9 @@
 import { redirect, type RequestHandler } from '@sveltejs/kit';
+import { sanitizeRedirectPath } from '#lib/server/auth.js';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const code = url.searchParams.get('code');
-	const next = url.searchParams.get('next') ?? '/profil';
+	const next = sanitizeRedirectPath(url.searchParams.get('next'), '/profil');
 
 	if (code) {
 		const { error } = await locals.supabase.auth.exchangeCodeForSession(code);
