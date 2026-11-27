@@ -431,9 +431,9 @@
 									{#if order.status === 'pending'}
 										<form method="POST" action="?/updateOrderStatus" use:enhance class="flex gap-2">
 											<input type="hidden" name="order_id" value={order.id} />
-											<input type="hidden" name="to_status" value="accepted" />
+											<input type="hidden" name="to_status" value="shopping" />
 											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
-												Terima Pesanan
+												Terima &amp; Belanjakan
 											</Button>
 										</form>
 										<form method="POST" action="?/updateOrderStatus" use:enhance>
@@ -453,7 +453,7 @@
 											<input type="hidden" name="order_id" value={order.id} />
 											<input type="hidden" name="to_status" value="shopping" />
 											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
-												Mulai Belanja di Toko
+												Mulai Belanja
 											</Button>
 										</form>
 									{:else if order.status === 'shopping'}
@@ -464,18 +464,18 @@
 											class="flex flex-wrap items-center gap-2"
 										>
 											<input type="hidden" name="order_id" value={order.id} />
-											<input type="hidden" name="to_status" value="purchased" />
+											<input type="hidden" name="to_status" value="delivering" />
 											<Input
 												name="actual_item_cost"
 												type="number"
 												min="0"
 												step="500"
-												placeholder="Total nota fisik (Rp)"
+												placeholder="Total nota toko (Rp)"
 												class="h-8 w-36 text-xs"
 												required
 											/>
 											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
-												Selesai Belanja (Ada Struk)
+												Input Nota &amp; Antar
 											</Button>
 										</form>
 									{:else if order.status === 'purchased'}
@@ -483,7 +483,7 @@
 											<input type="hidden" name="order_id" value={order.id} />
 											<input type="hidden" name="to_status" value="delivering" />
 											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
-												Berangkat Antar ke Alamat
+												Berangkat Antar
 											</Button>
 										</form>
 									{:else if order.status === 'delivering'}

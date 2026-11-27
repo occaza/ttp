@@ -7,6 +7,8 @@ async function runOrderLifecycleVerification() {
 
 	// 1. Test State Machine Transitions
 	if (!canTransition('pending', 'accepted')) throw new Error('pending -> accepted should be valid');
+	if (!canTransition('pending', 'shopping'))
+		throw new Error('pending -> shopping (fast accept) should be valid');
 	if (!canTransition('pending', 'rejected')) throw new Error('pending -> rejected should be valid');
 	if (!canTransition('pending', 'cancelled'))
 		throw new Error('pending -> cancelled should be valid');
@@ -19,6 +21,8 @@ async function runOrderLifecycleVerification() {
 		throw new Error('accepted -> shopping should be valid');
 	if (!canTransition('shopping', 'purchased'))
 		throw new Error('shopping -> purchased should be valid');
+	if (!canTransition('shopping', 'delivering'))
+		throw new Error('shopping -> delivering (fast ship) should be valid');
 	if (!canTransition('purchased', 'delivering'))
 		throw new Error('purchased -> delivering should be valid');
 	if (!canTransition('delivering', 'completed'))

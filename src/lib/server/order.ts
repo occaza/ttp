@@ -21,12 +21,12 @@ import type {
 import type { PricingSnapshot } from './pricing.ts';
 import { sendOrderMessage, createNotification } from './communication.ts';
 
-// State machine definition: allowed forward and terminal transitions
+// State machine definition: supports both fast 4-step flow and granular intermediate states
 export const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-	pending: ['accepted', 'rejected', 'cancelled'],
+	pending: ['accepted', 'shopping', 'rejected', 'cancelled'],
 	accepted: ['shopping', 'cancelled'],
-	shopping: ['purchased', 'cancelled'],
-	purchased: ['delivering', 'cancelled'],
+	shopping: ['purchased', 'delivering', 'cancelled'],
+	purchased: ['delivering', 'completed', 'cancelled'],
 	delivering: ['completed', 'cancelled'],
 	completed: [],
 	cancelled: [],
@@ -356,7 +356,10 @@ export async function transitionOrderStatus(
 		updates.cancelled_by = actorId;
 	}
 
-	if (toStatus === 'purchased' && typeof input.actual_item_cost === 'number') {
+	if (
+		(toStatus === 'purchased' || toStatus === 'delivering') &&
+		typeof input.actual_item_cost === 'number'
+	) {
 		updates.actual_item_cost = input.actual_item_cost;
 		updates.actual_total = input.actual_item_cost + order.jastip_fee;
 	}
