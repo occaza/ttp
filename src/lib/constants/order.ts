@@ -34,3 +34,11 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, { label: string; badgeClas
 		badgeClass: 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/20'
 	}
 };
+
+/**
+ * Strip legacy "Name (Phone) - " prefix from stored destination_address_text
+ * so recipient name and phone are not duplicated next to the address.
+ */
+export function formatCleanAddress(addressText: string): string {
+	return addressText.replace(/^[^-()]+?\(\+?[0-9\s-]{6,}\)\s*-\s*/i, '').trim();
+}

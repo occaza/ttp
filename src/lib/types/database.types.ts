@@ -679,6 +679,75 @@ export interface Database {
 				};
 				Relationships: [];
 			};
+			reviews: {
+				Row: {
+					id: string;
+					order_id: string;
+					customer_id: string;
+					provider_id: string;
+					rating: number;
+					comment: string | null;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					order_id: string;
+					customer_id: string;
+					provider_id: string;
+					rating: number;
+					comment?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					order_id?: string;
+					customer_id?: string;
+					provider_id?: string;
+					rating?: number;
+					comment?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			provider_payouts: {
+				Row: {
+					id: string;
+					provider_id: string;
+					amount: number;
+					reference: string | null;
+					status: 'recorded' | 'paid';
+					note: string | null;
+					recorded_by: string | null;
+					paid_at: string | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					provider_id: string;
+					amount: number;
+					reference?: string | null;
+					status?: 'recorded' | 'paid';
+					note?: string | null;
+					recorded_by?: string | null;
+					paid_at?: string | null;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					provider_id?: string;
+					amount?: number;
+					reference?: string | null;
+					status?: 'recorded' | 'paid';
+					note?: string | null;
+					recorded_by?: string | null;
+					paid_at?: string | null;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -714,3 +783,5 @@ export type OrderAttachment = Database['public']['Tables']['order_attachments'][
 export type Notification = Database['public']['Tables']['notifications']['Row'];
 export type Payment = Database['public']['Tables']['payments']['Row'];
 export type PaymentEvent = Database['public']['Tables']['payment_events']['Row'];
+export type Review = Database['public']['Tables']['reviews']['Row'];
+export type ProviderPayout = Database['public']['Tables']['provider_payouts']['Row'];

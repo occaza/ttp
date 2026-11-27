@@ -2,7 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
+	import { ORDER_STATUS_LABELS, formatCleanAddress } from '#lib/constants/order.js';
 	import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
 	import type { PricingSnapshot } from '#lib/server/pricing.js';
 	import type { PaymentMethod } from '#lib/types/database.types.js';
@@ -17,6 +17,7 @@
 		Phone,
 		Send,
 		ShieldCheck,
+		Star,
 		Store,
 		Truck,
 		Upload,
@@ -84,7 +85,7 @@
 			case 'delivering':
 				return {
 					title: 'Sedang Diantar ke Alamatmu',
-					subtitle: `Barang sudah dibeli sesuai nota kasir dan sedang diantar ke ${o.destination_address_text}.`,
+					subtitle: `Barang sudah dibeli sesuai nota kasir dan sedang diantar ke ${formatCleanAddress(o.destination_address_text)}.`,
 					icon: Truck,
 					toneClass: 'border-primary/30 bg-primary/5'
 				};
@@ -135,6 +136,10 @@
 	let refundNote = $state('');
 	let processingPrivilegePayment = $state(false);
 
+	let selectedRating = $state(5);
+	let reviewComment = $state('');
+	let submittingReview = $state(false);
+
 	$effect(() => {
 		if (p) {
 			selectedMethod = p.method;
@@ -181,7 +186,9 @@
 				<MapPin class="size-3.5 text-primary" />
 				<span>Diantar ke</span>
 			</div>
-			<p class="text-sm font-bold text-foreground">{o.destination_address_text}</p>
+			<p class="text-sm font-bold text-foreground">
+				{formatCleanAddress(o.destination_address_text)}
+			</p>
 			<div class="flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5 text-xs">
 				<span class="font-semibold text-foreground">{o.recipient_name}</span>
 				<a
@@ -206,26 +213,26 @@
 
 		<div class="divide-y divide-border/50 px-5">
 			{#each o.items as it (it.id)}
-				<div class="flex items-start justify-between gap-4 py-3">
-					<div class="flex items-start gap-2.5">
-						<span
-							class="mt-0.5 shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary tabular-nums"
-						>
-							{it.quantity}
-							{it.unit}
-						</span>
-						<div class="space-y-0.5">
-							<p class="text-sm font-bold text-foreground">{it.name}</p>
-							{#if it.notes}
-								<p class="text-xs text-amber-700 dark:text-amber-300">
-									Catatan item: {it.notes}
-								</p>
+				<div class="flex items-start justify-between gap-4 py-3.5">
+					<div class="space-y-0.5">
+						<p class="text-sm font-bold text-foreground">{it.name}</p>
+						<p class="text-xs text-muted-foreground tabular-nums">
+							{#if it.estimated_price}
+								{it.quantity}
+								{it.unit} &times; Rp {Number(it.estimated_price).toLocaleString('id-ID')}
+							{:else}
+								{it.quantity} {it.unit}
 							{/if}
-						</div>
+						</p>
+						{#if it.notes}
+							<p class="text-xs text-amber-700 dark:text-amber-300">
+								Catatan item: {it.notes}
+							</p>
+						{/if}
 					</div>
 
 					{#if it.estimated_price}
-						<span class="shrink-0 text-xs font-semibold text-foreground tabular-nums">
+						<span class="shrink-0 text-sm font-bold text-foreground tabular-nums">
 							Rp {Number(it.estimated_price * it.quantity).toLocaleString('id-ID')}
 						</span>
 					{/if}
@@ -245,10 +252,19 @@
 		<div class="space-y-1.5 border-t border-border/60 bg-muted/20 px-5 py-4 text-xs">
 			{#if pricingSnapshot?.lineItems}
 				{#each pricingSnapshot.lineItems as li (li.code)}
+					{@const isItemEstimate = li.code === 'ITEM_ESTIMATE'}
+					{@const displayLabel =
+						isItemEstimate && o.actual_item_cost !== null && o.actual_item_cost !== undefined
+							? 'Belanja Toko (Sesuai Struk Kasir)'
+							: li.label}
+					{@const displayAmount =
+						isItemEstimate && o.actual_item_cost !== null && o.actual_item_cost !== undefined
+							? o.actual_item_cost
+							: li.amount}
 					<div class="flex items-baseline justify-between">
-						<span class="text-muted-foreground">{li.label}</span>
+						<span class="text-muted-foreground">{displayLabel}</span>
 						<span class="font-medium text-foreground tabular-nums">
-							Rp {Number(li.amount).toLocaleString('id-ID')}
+							Rp {Number(displayAmount).toLocaleString('id-ID')}
 						</span>
 					</div>
 				{/each}
@@ -991,6 +1007,206 @@
 		</section>
 
 		{@render chatBlock()}
+
+		{#if o.status === 'completed' && (data.review || data.reviewEligibility.eligible)}
+			<section class="space-y-3 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+				<div class="flex items-center justify-between gap-2">
+					<h2 class="text-sm font-bold text-foreground">Ulasan Pelanggan</h2>
+					{#if data.review}
+						<span class="inline-flex items-center gap-1 text-xs font-bold text-amber-600">
+							<Star class="size-3.5 fill-amber-400 text-amber-400" />
+							<span>{data.review.rating}/5</span>
+						</span>
+					{/if}
+				</div>
+
+				{#if form?.reviewError}
+					<div
+						role="alert"
+						class="rounded-lg bg-destructive/10 p-2.5 text-xs font-semibold text-destructive"
+					>
+						{form.reviewError}
+					</div>
+				{/if}
+				{#if form?.reviewSuccess}
+					<div
+						role="status"
+						class="rounded-lg bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+					>
+						{form.reviewSuccess}
+					</div>
+				{/if}
+
+				{#if data.review}
+					<div class="space-y-1.5 rounded-xl bg-muted/25 p-3.5 text-xs">
+						<div class="flex items-center gap-1">
+							{#each [1, 2, 3, 4, 5] as star (star)}
+								<Star
+									class="size-4 {star <= data.review.rating
+										? 'fill-amber-400 text-amber-400'
+										: 'text-muted-foreground/30'}"
+								/>
+							{/each}
+						</div>
+						{#if data.review.comment}
+							<p class="leading-relaxed text-foreground">{data.review.comment}</p>
+						{/if}
+					</div>
+				{:else if data.reviewEligibility.eligible}
+					<form
+						method="POST"
+						action="?/submitReview"
+						use:enhance={() => {
+							submittingReview = true;
+							return async ({ update }) => {
+								submittingReview = false;
+								await update();
+							};
+						}}
+						class="space-y-3"
+					>
+						<div class="flex items-center gap-1.5">
+							{#each [1, 2, 3, 4, 5] as star (star)}
+								<button
+									type="button"
+									aria-label="Beri {star} bintang"
+									onclick={() => (selectedRating = star)}
+									class="rounded-lg p-1 transition-transform hover:scale-110"
+								>
+									<Star
+										class="size-6 {star <= selectedRating
+											? 'fill-amber-400 text-amber-400'
+											: 'text-muted-foreground/30'}"
+									/>
+								</button>
+							{/each}
+							<input type="hidden" name="rating" value={selectedRating} />
+							<span class="ml-2 text-xs font-semibold text-muted-foreground tabular-nums">
+								{selectedRating}/5
+							</span>
+						</div>
+
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<Input
+								name="comment"
+								type="text"
+								bind:value={reviewComment}
+								placeholder="Bagaimana pengalaman titip belanja kali ini? (opsional)"
+								class="h-9 flex-1 text-xs"
+							/>
+							<Button
+								type="submit"
+								size="sm"
+								disabled={submittingReview}
+								class="h-9 text-xs font-bold"
+							>
+								{submittingReview ? 'Mengirim...' : 'Kirim Ulasan'}
+							</Button>
+						</div>
+					</form>
+				{/if}
+			</section>
+		{/if}
+
+		{#if o.status === 'completed' && (data.review || data.reviewEligibility.eligible)}
+			<section class="space-y-3 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+				<div class="flex items-center justify-between gap-2">
+					<h2 class="text-sm font-bold text-foreground">Ulasan Pelanggan</h2>
+					{#if data.review}
+						<span class="inline-flex items-center gap-1 text-xs font-bold text-amber-600">
+							<Star class="size-3.5 fill-amber-400 text-amber-400" />
+							<span>{data.review.rating}/5</span>
+						</span>
+					{/if}
+				</div>
+
+				{#if form?.reviewError}
+					<div
+						role="alert"
+						class="rounded-lg bg-destructive/10 p-2.5 text-xs font-semibold text-destructive"
+					>
+						{form.reviewError}
+					</div>
+				{/if}
+				{#if form?.reviewSuccess}
+					<div
+						role="status"
+						class="rounded-lg bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+					>
+						{form.reviewSuccess}
+					</div>
+				{/if}
+
+				{#if data.review}
+					<div class="space-y-1.5 rounded-xl bg-muted/25 p-3.5 text-xs">
+						<div class="flex items-center gap-1">
+							{#each [1, 2, 3, 4, 5] as star (star)}
+								<Star
+									class="size-4 {star <= data.review.rating
+										? 'fill-amber-400 text-amber-400'
+										: 'text-muted-foreground/30'}"
+								/>
+							{/each}
+						</div>
+						{#if data.review.comment}
+							<p class="leading-relaxed text-foreground">{data.review.comment}</p>
+						{/if}
+					</div>
+				{:else if data.reviewEligibility.eligible}
+					<form
+						method="POST"
+						action="?/submitReview"
+						use:enhance={() => {
+							submittingReview = true;
+							return async ({ update }) => {
+								submittingReview = false;
+								await update();
+							};
+						}}
+						class="space-y-3"
+					>
+						<div class="flex items-center gap-1.5">
+							{#each [1, 2, 3, 4, 5] as star (star)}
+								<button
+									type="button"
+									aria-label="Beri {star} bintang"
+									onclick={() => (selectedRating = star)}
+									class="rounded-lg p-1 transition-transform hover:scale-110"
+								>
+									<Star
+										class="size-6 {star <= selectedRating
+											? 'fill-amber-400 text-amber-400'
+											: 'text-muted-foreground/30'}"
+									/>
+								</button>
+							{/each}
+							<input type="hidden" name="rating" value={selectedRating} />
+							<span class="ml-2 text-xs font-semibold text-muted-foreground tabular-nums">
+								{selectedRating}/5
+							</span>
+						</div>
+
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<Input
+								name="comment"
+								type="text"
+								bind:value={reviewComment}
+								placeholder="Bagaimana pengalaman titip belanja kali ini? (opsional)"
+								class="h-9 flex-1 text-xs"
+							/>
+							<Button
+								type="submit"
+								size="sm"
+								disabled={submittingReview}
+								class="h-9 text-xs font-bold"
+							>
+								{submittingReview ? 'Mengirim...' : 'Kirim Ulasan'}
+							</Button>
+						</div>
+					</form>
+				{/if}
+			</section>
+		{/if}
 
 		{#if o.status === 'pending' && data.isCustomer}
 			<div class="pt-1 text-center">

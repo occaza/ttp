@@ -8,6 +8,10 @@ import {
 import { getOrCreateProviderProfile, getProviderServices } from '#lib/server/provider.js';
 import { getProviderOrders, transitionOrderStatus } from '#lib/server/order.js';
 import { getPaymentByOrderId } from '#lib/server/payment.js';
+import {
+	getProviderEarningsSummary,
+	getProviderRatingSummary
+} from '#lib/server/review_earnings.js';
 import type { OrderStatus } from '#lib/types/database.types.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -26,7 +30,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.order('sort_order', { ascending: true });
 
 	const services = await getProviderServices(locals.supabase, auth.user.id);
-	const rawOrders = await getProviderOrders(locals.supabase, auth.user.id);
+	const [rawOrders, earnings, ratingSummary] = await Promise.all([
+		getProviderOrders(locals.supabase, auth.user.id),
+		getProviderEarningsSummary(locals.supabase, auth.user.id),
+		getProviderRatingSummary(locals.supabase, auth.user.id)
+	]);
 	const orders = await Promise.all(
 		rawOrders.map(async (ord) => {
 			const payment = await getPaymentByOrderId(locals.supabase, ord.id);
@@ -61,6 +69,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		categories: categories || [],
 		services,
 		orders,
+		earnings,
+		ratingSummary,
 		stats: {
 			totalServices,
 			activeServices,

@@ -16,6 +16,11 @@ import {
 	rejectPayment,
 	refundPayment
 } from '#lib/server/payment.js';
+import {
+	checkReviewEligibilityFromOrder,
+	getOrderReview,
+	submitOrderReview
+} from '#lib/server/review_earnings.js';
 import type { OrderStatus, PaymentMethod } from '#lib/types/database.types.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -42,11 +47,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw redirect(302, `/pesanan/${order.order_number}`);
 	}
 
-	const [messages, attachments, payment] = await Promise.all([
+	const [messages, attachments, payment, review] = await Promise.all([
 		getOrderMessages(locals.supabase, order.id),
 		getOrderAttachments(locals.supabase, order.id),
-		getPaymentByOrderId(locals.supabase, order.id)
+		getPaymentByOrderId(locals.supabase, order.id),
+		getOrderReview(locals.supabase, order.id)
 	]);
+
+	const reviewEligibility = checkReviewEligibilityFromOrder(auth.user.id, order, review);
 
 	return {
 		user: auth.user,
@@ -56,6 +64,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		messages,
 		attachments,
 		payment,
+		review,
+		reviewEligibility,
 		isCustomer,
 		isProvider,
 		isAdmin
@@ -374,6 +384,39 @@ export const actions: Actions = {
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : 'Gagal memperbarui status pesanan.';
 			return fail(400, { error: msg });
+		}
+	},
+
+	submitReview: async ({ request, locals, params }) => {
+		const auth = requireAuth(locals);
+		const { id } = params;
+		const order = await getOrderDetails(locals.supabase, id);
+		if (!order) {
+			return fail(404, { reviewError: 'Pesanan tidak ditemukan.' });
+		}
+
+		const formData = await request.formData();
+		const rawRating = formData.get('rating');
+		const rawComment = formData.get('comment');
+
+		const rating = typeof rawRating === 'string' && rawRating ? Number(rawRating) : NaN;
+		const comment =
+			typeof rawComment === 'string' && rawComment.trim() ? rawComment.trim() : undefined;
+
+		if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+			return fail(400, { reviewError: 'Pilih rating antara 1 hingga 5 bintang.' });
+		}
+
+		try {
+			await submitOrderReview(locals.supabase, auth.user.id, {
+				order_id: order.id,
+				rating,
+				comment
+			});
+			return { reviewSuccess: 'Terima kasih! Ulasan Anda berhasil disimpan.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal mengirim ulasan.';
+			return fail(400, { reviewError: msg });
 		}
 	}
 };

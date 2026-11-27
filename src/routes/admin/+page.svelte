@@ -10,7 +10,7 @@
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import type { ServiceCategory } from '#lib/types/database.types.js';
-	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
+	import { ORDER_STATUS_LABELS, formatCleanAddress } from '#lib/constants/order.js';
 	import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
 	import {
 		Users,
@@ -700,7 +700,7 @@
 											</a>
 										</p>
 										<p class="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-											{ord.destination_address_text}
+											{formatCleanAddress(ord.destination_address_text)}
 										</p>
 									</div>
 								</div>
@@ -718,23 +718,37 @@
 											)}
 										</span>
 									</div>
-									<ul class="space-y-1 text-xs text-foreground">
+									<ul class="space-y-1.5 text-xs text-foreground">
 										{#each ord.items as it (it.id)}
-											<li class="flex items-baseline gap-2">
-												<span
-													class="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums"
-												>
-													{it.quantity}
-													{it.unit}
-												</span>
-												<div>
-													<span class="font-semibold">{it.name}</span>
-													{#if it.notes}
-														<span class="text-[11px] text-muted-foreground">
-															&mdash; {it.notes}
-														</span>
-													{/if}
+											<li class="flex items-baseline justify-between gap-2">
+												<div class="flex items-baseline gap-2">
+													<span
+														class="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums"
+													>
+														{it.quantity}
+														{it.unit}
+													</span>
+													<div>
+														<span class="font-semibold">{it.name}</span>
+														{#if it.estimated_price}
+															<span class="ml-1 text-[11px] text-muted-foreground tabular-nums">
+																(@ Rp {Number(it.estimated_price).toLocaleString('id-ID')})
+															</span>
+														{/if}
+														{#if it.notes}
+															<span class="text-[11px] text-muted-foreground">
+																&mdash; {it.notes}
+															</span>
+														{/if}
+													</div>
 												</div>
+												{#if it.estimated_price}
+													<span
+														class="shrink-0 text-[11px] font-semibold text-foreground tabular-nums"
+													>
+														Rp {Number(it.estimated_price * it.quantity).toLocaleString('id-ID')}
+													</span>
+												{/if}
 											</li>
 										{/each}
 									</ul>

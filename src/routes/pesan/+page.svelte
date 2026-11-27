@@ -66,7 +66,7 @@
 		}
 		const found = data.addresses.find((a) => a.id === selectedAddressId);
 		if (!found) return manualAddressText;
-		return `${found.recipient_name} (${found.recipient_phone}) - ${found.street_address}, ${found.city}`;
+		return [found.street_address, found.city].filter(Boolean).join(', ');
 	});
 
 	function addItem() {

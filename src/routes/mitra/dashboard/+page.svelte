@@ -20,7 +20,7 @@
 		Power,
 		ShoppingBag
 	} from 'lucide-svelte';
-	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
+	import { ORDER_STATUS_LABELS, formatCleanAddress } from '#lib/constants/order.js';
 	import { PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
 	import type { ProviderService } from '#lib/types/database.types.js';
 
@@ -207,7 +207,7 @@
 				</span>
 			</div>
 			<span class="text-[10px] text-muted-foreground">
-				{data.providerProfile?.rating_count || 0} Ulasan Pelanggan
+				{data.ratingSummary.ratingCount} Ulasan Pelanggan
 			</span>
 		</div>
 	</div>
@@ -385,7 +385,7 @@
 											</a>
 										</p>
 										<p class="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-											{order.destination_address_text}
+											{formatCleanAddress(order.destination_address_text)}
 										</p>
 									</div>
 								</div>
@@ -396,23 +396,37 @@
 									>
 										Daftar Belanja ({order.items.length} item)
 									</span>
-									<ul class="space-y-1 text-xs text-foreground">
+									<ul class="space-y-1.5 text-xs text-foreground">
 										{#each order.items as it (it.id)}
-											<li class="flex items-baseline gap-2">
-												<span
-													class="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums"
-												>
-													{it.quantity}
-													{it.unit}
-												</span>
-												<div>
-													<span class="font-semibold">{it.name}</span>
-													{#if it.notes}
-														<span class="text-[11px] text-muted-foreground">
-															&mdash; {it.notes}
-														</span>
-													{/if}
+											<li class="flex items-baseline justify-between gap-2">
+												<div class="flex items-baseline gap-2">
+													<span
+														class="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums"
+													>
+														{it.quantity}
+														{it.unit}
+													</span>
+													<div>
+														<span class="font-semibold">{it.name}</span>
+														{#if it.estimated_price}
+															<span class="ml-1 text-[11px] text-muted-foreground tabular-nums">
+																(@ Rp {Number(it.estimated_price).toLocaleString('id-ID')})
+															</span>
+														{/if}
+														{#if it.notes}
+															<span class="text-[11px] text-muted-foreground">
+																&mdash; {it.notes}
+															</span>
+														{/if}
+													</div>
 												</div>
+												{#if it.estimated_price}
+													<span
+														class="shrink-0 text-[11px] font-semibold text-foreground tabular-nums"
+													>
+														Rp {Number(it.estimated_price * it.quantity).toLocaleString('id-ID')}
+													</span>
+												{/if}
 											</li>
 										{/each}
 									</ul>
@@ -510,6 +524,89 @@
 									>
 										Lihat Detail &rarr;
 									</a>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+
+			<!-- Provider Earnings & Payout Records (Phase 10) -->
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				<div
+					class="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3"
+				>
+					<div>
+						<h2 class="text-sm font-bold text-foreground">
+							Pendapatan Jasa &amp; Riwayat Order Selesai
+						</h2>
+						<p class="text-xs text-muted-foreground">
+							Dihitung dari order berstatus selesai sesuai aturan tarif. Pencairan hanya dicatat
+							jika terverifikasi di tabel payout.
+						</p>
+					</div>
+					<span
+						class="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-bold text-foreground tabular-nums"
+					>
+						{data.earnings.completedOrdersCount} Selesai
+					</span>
+				</div>
+
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+					<div class="rounded-xl border border-border/70 bg-muted/20 p-3.5 text-xs">
+						<span class="block text-[11px] text-muted-foreground">Pendapatan Jasa Netto</span>
+						<p class="mt-1 text-lg font-black text-primary tabular-nums">
+							Rp {data.earnings.netProviderEarnings.toLocaleString('id-ID')}
+						</p>
+						<span class="text-[10px] text-muted-foreground tabular-nums">
+							Kotor Rp {data.earnings.grossServiceFees.toLocaleString('id-ID')} &minus; Platform Rp {data.earnings.platformFees.toLocaleString(
+								'id-ID'
+							)}
+						</span>
+					</div>
+
+					<div class="rounded-xl border border-border/70 bg-muted/20 p-3.5 text-xs">
+						<span class="block text-[11px] text-muted-foreground">Reimburse Belanja Toko</span>
+						<p class="mt-1 text-lg font-black text-foreground tabular-nums">
+							Rp {data.earnings.totalItemReimbursements.toLocaleString('id-ID')}
+						</p>
+						<span class="text-[10px] text-muted-foreground">Sesuai nota kasir (tanpa markup)</span>
+					</div>
+
+					<div class="rounded-xl border border-border/70 bg-muted/20 p-3.5 text-xs">
+						<span class="block text-[11px] text-muted-foreground">Pencairan Tercatat (Payout)</span>
+						<p class="mt-1 text-lg font-black text-foreground tabular-nums">
+							Rp {data.earnings.recordedPayoutTotal.toLocaleString('id-ID')}
+						</p>
+						<span class="text-[10px] text-muted-foreground">
+							{#if data.earnings.hasRecordedPayouts}
+								Sisa tercatat: Rp {data.earnings.unpaidRecordedBalance.toLocaleString('id-ID')}
+							{:else}
+								Belum ada pencairan dana tercatat
+							{/if}
+						</span>
+					</div>
+				</div>
+
+				{#if data.earnings.history.length === 0}
+					<p class="text-xs text-muted-foreground">
+						Belum ada pesanan selesai untuk dihitung dalam riwayat pendapatan.
+					</p>
+				{:else}
+					<div class="divide-y divide-border/50 rounded-xl border border-border/70">
+						{#each data.earnings.history as h (h.orderId)}
+							<div class="flex flex-wrap items-center justify-between gap-2 p-3 text-xs">
+								<div>
+									<span class="font-mono font-bold text-foreground">{h.orderNumber}</span>
+									<span class="ml-1.5 text-muted-foreground">&bull; {h.originName}</span>
+								</div>
+								<div class="flex items-center gap-3 tabular-nums">
+									<span class="text-[11px] text-muted-foreground">
+										Belanja Rp {h.itemReimbursement.toLocaleString('id-ID')}
+									</span>
+									<span class="font-bold text-primary">
+										Jasa +Rp {h.netProviderEarning.toLocaleString('id-ID')}
+									</span>
 								</div>
 							</div>
 						{/each}

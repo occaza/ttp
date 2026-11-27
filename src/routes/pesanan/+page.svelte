@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
-	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
+	import { ORDER_STATUS_LABELS, formatCleanAddress } from '#lib/constants/order.js';
 	import { ShoppingBag, Clock, MapPin, ChevronRight, ArrowRight } from 'lucide-svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 
@@ -104,7 +104,9 @@
 							</h2>
 							<div class="flex items-center gap-1 text-xs text-muted-foreground">
 								<MapPin class="size-3.5 shrink-0 text-primary" />
-								<span class="max-w-xs truncate">{order.destination_address_text}</span>
+								<span class="max-w-xs truncate">
+									{formatCleanAddress(order.destination_address_text)}
+								</span>
 							</div>
 							<p class="text-[11px] text-muted-foreground">
 								{order.items.length} Barang Belanjaan

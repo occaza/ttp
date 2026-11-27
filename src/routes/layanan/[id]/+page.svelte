@@ -201,6 +201,51 @@
 					</li>
 				</ol>
 			</div>
+
+			<!-- Provider Rating Summary & Reviews -->
+			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+				<div
+					class="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3"
+				>
+					<h3 class="text-sm font-bold text-foreground">Ulasan &amp; Rating Pelanggan</h3>
+					<div class="flex items-center gap-1.5 text-xs font-bold text-foreground tabular-nums">
+						<Star class="size-4 fill-amber-400 text-amber-400" />
+						<span>{data.ratingSummary.ratingAvg.toFixed(1)}</span>
+						<span class="font-normal text-muted-foreground">
+							({data.ratingSummary.ratingCount} ulasan)
+						</span>
+					</div>
+				</div>
+
+				{#if data.ratingSummary.recentReviews.length === 0}
+					<p class="text-xs text-muted-foreground">
+						Belum ada ulasan tertulis untuk layanan ini. Ulasan hanya dapat dikirim oleh pelanggan
+						setelah pesanan selesai.
+					</p>
+				{:else}
+					<div class="divide-y divide-border/50">
+						{#each data.ratingSummary.recentReviews as rev (rev.id)}
+							<div class="space-y-1 py-3 text-xs">
+								<div class="flex items-center justify-between">
+									<span class="font-bold text-foreground">{rev.customer_name || 'Pelanggan'}</span>
+									<div class="flex items-center gap-0.5">
+										{#each [1, 2, 3, 4, 5] as star (star)}
+											<Star
+												class="size-3.5 {star <= rev.rating
+													? 'fill-amber-400 text-amber-400'
+													: 'text-muted-foreground/30'}"
+											/>
+										{/each}
+									</div>
+								</div>
+								{#if rev.comment}
+									<p class="leading-relaxed text-muted-foreground">{rev.comment}</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Right Column / Sticky Action Box (4 cols) -->
