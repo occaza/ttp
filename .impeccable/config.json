@@ -6,5 +6,6 @@
 				"engine": "html"
 			}
 		]
-	}
+	},
+	"buildPath": "code"
 }
