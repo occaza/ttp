@@ -671,23 +671,81 @@
 									</span>
 								</div>
 
-								<div class="space-y-1">
-									<p class="font-bold text-foreground">{ord.origin_name}</p>
-									<p class="text-muted-foreground">{ord.destination_address_text}</p>
-									<p class="text-[11px] text-muted-foreground">
-										Pemesan:
-										<strong class="text-foreground">
-											{ord.recipient_name} ({ord.recipient_phone})
-										</strong>
-										&bull; Estimasi Total:
-										<strong class="text-primary">
-											Rp {Number(ord.actual_total || ord.total_estimated).toLocaleString('id-ID')}
-										</strong>
-									</p>
-									<div class="rounded-lg bg-card p-2 text-[11px] text-foreground">
-										<span class="font-semibold">Barang:</span>
-										{ord.items.map((it) => `${it.name} (${it.quantity} ${it.unit})`).join(', ')}
+								<div class="grid grid-cols-1 gap-3 rounded-lg bg-card p-3 sm:grid-cols-2">
+									<div>
+										<span
+											class="block text-[10px] font-bold tracking-wide text-muted-foreground uppercase"
+										>
+											Beli di Toko
+										</span>
+										<p class="mt-0.5 text-sm font-bold text-foreground">{ord.origin_name}</p>
+										{#if ord.origin_address}
+											<p class="text-[11px] text-muted-foreground">{ord.origin_address}</p>
+										{/if}
 									</div>
+
+									<div>
+										<span
+											class="block text-[10px] font-bold tracking-wide text-muted-foreground uppercase"
+										>
+											Pemesan &amp; Antar ke
+										</span>
+										<p class="mt-0.5 text-xs font-bold text-foreground">
+											{ord.recipient_name} &middot;
+											<a
+												href="tel:{ord.recipient_phone}"
+												class="text-primary tabular-nums hover:underline"
+											>
+												{ord.recipient_phone}
+											</a>
+										</p>
+										<p class="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+											{ord.destination_address_text}
+										</p>
+									</div>
+								</div>
+
+								<div class="space-y-1.5 rounded-lg bg-card p-3">
+									<div class="flex items-center justify-between">
+										<span
+											class="text-[10px] font-bold tracking-wide text-muted-foreground uppercase"
+										>
+											Daftar Belanja ({ord.items.length} item)
+										</span>
+										<span class="text-xs font-bold text-primary tabular-nums">
+											Total: Rp {Number(ord.actual_total || ord.total_estimated).toLocaleString(
+												'id-ID'
+											)}
+										</span>
+									</div>
+									<ul class="space-y-1 text-xs text-foreground">
+										{#each ord.items as it (it.id)}
+											<li class="flex items-baseline gap-2">
+												<span
+													class="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums"
+												>
+													{it.quantity}
+													{it.unit}
+												</span>
+												<div>
+													<span class="font-semibold">{it.name}</span>
+													{#if it.notes}
+														<span class="text-[11px] text-muted-foreground">
+															&mdash; {it.notes}
+														</span>
+													{/if}
+												</div>
+											</li>
+										{/each}
+									</ul>
+									{#if ord.customer_notes}
+										<div
+											class="mt-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-900 dark:text-amber-200"
+										>
+											<strong>Catatan Pemesan:</strong>
+											{ord.customer_notes}
+										</div>
+									{/if}
 								</div>
 
 								<div class="flex flex-wrap items-center gap-2 border-t border-border/50 pt-2.5">

@@ -10,10 +10,11 @@
 		AlertCircle,
 		ArrowLeft,
 		CheckCircle2,
-		ChevronDown,
 		Clock,
 		FileText,
+		MapPin,
 		MessageSquare,
+		Phone,
 		Receipt,
 		Send,
 		Store,
@@ -55,51 +56,47 @@
 		currentStepIndex <= 0 ? 12 : Math.round(((currentStepIndex + 1) / orderFlow.length) * 100)
 	);
 
-	// Step-focused guidance for the customer
 	const stepFocus = $derived.by(() => {
 		switch (o.status) {
 			case 'pending':
 				return {
 					title: 'Menunggu Konfirmasi Kurir',
-					subtitle: `Pesananmu sudah masuk. Kurir Titipin akan segera mengonfirmasi sebelum menuju ${o.origin_name}.`,
+					subtitle: `Pesanan sudah masuk dan menunggu konfirmasi sebelum kurir menuju ${o.origin_name}.`,
 					icon: Clock,
 					toneClass: 'border-amber-500/30 bg-amber-500/5'
 				};
 			case 'accepted':
 				return {
 					title: 'Pesanan Diterima',
-					subtitle: `Kurir bersiap berangkat ke ${o.origin_name}. Tetap pantau chat jika ada catatan tambahan.`,
+					subtitle: `Kurir bersiap berangkat ke ${o.origin_name}.`,
 					icon: CheckCircle2,
 					toneClass: 'border-primary/30 bg-primary/5'
 				};
 			case 'shopping':
 				return {
 					title: `Sedang Dibelikan di ${o.origin_name}`,
-					subtitle:
-						'Kurir sedang berbelanja. Jika ada barang kosong atau ganti varian, akan langsung dikabari lewat chat.',
+					subtitle: 'Kurir sedang berbelanja. Kabar barang atau ganti varian dikirim lewat chat.',
 					icon: Store,
 					toneClass: 'border-primary/30 bg-primary/5'
 				};
 			case 'purchased':
 				return {
 					title: 'Belanja Selesai & Struk Kasir Ada',
-					subtitle:
-						'Barang sudah dibeli sesuai nota asli toko. Cek foto struk dan pastikan metode pembayaranmu.',
+					subtitle: 'Barang sudah dibeli sesuai nota asli toko.',
 					icon: Receipt,
 					toneClass: 'border-emerald-500/30 bg-emerald-500/5'
 				};
 			case 'delivering':
 				return {
-					title: 'Kurir Sedang Menuju Alamatmu',
-					subtitle: `Pesanan sedang diantar ke ${o.destination_address_text}. Siapkan pembayaran jika memilih COD.`,
+					title: 'Sedang Diantar ke Alamat Tujuan',
+					subtitle: `Kurir sedang dalam perjalanan menuju ${o.destination_address_text}.`,
 					icon: Truck,
 					toneClass: 'border-primary/30 bg-primary/5'
 				};
 			case 'completed':
 				return {
 					title: 'Pesanan Selesai',
-					subtitle:
-						'Terima kasih sudah menitip di Titipin. Rincian nota dan bukti transaksi tersimpan rapi di sini.',
+					subtitle: 'Terima kasih sudah menggunakan layanan Titipin.',
 					icon: CheckCircle2,
 					toneClass: 'border-emerald-500/30 bg-emerald-500/5'
 				};
@@ -113,15 +110,6 @@
 		}
 	});
 	const StepIcon = $derived(stepFocus.icon);
-
-	// Priority: during purchased/delivering or awaiting/rejected payment, Payment comes before Chat
-	const prioritizePayment = $derived(
-		o.status === 'purchased' ||
-			o.status === 'delivering' ||
-			p?.status === 'awaiting_verification' ||
-			p?.status === 'rejected' ||
-			Boolean(form?.paymentError || form?.paymentSuccess)
-	);
 
 	const receiptAttachments = $derived(
 		data.attachments.filter((a) => a.attachment_type === 'receipt')
@@ -184,88 +172,280 @@
 	<title>Pesanan {o.order_number} - Titipin</title>
 </svelte:head>
 
-{#snippet orderSummaryContent()}
-	<div class="divide-y divide-border/60">
-		<!-- Route -->
-		<div class="space-y-2 p-4 text-xs sm:p-5">
-			<div class="flex items-baseline justify-between gap-4">
-				<span class="w-16 shrink-0 text-muted-foreground">Beli di</span>
-				<span class="flex-1 text-right font-semibold text-foreground">{o.origin_name}</span>
-			</div>
-			<div class="flex items-baseline justify-between gap-4">
-				<span class="w-16 shrink-0 text-muted-foreground">Antar ke</span>
-				<div class="flex-1 text-right">
-					<p class="font-semibold text-foreground">{o.destination_address_text}</p>
-					<p class="text-[11px] text-muted-foreground tabular-nums">
-						{o.recipient_name} &middot; {o.recipient_phone}
-					</p>
+<div class="mx-auto max-w-4xl space-y-5 px-4 pt-5 pb-24 sm:px-6 sm:pt-7 md:pb-12">
+	<!-- Top Navigation -->
+	<div class="flex items-center justify-between text-xs text-muted-foreground">
+		<a
+			href={resolve('/pesanan')}
+			class="inline-flex items-center gap-1.5 font-semibold transition-colors duration-150 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			<ArrowLeft class="size-3.5" />
+			<span>Semua Pesanan</span>
+		</a>
+
+		<span class="tabular-nums">
+			{new Date(o.created_at).toLocaleDateString('id-ID', {
+				day: 'numeric',
+				month: 'short',
+				hour: '2-digit',
+				minute: '2-digit'
+			})}
+		</span>
+	</div>
+
+	{#if form?.error}
+		<div
+			role="alert"
+			class="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+		>
+			<AlertCircle class="size-4 shrink-0" />
+			<span>{form.error}</span>
+		</div>
+	{/if}
+
+	{#if form?.cancelSuccess || form?.statusSuccess}
+		<div
+			role="status"
+			class="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+		>
+			<CheckCircle2 class="size-4 shrink-0" />
+			<span>{form.cancelSuccess || form.statusSuccess}</span>
+		</div>
+	{/if}
+
+	<!-- 1. STATUS PESANAN & AKSI STEP OWNER -->
+	<section class="space-y-4 rounded-2xl border p-5 shadow-xs {stepFocus.toneClass}">
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			<h1
+				class="font-mono text-xl font-bold tracking-tight text-foreground tabular-nums sm:text-2xl"
+			>
+				{o.order_number}
+			</h1>
+			<span class="rounded-full border px-3 py-1 text-xs font-semibold {statusMeta.badgeClass}">
+				{statusMeta.label}
+			</span>
+		</div>
+
+		{#if o.status !== 'cancelled' && o.status !== 'rejected'}
+			<div class="space-y-1.5">
+				<div class="h-1.5 w-full overflow-hidden rounded-full bg-background/80">
+					<div
+						class="h-full rounded-full bg-primary transition-all duration-200"
+						style="width: {progressPercent}%"
+					></div>
 				</div>
+				<p class="text-[11px] font-medium text-muted-foreground tabular-nums">
+					Tahap {Math.max(1, currentStepIndex + 1)} dari {orderFlow.length}
+				</p>
 			</div>
-			{#if o.customer_notes}
-				<p class="pt-1 text-[11px] text-muted-foreground italic">Catatan: {o.customer_notes}</p>
+		{/if}
+
+		<div class="flex items-start gap-3">
+			<div
+				class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-background text-primary shadow-2xs"
+			>
+				<StepIcon class="size-4.5" />
+			</div>
+			<div class="space-y-0.5">
+				<p class="text-sm font-bold text-foreground">{stepFocus.title}</p>
+				<p class="text-xs leading-relaxed text-muted-foreground">{stepFocus.subtitle}</p>
+			</div>
+		</div>
+
+		<!-- Owner / Kurir Quick Step Action Bar -->
+		{#if (data.isAdmin || data.isProvider) && o.status !== 'completed' && o.status !== 'cancelled' && o.status !== 'rejected'}
+			<div class="flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
+				{#if o.status === 'pending'}
+					<form method="POST" action="?/updateOrderStatus" use:enhance>
+						<input type="hidden" name="to_status" value="accepted" />
+						<Button size="sm" type="submit" class="h-9 text-xs font-bold">Terima Pesanan</Button>
+					</form>
+					<form method="POST" action="?/updateOrderStatus" use:enhance>
+						<input type="hidden" name="to_status" value="rejected" />
+						<Button
+							size="sm"
+							variant="outline"
+							type="submit"
+							class="h-9 text-xs text-destructive hover:bg-destructive/10"
+						>
+							Tolak
+						</Button>
+					</form>
+				{:else if o.status === 'accepted'}
+					<form method="POST" action="?/updateOrderStatus" use:enhance>
+						<input type="hidden" name="to_status" value="shopping" />
+						<Button size="sm" type="submit" class="h-9 text-xs font-bold">
+							Mulai Belanja di Toko
+						</Button>
+					</form>
+				{:else if o.status === 'shopping'}
+					<form
+						method="POST"
+						action="?/updateOrderStatus"
+						use:enhance
+						class="flex flex-wrap items-center gap-2"
+					>
+						<input type="hidden" name="to_status" value="purchased" />
+						<Input
+							name="actual_item_cost"
+							type="number"
+							min="0"
+							step="500"
+							placeholder="Total nota toko (Rp)"
+							required
+							class="h-9 w-40 bg-background text-xs tabular-nums"
+						/>
+						<Button size="sm" type="submit" class="h-9 text-xs font-bold">
+							Selesai Belanja (Ada Struk)
+						</Button>
+					</form>
+				{:else if o.status === 'purchased'}
+					<form method="POST" action="?/updateOrderStatus" use:enhance>
+						<input type="hidden" name="to_status" value="delivering" />
+						<Button size="sm" type="submit" class="h-9 text-xs font-bold">Berangkat Antar</Button>
+					</form>
+				{:else if o.status === 'delivering'}
+					<form method="POST" action="?/updateOrderStatus" use:enhance>
+						<input type="hidden" name="to_status" value="completed" />
+						<Button
+							size="sm"
+							type="submit"
+							class="h-9 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+						>
+							Selesaikan Pesanan
+						</Button>
+					</form>
+				{/if}
+			</div>
+		{/if}
+
+		{#if o.status === 'cancelled' || o.status === 'rejected'}
+			<div class="pt-1">
+				<Button href={resolve('/pesan')} size="sm" class="h-9 text-xs font-bold">
+					Buat Pesanan Baru
+				</Button>
+			</div>
+		{/if}
+	</section>
+
+	<!-- 2. LOKASI & PEMESAN (Jelas: Toko mana, Siapa yang pesan, Kontak, & Dikirim ke mana) -->
+	<section class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+		<!-- Toko Tujuan -->
+		<div class="space-y-2 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+			<div
+				class="flex items-center gap-2 text-xs font-bold tracking-wide text-muted-foreground uppercase"
+			>
+				<Store class="size-4 text-primary" />
+				<span>Beli di Toko</span>
+			</div>
+			<p class="text-base font-bold text-foreground">{o.origin_name}</p>
+			{#if o.origin_address}
+				<p class="text-xs leading-relaxed text-muted-foreground">{o.origin_address}</p>
 			{/if}
 		</div>
 
-		<!-- Items -->
-		<div class="p-4 sm:p-5">
-			<p class="mb-2 text-xs font-bold text-foreground">Daftar Belanja ({o.items.length})</p>
-			<div class="divide-y divide-border/40">
-				{#each o.items as it (it.id)}
-					<div class="flex items-baseline justify-between gap-3 py-1.5 text-xs">
-						<div>
-							<span class="font-medium text-foreground">{it.name}</span>
-							<span class="ml-1 text-muted-foreground tabular-nums">
-								&times; {it.quantity}
-								{it.unit}
-							</span>
-							{#if it.notes}
-								<p class="text-[11px] text-muted-foreground">{it.notes}</p>
-							{/if}
-						</div>
-						{#if it.estimated_price}
-							<span class="shrink-0 font-medium text-foreground tabular-nums">
-								Rp {Number(it.estimated_price * it.quantity).toLocaleString('id-ID')}
-							</span>
-						{/if}
-					</div>
-				{/each}
+		<!-- Pemesan, Kontak & Alamat Antar -->
+		<div class="space-y-2 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+			<div
+				class="flex items-center gap-2 text-xs font-bold tracking-wide text-muted-foreground uppercase"
+			>
+				<MapPin class="size-4 text-primary" />
+				<span>Diantar ke</span>
+			</div>
+			<p class="text-sm font-bold text-foreground">{o.destination_address_text}</p>
+			<div class="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs">
+				<span class="font-semibold text-foreground">{o.recipient_name}</span>
+				<a
+					href="tel:{o.recipient_phone}"
+					class="inline-flex items-center gap-1 font-semibold text-primary tabular-nums hover:underline"
+				>
+					<Phone class="size-3.5" />
+					<span>{o.recipient_phone}</span>
+				</a>
 			</div>
 		</div>
+	</section>
 
-		<!-- Pricing Breakdown -->
-		<div class="space-y-1.5 p-4 text-xs sm:p-5">
+	<!-- 3. DAFTAR BARANG YANG DIPESAN & CATATAN -->
+	<section class="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
+		<div class="flex items-center justify-between border-b border-border/60 px-5 py-3.5">
+			<h2 class="text-sm font-bold text-foreground">Barang yang Dipesan</h2>
+			<span class="text-xs font-medium text-muted-foreground tabular-nums">
+				{o.items.length} item
+			</span>
+		</div>
+
+		<div class="divide-y divide-border/50 px-5">
+			{#each o.items as it (it.id)}
+				<div class="flex items-start justify-between gap-4 py-3.5">
+					<div class="flex items-start gap-2.5">
+						<span
+							class="mt-0.5 shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary tabular-nums"
+						>
+							{it.quantity}
+							{it.unit}
+						</span>
+						<div class="space-y-0.5">
+							<p class="text-sm font-bold text-foreground">{it.name}</p>
+							{#if it.notes}
+								<p class="text-xs text-amber-700 dark:text-amber-300">
+									Catatan item: {it.notes}
+								</p>
+							{/if}
+						</div>
+					</div>
+
+					{#if it.estimated_price}
+						<span class="shrink-0 text-xs font-semibold text-foreground tabular-nums">
+							Rp {Number(it.estimated_price * it.quantity).toLocaleString('id-ID')}
+						</span>
+					{/if}
+				</div>
+			{/each}
+		</div>
+
+		{#if o.customer_notes}
+			<div
+				class="border-t border-amber-500/25 bg-amber-500/10 px-5 py-3 text-xs text-amber-900 dark:text-amber-200"
+			>
+				<strong>Catatan Pemesan:</strong>
+				{o.customer_notes}
+			</div>
+		{/if}
+
+		<!-- Rincian Total -->
+		<div class="space-y-1.5 border-t border-border/60 bg-muted/20 px-5 py-4 text-xs">
 			{#if pricingSnapshot?.lineItems}
 				{#each pricingSnapshot.lineItems as li (li.code)}
 					<div class="flex items-baseline justify-between">
 						<span class="text-muted-foreground">{li.label}</span>
-						<span class="text-foreground tabular-nums">
+						<span class="font-medium text-foreground tabular-nums">
 							Rp {Number(li.amount).toLocaleString('id-ID')}
 						</span>
 					</div>
 				{/each}
 			{:else}
 				<div class="flex items-baseline justify-between">
-					<span class="text-muted-foreground">Tarif Jastip</span>
-					<span class="text-foreground tabular-nums">
+					<span class="text-muted-foreground">Ongkos Jastip</span>
+					<span class="font-medium text-foreground tabular-nums">
 						Rp {Number(o.jastip_fee).toLocaleString('id-ID')}
 					</span>
 				</div>
 			{/if}
 
-			<div
-				class="flex items-baseline justify-between border-t border-dashed border-border pt-2.5 text-sm font-bold"
-			>
-				<span class="text-foreground">{o.actual_total ? 'Total Nota' : 'Total Estimasi'}</span>
-				<span class="text-base text-primary tabular-nums">
+			<div class="flex items-baseline justify-between border-t border-dashed border-border pt-2.5">
+				<span class="text-sm font-bold text-foreground">
+					{o.actual_total ? 'Total Nota Akhir' : 'Total Estimasi'}
+				</span>
+				<span class="text-base font-bold text-primary tabular-nums">
 					Rp {expectedTotalAmount.toLocaleString('id-ID')}
 				</span>
 			</div>
 		</div>
-	</div>
-{/snippet}
+	</section>
 
-{#snippet paymentSection()}
-	<section class="space-y-3.5 rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
+	<!-- 4. PEMBAYARAN -->
+	<section class="space-y-3.5 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
 		<div class="flex items-center justify-between gap-2">
 			<div class="flex items-center gap-2">
 				<Wallet class="size-4 text-primary" />
@@ -274,7 +454,7 @@
 					<p class="text-[11px] text-muted-foreground tabular-nums">
 						{p
 							? `${PAYMENT_METHOD_LABELS[p.method].shortLabel} · ${p.payment_reference}`
-							: 'Pilih metode bayar'}
+							: 'Belum memilih metode bayar'}
 					</p>
 				</div>
 			</div>
@@ -553,12 +733,133 @@
 			</details>
 		{/if}
 	</section>
-{/snippet}
 
-{#snippet chatSection()}
-	<section class="space-y-3 rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
+	<!-- 5. FOTO STRUK KASIR & BUKTI -->
+	{#if receiptAttachments.length > 0 || data.attachments.length > 0 || data.isAdmin || data.isProvider || form?.evidenceError || form?.evidenceSuccess}
+		<section class="space-y-3 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+			<div class="flex items-center justify-between">
+				<h2 class="text-sm font-bold text-foreground">Foto Struk Kasir &amp; Bukti</h2>
+				<span class="text-xs text-muted-foreground tabular-nums">
+					{data.attachments.length} file
+				</span>
+			</div>
+
+			{#if form?.evidenceError}
+				<div
+					role="alert"
+					class="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-2.5 text-xs font-semibold text-destructive"
+				>
+					<AlertCircle class="size-4 shrink-0" />
+					<span>{form.evidenceError}</span>
+				</div>
+			{/if}
+
+			{#if form?.evidenceSuccess}
+				<div
+					role="status"
+					class="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+				>
+					<CheckCircle2 class="size-4 shrink-0" />
+					<span>{form.evidenceSuccess}</span>
+				</div>
+			{/if}
+
+			{#if data.attachments.length > 0}
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+					{#each data.attachments as att (att.id)}
+						<div class="space-y-1.5 rounded-xl border border-border/60 bg-muted/20 p-2.5 text-xs">
+							<div class="flex items-center justify-between text-[11px]">
+								<span class="font-semibold text-primary">
+									{att.attachment_type === 'receipt'
+										? 'Struk Kasir'
+										: att.attachment_type === 'delivery_proof'
+											? 'Bukti Antar'
+											: 'Lampiran'}
+								</span>
+								<span class="text-muted-foreground tabular-nums">
+									{Math.round(att.file_size / 1024)} KB
+								</span>
+							</div>
+							{#if att.signedUrl && att.mime_type.startsWith('image/')}
+								<img
+									src={att.signedUrl}
+									alt={att.file_name}
+									class="h-40 w-full rounded-lg object-cover"
+								/>
+							{:else}
+								<div class="flex items-center gap-2 rounded-lg bg-card p-2.5">
+									<FileText class="size-4 shrink-0 text-primary" />
+									<span class="truncate font-medium text-foreground">{att.file_name}</span>
+								</div>
+							{/if}
+							{#if att.note}
+								<p class="text-[11px] text-muted-foreground">{att.note}</p>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			{#if data.isAdmin || data.isProvider}
+				<form
+					method="POST"
+					action="?/uploadEvidence"
+					enctype="multipart/form-data"
+					use:enhance={() => {
+						uploadingEvidence = true;
+						return async ({ update }) => {
+							uploadingEvidence = false;
+							evidenceNote = '';
+							await update();
+						};
+					}}
+					class="space-y-2.5 border-t border-border/50 pt-3"
+				>
+					<div class="grid grid-cols-1 gap-2 sm:grid-cols-12">
+						<select
+							name="attachment_type"
+							bind:value={attachmentType}
+							class="h-9 rounded-md border border-input bg-background px-2.5 text-xs sm:col-span-4"
+						>
+							<option value="receipt">Struk Kasir Toko</option>
+							<option value="delivery_proof">Bukti Pengantaran</option>
+							<option value="chat_image">Gambar Tambahan</option>
+						</select>
+						<input
+							type="file"
+							name="file"
+							accept="image/jpeg,image/png,image/webp,application/pdf"
+							required
+							class="block text-xs text-muted-foreground file:mr-2.5 file:rounded-md file:border file:border-border file:bg-muted file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-foreground sm:col-span-8"
+						/>
+					</div>
+					<div class="flex gap-2">
+						<Input
+							name="note"
+							type="text"
+							bind:value={evidenceNote}
+							placeholder="Catatan singkat (opsional)"
+							class="h-9 flex-1 text-xs"
+						/>
+						<Button
+							type="submit"
+							size="sm"
+							disabled={uploadingEvidence}
+							class="h-9 gap-1.5 text-xs font-bold"
+						>
+							<Upload class="size-3.5" />
+							<span>{uploadingEvidence ? 'Mengunggah...' : 'Unggah'}</span>
+						</Button>
+					</div>
+				</form>
+			{/if}
+		</section>
+	{/if}
+
+	<!-- 6. CHAT & WHATSAPP -->
+	<section class="space-y-3 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
 		<div class="flex items-center justify-between gap-2">
-			<h2 class="text-sm font-bold text-foreground">Chat Kurir</h2>
+			<h2 class="text-sm font-bold text-foreground">Chat Pesanan</h2>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 			<a
 				href={waUrl}
@@ -626,7 +927,7 @@
 				name="message"
 				type="text"
 				bind:value={chatInput}
-				placeholder="Tulis pesan untuk kurir..."
+				placeholder="Tulis pesan..."
 				required
 				class="h-10 flex-1 text-xs"
 			/>
@@ -665,353 +966,65 @@
 			</details>
 		{/if}
 	</section>
-{/snippet}
 
-<div class="mx-auto max-w-5xl space-y-5 px-4 pt-5 pb-24 sm:px-6 sm:pt-7 md:pb-10">
-	<!-- Compact Top Bar -->
-	<div class="flex items-center justify-between text-xs text-muted-foreground">
-		<a
-			href={resolve('/pesanan')}
-			class="inline-flex items-center gap-1.5 font-semibold transition-colors duration-150 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>
-			<ArrowLeft class="size-3.5" />
-			<span>Semua Pesanan</span>
-		</a>
-
-		<span class="tabular-nums">
-			{new Date(o.created_at).toLocaleDateString('id-ID', {
-				day: 'numeric',
-				month: 'short',
-				hour: '2-digit',
-				minute: '2-digit'
-			})}
-		</span>
-	</div>
-
-	{#if form?.error}
-		<div
-			role="alert"
-			class="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive"
-		>
-			<AlertCircle class="size-4 shrink-0" />
-			<span>{form.error}</span>
-		</div>
-	{/if}
-
-	{#if form?.cancelSuccess}
-		<div
-			role="status"
-			class="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
-		>
-			<CheckCircle2 class="size-4 shrink-0" />
-			<span>{form.cancelSuccess}</span>
-		</div>
-	{/if}
-
-	<!-- Responsive Grid: Main Step Flow (Left 7 cols) + Sticky Receipt (Right 5 cols on Desktop) -->
-	<div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-		<!-- Left Column: Step-Focused Flow -->
-		<div class="space-y-4 lg:col-span-7">
-			<!-- Step Focus Card (Adapts cleanly to exact current step) -->
-			<section class="space-y-4 rounded-2xl border p-5 shadow-xs {stepFocus.toneClass}">
-				<div class="flex flex-wrap items-center justify-between gap-2">
-					<h1
-						class="font-mono text-xl font-bold tracking-tight text-foreground tabular-nums sm:text-2xl"
-					>
-						{o.order_number}
-					</h1>
-					<span
-						class="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold {statusMeta.badgeClass}"
-					>
-						{statusMeta.label}
-					</span>
-				</div>
-
-				{#if o.status !== 'cancelled' && o.status !== 'rejected'}
-					<div class="space-y-1.5">
-						<div class="h-1.5 w-full overflow-hidden rounded-full bg-background/80">
-							<div
-								class="h-full rounded-full bg-primary transition-all duration-200"
-								style="width: {progressPercent}%"
-							></div>
-						</div>
-						<p class="text-[11px] font-medium text-muted-foreground tabular-nums">
-							Tahap {Math.max(1, currentStepIndex + 1)} dari {orderFlow.length}
-						</p>
-					</div>
-				{/if}
-
-				<div class="flex items-start gap-3">
-					<div
-						class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-background text-primary shadow-2xs"
-					>
-						<StepIcon class="size-4.5" />
-					</div>
-					<div class="space-y-1">
-						<p class="text-sm font-bold text-foreground">{stepFocus.title}</p>
-						<p class="text-xs leading-relaxed text-muted-foreground">{stepFocus.subtitle}</p>
-					</div>
-				</div>
-
-				<!-- Inline Receipt Preview when purchased/delivering/completed -->
-				{#if receiptAttachments.length > 0 && (o.status === 'purchased' || o.status === 'delivering' || o.status === 'completed')}
-					{@const mainReceipt = receiptAttachments[0]}
-					{#if mainReceipt.signedUrl && mainReceipt.mime_type.startsWith('image/')}
-						<div class="space-y-1.5 rounded-xl border border-border/70 bg-card p-3">
-							<div class="flex items-center justify-between text-[11px]">
-								<span class="font-bold text-foreground">Foto Struk Kasir Toko</span>
-								{#if mainReceipt.note}
-									<span class="text-muted-foreground">{mainReceipt.note}</span>
-								{/if}
-							</div>
-							<img
-								src={mainReceipt.signedUrl}
-								alt={mainReceipt.file_name}
-								class="max-h-52 w-full rounded-lg object-cover"
-							/>
-						</div>
-					{/if}
-				{/if}
-
-				{#if o.status === 'cancelled' || o.status === 'rejected'}
-					<div class="pt-1">
-						<Button href={resolve('/pesan')} size="sm" class="h-9 text-xs font-bold">
-							Buat Pesanan Baru
+	<!-- Cancel Order (Only when pending & customer) -->
+	{#if o.status === 'pending' && data.isCustomer}
+		<div class="pt-1 text-center">
+			{#if !showCancelInline}
+				<button
+					type="button"
+					onclick={() => (showCancelInline = true)}
+					class="text-xs font-semibold text-destructive/80 transition-colors hover:text-destructive hover:underline"
+				>
+					Batalkan pesanan ini
+				</button>
+			{:else}
+				<form
+					method="POST"
+					action="?/cancelOrder"
+					use:enhance={() => {
+						isCancelling = true;
+						return async ({ update }) => {
+							isCancelling = false;
+							showCancelInline = false;
+							await update();
+						};
+					}}
+					class="space-y-2.5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-left"
+				>
+					<label for="cancellation_reason" class="block text-xs font-semibold text-destructive">
+						Alasan Pembatalan
+					</label>
+					<Input
+						id="cancellation_reason"
+						name="cancellation_reason"
+						type="text"
+						bind:value={cancelReason}
+						required
+						class="h-9 bg-background text-xs"
+					/>
+					<div class="flex justify-end gap-2">
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							onclick={() => (showCancelInline = false)}
+							class="h-8 text-xs"
+						>
+							Kembali
+						</Button>
+						<Button
+							type="submit"
+							variant="destructive"
+							size="sm"
+							disabled={isCancelling}
+							class="h-8 text-xs font-bold"
+						>
+							{isCancelling ? 'Membatalkan...' : 'Konfirmasi Batalkan'}
 						</Button>
 					</div>
-				{/if}
-			</section>
-
-			<!-- Mobile-Only Collapsible Order & Price Summary (1 tap away, zero clutter) -->
-			<details
-				class="group overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs lg:hidden"
-			>
-				<summary
-					class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-xs"
-				>
-					<div>
-						<p class="font-bold text-foreground">Detail Pesanan &amp; Rincian Biaya</p>
-						<p class="text-[11px] text-muted-foreground tabular-nums">
-							{o.items.length} barang &middot; {o.origin_name}
-						</p>
-					</div>
-					<div class="flex items-center gap-2">
-						<span class="text-sm font-bold text-primary tabular-nums">
-							Rp {expectedTotalAmount.toLocaleString('id-ID')}
-						</span>
-						<ChevronDown
-							class="size-4 text-muted-foreground transition-transform duration-150 group-open:rotate-180"
-						/>
-					</div>
-				</summary>
-				<div class="border-t border-border/60">
-					{@render orderSummaryContent()}
-				</div>
-			</details>
-
-			<!-- Contextual Order of Actions based on Current Step -->
-			{#if prioritizePayment}
-				{@render paymentSection()}
-				{@render chatSection()}
-			{:else}
-				{@render chatSection()}
-				{@render paymentSection()}
-			{/if}
-
-			<!-- Evidence / Receipt Upload (Visible for Admin/Provider, or when attachments exist) -->
-			{#if data.attachments.length > 0 || data.isAdmin || data.isProvider || form?.evidenceError || form?.evidenceSuccess}
-				<section class="space-y-3 rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
-					<div class="flex items-center justify-between">
-						<h2 class="text-sm font-bold text-foreground">Foto Struk &amp; Bukti</h2>
-						<span class="text-xs text-muted-foreground tabular-nums">
-							{data.attachments.length} file
-						</span>
-					</div>
-
-					{#if form?.evidenceError}
-						<div
-							role="alert"
-							class="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-2.5 text-xs font-semibold text-destructive"
-						>
-							<AlertCircle class="size-4 shrink-0" />
-							<span>{form.evidenceError}</span>
-						</div>
-					{/if}
-
-					{#if form?.evidenceSuccess}
-						<div
-							role="status"
-							class="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
-						>
-							<CheckCircle2 class="size-4 shrink-0" />
-							<span>{form.evidenceSuccess}</span>
-						</div>
-					{/if}
-
-					{#if data.attachments.length > 0}
-						<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-							{#each data.attachments as att (att.id)}
-								<div
-									class="space-y-1.5 rounded-xl border border-border/60 bg-muted/20 p-2.5 text-xs"
-								>
-									<div class="flex items-center justify-between text-[11px]">
-										<span class="font-semibold text-primary">
-											{att.attachment_type === 'receipt'
-												? 'Struk Kasir'
-												: att.attachment_type === 'delivery_proof'
-													? 'Bukti Antar'
-													: 'Lampiran'}
-										</span>
-										<span class="text-muted-foreground tabular-nums">
-											{Math.round(att.file_size / 1024)} KB
-										</span>
-									</div>
-									{#if att.signedUrl && att.mime_type.startsWith('image/')}
-										<img
-											src={att.signedUrl}
-											alt={att.file_name}
-											class="h-36 w-full rounded-lg object-cover"
-										/>
-									{:else}
-										<div class="flex items-center gap-2 rounded-lg bg-card p-2.5">
-											<FileText class="size-4 shrink-0 text-primary" />
-											<span class="truncate font-medium text-foreground">{att.file_name}</span>
-										</div>
-									{/if}
-									{#if att.note}
-										<p class="text-[11px] text-muted-foreground">{att.note}</p>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					{/if}
-
-					{#if data.isAdmin || data.isProvider}
-						<form
-							method="POST"
-							action="?/uploadEvidence"
-							enctype="multipart/form-data"
-							use:enhance={() => {
-								uploadingEvidence = true;
-								return async ({ update }) => {
-									uploadingEvidence = false;
-									evidenceNote = '';
-									await update();
-								};
-							}}
-							class="space-y-2.5 border-t border-border/50 pt-3"
-						>
-							<div class="grid grid-cols-1 gap-2 sm:grid-cols-12">
-								<select
-									name="attachment_type"
-									bind:value={attachmentType}
-									class="h-9 rounded-md border border-input bg-background px-2.5 text-xs sm:col-span-4"
-								>
-									<option value="receipt">Struk Kasir Toko</option>
-									<option value="delivery_proof">Bukti Pengantaran</option>
-									<option value="chat_image">Gambar Tambahan</option>
-								</select>
-								<input
-									type="file"
-									name="file"
-									accept="image/jpeg,image/png,image/webp,application/pdf"
-									required
-									class="block text-xs text-muted-foreground file:mr-2.5 file:rounded-md file:border file:border-border file:bg-muted file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-foreground sm:col-span-8"
-								/>
-							</div>
-							<div class="flex gap-2">
-								<Input
-									name="note"
-									type="text"
-									bind:value={evidenceNote}
-									placeholder="Catatan singkat (opsional)"
-									class="h-9 flex-1 text-xs"
-								/>
-								<Button
-									type="submit"
-									size="sm"
-									disabled={uploadingEvidence}
-									class="h-9 gap-1.5 text-xs font-bold"
-								>
-									<Upload class="size-3.5" />
-									<span>{uploadingEvidence ? 'Mengunggah...' : 'Unggah'}</span>
-								</Button>
-							</div>
-						</form>
-					{/if}
-				</section>
-			{/if}
-
-			<!-- Cancel Order (Only when pending & customer) -->
-			{#if o.status === 'pending' && data.isCustomer}
-				<div class="pt-1 text-center">
-					{#if !showCancelInline}
-						<button
-							type="button"
-							onclick={() => (showCancelInline = true)}
-							class="text-xs font-semibold text-destructive/80 transition-colors hover:text-destructive hover:underline"
-						>
-							Batalkan pesanan ini
-						</button>
-					{:else}
-						<form
-							method="POST"
-							action="?/cancelOrder"
-							use:enhance={() => {
-								isCancelling = true;
-								return async ({ update }) => {
-									isCancelling = false;
-									showCancelInline = false;
-									await update();
-								};
-							}}
-							class="space-y-2.5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-left"
-						>
-							<label for="cancellation_reason" class="block text-xs font-semibold text-destructive">
-								Alasan Pembatalan
-							</label>
-							<Input
-								id="cancellation_reason"
-								name="cancellation_reason"
-								type="text"
-								bind:value={cancelReason}
-								required
-								class="h-9 bg-background text-xs"
-							/>
-							<div class="flex justify-end gap-2">
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									onclick={() => (showCancelInline = false)}
-									class="h-8 text-xs"
-								>
-									Kembali
-								</Button>
-								<Button
-									type="submit"
-									variant="destructive"
-									size="sm"
-									disabled={isCancelling}
-									class="h-8 text-xs font-bold"
-								>
-									{isCancelling ? 'Membatalkan...' : 'Konfirmasi Batalkan'}
-								</Button>
-							</div>
-						</form>
-					{/if}
-				</div>
+				</form>
 			{/if}
 		</div>
-
-		<!-- Desktop-Only Sticky Order & Receipt Summary (Right 5 cols) -->
-		<aside class="hidden lg:sticky lg:top-20 lg:col-span-5 lg:block">
-			<div class="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
-				<div class="border-b border-border/60 px-5 py-3.5">
-					<h2 class="text-sm font-bold text-foreground">Ringkasan Pesanan</h2>
-				</div>
-				{@render orderSummaryContent()}
-			</div>
-		</aside>
-	</div>
+	{/if}
 </div>

@@ -16,7 +16,7 @@ import {
 	rejectPayment,
 	refundPayment
 } from '#lib/server/payment.js';
-import type { PaymentMethod } from '#lib/types/database.types.js';
+import type { OrderStatus, PaymentMethod } from '#lib/types/database.types.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const auth = requireAuth(locals);
@@ -338,6 +338,42 @@ export const actions: Actions = {
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : 'Gagal mencatat pengembalian dana.';
 			return fail(400, { paymentError: msg });
+		}
+	},
+
+	updateOrderStatus: async ({ request, locals, params }) => {
+		const auth = requireAuth(locals);
+		if (auth.role !== 'admin' && auth.role !== 'provider') {
+			return fail(403, { error: 'Hanya Admin atau Kurir yang dapat mengubah status pesanan.' });
+		}
+
+		const { id } = params;
+		const order = await getOrderDetails(locals.supabase, id);
+		if (!order) {
+			return fail(404, { error: 'Pesanan tidak ditemukan.' });
+		}
+
+		const formData = await request.formData();
+		const rawToStatus = formData.get('to_status');
+		const rawActualCost = formData.get('actual_item_cost');
+		const toStatus = (typeof rawToStatus === 'string' ? rawToStatus : '') as OrderStatus;
+		const actualItemCost =
+			typeof rawActualCost === 'string' && rawActualCost ? Number(rawActualCost) : undefined;
+
+		if (!toStatus) {
+			return fail(400, { error: 'Status tujuan wajib diisi.' });
+		}
+
+		try {
+			await transitionOrderStatus(locals.supabase, auth.user.id, auth.role, {
+				order_id: order.id,
+				to_status: toStatus,
+				actual_item_cost: actualItemCost
+			});
+			return { statusSuccess: 'Status pesanan berhasil diperbarui.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal memperbarui status pesanan.';
+			return fail(400, { error: msg });
 		}
 	}
 };
