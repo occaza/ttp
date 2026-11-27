@@ -1,9 +1,10 @@
 import type { Actions, PageServerLoad } from './$types';
 import { requireRole, categorySchema } from '#lib/server/auth.js';
 import { fail } from '@sveltejs/kit';
-import type { ServiceCategory, UserRole } from '#lib/types/database.types.js';
+import type { OrderStatus, ServiceCategory, UserRole } from '#lib/types/database.types.js';
 import { getPlatformSettings, updatePlatformSettings } from '#lib/server/settings.js';
 import { getAllPayments, verifyPayment, rejectPayment } from '#lib/server/payment.js';
+import { getAllOrdersForAdmin, transitionOrderStatus } from '#lib/server/order.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Server-side strict authorization: only admin/owner
@@ -87,8 +88,28 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// 2. Fetch platform settings
 	const settings = await getPlatformSettings(locals.supabase);
 
-	// 2b. Fetch manual payments queue for audit & privileged verification
-	const payments = await getAllPayments(locals.supabase, 50);
+	// 2b. Fetch manual payments & incoming orders for Owner Console
+	const [rawPayments, rawOrders] = await Promise.all([
+		getAllPayments(locals.supabase, 50),
+		getAllOrdersForAdmin(locals.supabase, 50)
+	]);
+
+	const orderById = new Map(rawOrders.map((o) => [o.id, o]));
+	const paymentByOrderId = new Map(rawPayments.map((p) => [p.order_id, p]));
+
+	const orders = rawOrders.map((ord) => {
+		const pay = paymentByOrderId.get(ord.id);
+		return {
+			...ord,
+			paymentStatus: pay?.status || 'unpaid',
+			paymentReference: pay?.payment_reference || null
+		};
+	});
+
+	const payments = rawPayments.map((p) => ({
+		...p,
+		order_number: orderById.get(p.order_id)?.order_number || null
+	}));
 
 	// 3. Fetch registered users list
 	const { data: usersData } = await locals.supabase
@@ -100,6 +121,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const userList = usersData || [];
 	const providerCount = userList.filter((u) => u.role === 'provider').length;
 	const awaitingPaymentsCount = payments.filter((p) => p.status === 'awaiting_verification').length;
+	const pendingOrdersCount = orders.filter((o) => o.status === 'pending').length;
+	const activeOrdersCount = orders.filter((o) =>
+		['accepted', 'shopping', 'purchased', 'delivering'].includes(o.status)
+	).length;
 
 	return {
 		user: auth.user,
@@ -107,12 +132,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		role: auth.role,
 		categories: categories && categories.length > 0 ? categories : fallbackCategories,
 		settings,
+		orders,
 		payments,
 		users: userList,
 		stats: {
 			totalUsers: userList.length,
 			totalProviders: providerCount,
 			awaitingPayments: awaitingPaymentsCount,
+			pendingOrders: pendingOrdersCount,
+			activeOrders: activeOrdersCount,
 			totalCategories: (categories && categories.length > 0 ? categories : fallbackCategories)
 				.length,
 			activeCategories: (categories && categories.length > 0
@@ -358,6 +386,39 @@ export const actions: Actions = {
 			return { success: true, message: 'Bukti pembayaran ditolak dan pemesan diberitahu.' };
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : 'Gagal menolak bukti pembayaran.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	updateOrderStatus: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+
+		const rawOrderId = formData.get('order_id');
+		const rawToStatus = formData.get('to_status');
+		const rawNote = formData.get('note');
+		const rawActualCost = formData.get('actual_item_cost');
+
+		const orderId = typeof rawOrderId === 'string' ? rawOrderId : '';
+		const toStatus = (typeof rawToStatus === 'string' ? rawToStatus : '') as OrderStatus;
+		const note = typeof rawNote === 'string' && rawNote.trim() ? rawNote.trim() : undefined;
+		const actualItemCost =
+			typeof rawActualCost === 'string' && rawActualCost ? Number(rawActualCost) : undefined;
+
+		if (!orderId || !toStatus) {
+			return fail(400, { error: 'ID pesanan dan status tujuan wajib diisi.' });
+		}
+
+		try {
+			await transitionOrderStatus(locals.supabase, auth.user.id, auth.role, {
+				order_id: orderId,
+				to_status: toStatus,
+				note,
+				actual_item_cost: actualItemCost
+			});
+			return { success: true, message: `Status pesanan berhasil diperbarui menjadi ${toStatus}.` };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal memperbarui status pesanan.';
 			return fail(400, { error: msg });
 		}
 	}

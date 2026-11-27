@@ -1,7 +1,7 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireAuth } from '#lib/server/auth.js';
-import { getOrderDetails, transitionOrderStatus } from '#lib/server/order.js';
+import { getOrderDetails, isUuid, transitionOrderStatus } from '#lib/server/order.js';
 import {
 	getOrderMessages,
 	getOrderAttachments,
@@ -37,10 +37,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(403, { message: 'Anda tidak memiliki hak akses untuk melihat pesanan ini.' });
 	}
 
+	// Canonicalize UUID URLs to the short order_number alias (e.g. /pesanan/TP-8K4M2P)
+	if (isUuid(id) && order.order_number) {
+		throw redirect(302, `/pesanan/${order.order_number}`);
+	}
+
 	const [messages, attachments, payment] = await Promise.all([
-		getOrderMessages(locals.supabase, id),
-		getOrderAttachments(locals.supabase, id),
-		getPaymentByOrderId(locals.supabase, id)
+		getOrderMessages(locals.supabase, order.id),
+		getOrderAttachments(locals.supabase, order.id),
+		getPaymentByOrderId(locals.supabase, order.id)
 	]);
 
 	return {
@@ -67,8 +72,12 @@ export const actions: Actions = {
 			typeof rawReason === 'string' && rawReason ? rawReason : 'Dibatalkan oleh pemesan.';
 
 		try {
+			const order = await getOrderDetails(locals.supabase, id);
+			if (!order) {
+				return fail(404, { error: 'Pesanan tidak ditemukan.' });
+			}
 			await transitionOrderStatus(locals.supabase, auth.user.id, auth.role, {
-				order_id: id,
+				order_id: order.id,
 				to_status: 'cancelled',
 				cancellation_reason: cancellationReason,
 				note: cancellationReason
@@ -103,7 +112,7 @@ export const actions: Actions = {
 
 		try {
 			await sendOrderMessage(locals.supabase, {
-				orderId: id,
+				orderId: order.id,
 				senderId: auth.user.id,
 				senderRole: auth.role,
 				message: messageText,
@@ -114,7 +123,7 @@ export const actions: Actions = {
 				auth.user.id === order.customer_id ? order.provider_id : order.customer_id;
 			await createNotification(locals.supabase, {
 				userId: notifyUserId,
-				orderId: id,
+				orderId: order.id,
 				title: `Pesan Baru (${order.order_number})`,
 				body: messageText.slice(0, 100),
 				type: 'chat_message'
@@ -162,7 +171,7 @@ export const actions: Actions = {
 		try {
 			const buffer = await file.arrayBuffer();
 			await uploadOrderEvidence(locals.supabase, {
-				orderId: id,
+				orderId: order.id,
 				uploaderId: auth.user.id,
 				attachmentType,
 				fileName: file.name,
@@ -180,7 +189,7 @@ export const actions: Actions = {
 						: 'Lampiran Gambar';
 
 			await sendOrderMessage(locals.supabase, {
-				orderId: id,
+				orderId: order.id,
 				senderId: null,
 				senderRole: 'system',
 				message: `${typeLabel} diunggah: ${file.name}${note ? ` (${note})` : ''}`,
@@ -191,7 +200,7 @@ export const actions: Actions = {
 				auth.user.id === order.customer_id ? order.provider_id : order.customer_id;
 			await createNotification(locals.supabase, {
 				userId: notifyUserId,
-				orderId: id,
+				orderId: order.id,
 				title: `${typeLabel} Diunggah`,
 				body: `Pesanan ${order.order_number}: ${file.name}`,
 				type: 'evidence_uploaded'

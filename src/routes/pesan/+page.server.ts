@@ -1,10 +1,42 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '#lib/types/database.types.js';
 import { requireAuth } from '#lib/server/auth.js';
 import { getServiceDetail } from '#lib/server/provider.js';
 import { calculateOrderPricing } from '#lib/server/pricing.js';
-import { createOrder, orderItemInputSchema } from '#lib/server/order.js';
+import { createOrder, isUuid, orderItemInputSchema } from '#lib/server/order.js';
 import { z } from 'zod';
+
+async function resolveDefaultOwnerProviderId(
+	supabase: SupabaseClient<Database> | null
+): Promise<string> {
+	if (supabase) {
+		const { data: activeProvider } = await supabase
+			.from('provider_profiles')
+			.select('id')
+			.eq('is_active', true)
+			.order('created_at', { ascending: true })
+			.limit(1)
+			.maybeSingle();
+
+		if (activeProvider?.id) {
+			return activeProvider.id;
+		}
+
+		const { data: anyProvider } = await supabase
+			.from('provider_profiles')
+			.select('id')
+			.order('created_at', { ascending: true })
+			.limit(1)
+			.maybeSingle();
+
+		if (anyProvider?.id) {
+			return anyProvider.id;
+		}
+	}
+	return 'owner-titipin';
+}
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	const auth = requireAuth(locals);
@@ -24,12 +56,15 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		selectedService = await getServiceDetail(locals.supabase, serviceId);
 	}
 
+	const defaultProviderId = await resolveDefaultOwnerProviderId(locals.supabase);
+
 	return {
 		user: auth.user,
 		profile: auth.profile,
 		addresses: addresses || [],
 		selectedService,
-		defaultOrigin
+		defaultOrigin,
+		defaultProviderId
 	};
 };
 
@@ -43,9 +78,17 @@ export const actions: Actions = {
 			return typeof v === 'string' ? v : '';
 		};
 
-		const providerId = getStr('provider_id') || 'owner-titipin';
-		const serviceId = getStr('service_id') || null;
-		const categoryId = getStr('category_id') || null;
+		const rawProviderId = getStr('provider_id');
+		const providerId = isUuid(rawProviderId)
+			? rawProviderId
+			: await resolveDefaultOwnerProviderId(locals.supabase);
+
+		const rawServiceId = getStr('service_id');
+		const serviceId = isUuid(rawServiceId) ? rawServiceId : null;
+
+		const rawCategoryId = getStr('category_id');
+		const categoryId = isUuid(rawCategoryId) ? rawCategoryId : null;
+
 		const originName = getStr('origin_name');
 		const originAddress = getStr('origin_address');
 		const destinationAddressId = getStr('destination_address_id') || null;
@@ -118,6 +161,6 @@ export const actions: Actions = {
 			return fail(400, { error: msg });
 		}
 
-		throw redirect(303, `/pesanan/${order.id}`);
+		throw redirect(303, `/pesanan/${order.order_number}`);
 	}
 };

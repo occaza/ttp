@@ -147,7 +147,7 @@
 		<input
 			type="hidden"
 			name="provider_id"
-			value={data.selectedService?.provider_id || 'owner-titipin'}
+			value={data.selectedService?.provider_id || data.defaultProviderId || ''}
 		/>
 		<input type="hidden" name="service_id" value={data.selectedService?.id || ''} />
 		<input type="hidden" name="category_id" value={data.selectedService?.category_id || ''} />

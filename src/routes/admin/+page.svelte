@@ -10,6 +10,7 @@
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import type { ServiceCategory } from '#lib/types/database.types.js';
+	import { ORDER_STATUS_LABELS } from '#lib/constants/order.js';
 	import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
 	import {
 		Users,
@@ -31,13 +32,16 @@
 		CircleCheck,
 		Clock,
 		ShieldCheck,
-		Wallet
+		Wallet,
+		ShoppingBag
 	} from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Active tab state: 'overview' | 'payments' | 'categories' | 'users' | 'settings'
-	let activeTab = $state<'overview' | 'payments' | 'categories' | 'users' | 'settings'>('overview');
+	// Active tab state: 'overview' | 'orders' | 'payments' | 'categories' | 'users' | 'settings'
+	let activeTab = $state<'overview' | 'orders' | 'payments' | 'categories' | 'users' | 'settings'>(
+		'overview'
+	);
 
 	let isCategoryModalOpen = $state(false);
 	let isSubmitting = $state(false);
@@ -147,6 +151,25 @@
 		>
 			<LayoutDashboard class="size-4" />
 			<span>Ikhtisar Platform</span>
+		</button>
+
+		<button
+			type="button"
+			onclick={() => (activeTab = 'orders')}
+			class="inline-flex items-center gap-2 border-b-2 px-4 py-2.5 whitespace-nowrap transition-colors {activeTab ===
+			'orders'
+				? 'border-primary font-bold text-primary'
+				: 'border-transparent text-muted-foreground hover:text-foreground'}"
+		>
+			<ShoppingBag class="size-4" />
+			<span>
+				Pesanan Jastip
+				{#if data.stats.pendingOrders > 0}
+					({data.stats.pendingOrders} Baru)
+				{:else if data.orders.length > 0}
+					({data.orders.length})
+				{/if}
+			</span>
 		</button>
 
 		<button
@@ -598,6 +621,163 @@
 		</Card>
 	{/if}
 
+	<!-- TAB: ORDERS MANAGEMENT -->
+	{#if activeTab === 'orders'}
+		<Card class="border-border/80">
+			<CardHeader>
+				<CardTitle class="text-base font-bold">Pesanan Jastip Masuk & Berjalan</CardTitle>
+				<p class="text-xs text-muted-foreground">
+					Semua pesanan yang dikirim pelanggan tampil di sini agar dapat langsung diterima,
+					dibelanjakan, dan diantar oleh Owner.
+				</p>
+			</CardHeader>
+			<CardContent>
+				{#if data.orders.length === 0}
+					<div class="py-8 text-center text-xs text-muted-foreground">
+						Belum ada pesanan jastip yang masuk.
+					</div>
+				{:else}
+					<div class="space-y-4">
+						{#each data.orders as ord (ord.id)}
+							{@const oMeta = ORDER_STATUS_LABELS[ord.status] || {
+								label: ord.status,
+								badgeClass: 'bg-muted text-muted-foreground'
+							}}
+							{@const pMeta = PAYMENT_STATUS_LABELS[ord.paymentStatus]}
+							<div class="space-y-3 rounded-xl border border-border/80 bg-muted/20 p-4 text-xs">
+								<div
+									class="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-2.5"
+								>
+									<div class="flex flex-wrap items-center gap-2">
+										<span class="font-mono font-bold text-foreground">{ord.order_number}</span>
+										<span
+											class="rounded-full border px-2 py-0.5 text-[10px] font-bold {oMeta.badgeClass}"
+										>
+											{oMeta.label}
+										</span>
+										<span
+											class="rounded-full border px-2 py-0.5 text-[10px] font-bold {pMeta.badgeClass}"
+										>
+											Bayar: {pMeta.label}
+										</span>
+									</div>
+									<span class="text-[10px] text-muted-foreground">
+										{new Date(ord.created_at).toLocaleString('id-ID', {
+											day: 'numeric',
+											month: 'short',
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
+									</span>
+								</div>
+
+								<div class="space-y-1">
+									<p class="font-bold text-foreground">{ord.origin_name}</p>
+									<p class="text-muted-foreground">{ord.destination_address_text}</p>
+									<p class="text-[11px] text-muted-foreground">
+										Pemesan:
+										<strong class="text-foreground">
+											{ord.recipient_name} ({ord.recipient_phone})
+										</strong>
+										&bull; Estimasi Total:
+										<strong class="text-primary">
+											Rp {Number(ord.actual_total || ord.total_estimated).toLocaleString('id-ID')}
+										</strong>
+									</p>
+									<div class="rounded-lg bg-card p-2 text-[11px] text-foreground">
+										<span class="font-semibold">Barang:</span>
+										{ord.items.map((it) => `${it.name} (${it.quantity} ${it.unit})`).join(', ')}
+									</div>
+								</div>
+
+								<div class="flex flex-wrap items-center gap-2 border-t border-border/50 pt-2.5">
+									{#if ord.status === 'pending'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={ord.id} />
+											<input type="hidden" name="to_status" value="accepted" />
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Terima Pesanan
+											</Button>
+										</form>
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={ord.id} />
+											<input type="hidden" name="to_status" value="rejected" />
+											<Button
+												size="sm"
+												variant="outline"
+												type="submit"
+												class="h-8 text-xs text-destructive hover:bg-destructive/10"
+											>
+												Tolak
+											</Button>
+										</form>
+									{:else if ord.status === 'accepted'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={ord.id} />
+											<input type="hidden" name="to_status" value="shopping" />
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Mulai Belanja di Toko
+											</Button>
+										</form>
+									{:else if ord.status === 'shopping'}
+										<form
+											method="POST"
+											action="?/updateOrderStatus"
+											use:enhance
+											class="flex flex-wrap items-center gap-2"
+										>
+											<input type="hidden" name="order_id" value={ord.id} />
+											<input type="hidden" name="to_status" value="purchased" />
+											<Input
+												name="actual_item_cost"
+												type="number"
+												min="0"
+												step="500"
+												placeholder="Total nota fisik (Rp)"
+												class="h-8 w-36 bg-background text-xs"
+												required
+											/>
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Selesai Belanja (Ada Struk)
+											</Button>
+										</form>
+									{:else if ord.status === 'purchased'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={ord.id} />
+											<input type="hidden" name="to_status" value="delivering" />
+											<Button size="sm" type="submit" class="h-8 text-xs font-bold">
+												Berangkat Antar
+											</Button>
+										</form>
+									{:else if ord.status === 'delivering'}
+										<form method="POST" action="?/updateOrderStatus" use:enhance>
+											<input type="hidden" name="order_id" value={ord.id} />
+											<input type="hidden" name="to_status" value="completed" />
+											<Button
+												size="sm"
+												type="submit"
+												class="h-8 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+											>
+												Selesaikan Pesanan
+											</Button>
+										</form>
+									{/if}
+
+									<a
+										href={resolve('/pesanan/[id]', { id: ord.order_number })}
+										class="ml-auto text-[11px] font-semibold text-primary hover:underline"
+									>
+										Detail & Chat &rarr;
+									</a>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</CardContent>
+		</Card>
+	{/if}
+
 	<!-- TAB: PAYMENTS VERIFICATION -->
 	{#if activeTab === 'payments'}
 		<Card class="border-border/80">
@@ -635,7 +815,7 @@
 										</span>
 									</div>
 									<a
-										href={resolve('/pesanan/[id]', { id: pay.order_id })}
+										href={resolve('/pesanan/[id]', { id: pay.order_number || pay.order_id })}
 										class="text-[11px] font-semibold text-primary hover:underline"
 									>
 										Detail Pesanan &rarr;

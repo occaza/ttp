@@ -64,7 +64,7 @@
 					badgeClass: 'bg-muted text-muted-foreground'
 				}}
 				<a
-					href={resolve('/pesanan/[id]', { id: order.id })}
+					href={resolve('/pesanan/[id]', { id: order.order_number })}
 					class="group flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md sm:p-6"
 				>
 					<div

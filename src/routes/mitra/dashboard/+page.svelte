@@ -453,7 +453,7 @@
 									{/if}
 
 									<a
-										href={resolve('/pesanan/[id]', { id: order.id })}
+										href={resolve('/pesanan/[id]', { id: order.order_number })}
 										class="ml-auto text-[11px] font-semibold text-primary hover:underline"
 									>
 										Lihat Detail &rarr;

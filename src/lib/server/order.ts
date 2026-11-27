@@ -92,11 +92,21 @@ export interface EnrichedOrder extends Order {
 // In-memory fallback cache
 const fallbackOrdersCache = new Map<string, EnrichedOrder>();
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SHORT_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+export function isUuid(value: string): boolean {
+	return UUID_REGEX.test(value.trim());
+}
+
 function generateOrderNumber(): string {
-	const now = new Date();
-	const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
-	const rand = Math.floor(1000 + Math.random() * 9000);
-	return `TP-${datePart}-${rand}`;
+	const bytes = new Uint8Array(6);
+	crypto.getRandomValues(bytes);
+	let code = '';
+	for (const b of bytes) {
+		code += SHORT_CODE_ALPHABET[b % SHORT_CODE_ALPHABET.length];
+	}
+	return `TP-${code}`;
 }
 
 /**
@@ -391,21 +401,24 @@ export async function transitionOrderStatus(
 }
 
 /**
- * Get single order details with items and status timeline
+ * Get single order details by UUID or short order_number (e.g. TP-8K4M2P)
  */
 export async function getOrderDetails(
 	supabase: SupabaseClient<Database> | null,
-	orderId: string
+	idOrOrderNumber: string
 ): Promise<EnrichedOrder | null> {
+	const lookup = idOrOrderNumber.trim();
+	const lookupIsUuid = isUuid(lookup);
+
 	if (supabase) {
 		try {
-			const { data: order, error } = await supabase
-				.from('orders')
-				.select('*')
-				.eq('id', orderId)
-				.maybeSingle();
+			const query = supabase.from('orders').select('*');
+			const { data: order, error } = await (
+				lookupIsUuid ? query.eq('id', lookup) : query.eq('order_number', lookup.toUpperCase())
+			).maybeSingle();
 
 			if (!error && order) {
+				const orderId = order.id;
 				const [{ data: items }, { data: history }, { data: customer }, { data: provider }] =
 					await Promise.all([
 						supabase.from('order_items').select('*').eq('order_id', orderId),
@@ -441,7 +454,15 @@ export async function getOrderDetails(
 		}
 	}
 
-	return fallbackOrdersCache.get(orderId) || null;
+	const direct = fallbackOrdersCache.get(lookup);
+	if (direct) return direct;
+	const upper = lookup.toUpperCase();
+	for (const cached of fallbackOrdersCache.values()) {
+		if (cached.order_number.toUpperCase() === upper) {
+			return cached;
+		}
+	}
+	return null;
 }
 
 /**
@@ -520,4 +541,50 @@ export async function getProviderOrders(
 	}
 
 	return Array.from(fallbackOrdersCache.values()).filter((o) => o.provider_id === providerId);
+}
+
+/**
+ * Get all incoming & historical orders for the Owner / Admin Console
+ */
+export async function getAllOrdersForAdmin(
+	supabase: SupabaseClient<Database> | null,
+	limit = 50
+): Promise<EnrichedOrder[]> {
+	if (supabase) {
+		try {
+			const { data: orders, error } = await supabase
+				.from('orders')
+				.select('*')
+				.order('created_at', { ascending: false })
+				.limit(limit);
+
+			if (!error && orders) {
+				const enrichedList: EnrichedOrder[] = await Promise.all(
+					orders.map(async (o) => {
+						const [{ data: items }, { data: customer }] = await Promise.all([
+							supabase.from('order_items').select('*').eq('order_id', o.id),
+							supabase
+								.from('profiles')
+								.select('full_name, phone')
+								.eq('id', o.customer_id)
+								.maybeSingle()
+						]);
+						return {
+							...o,
+							items: items || [],
+							history: [],
+							customer: customer || null
+						};
+					})
+				);
+				return enrichedList;
+			}
+		} catch (err) {
+			console.warn('[OrderEngine] DB admin orders fallback:', err);
+		}
+	}
+
+	return Array.from(fallbackOrdersCache.values())
+		.sort((a, b) => b.created_at.localeCompare(a.created_at))
+		.slice(0, limit);
 }
