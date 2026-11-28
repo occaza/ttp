@@ -18,16 +18,10 @@
 		class="flex flex-col items-start justify-between gap-4 border-b border-border/60 pb-5 sm:flex-row sm:items-center"
 	>
 		<div>
-			<div
-				class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-			>
-				<ShoppingBag class="size-3.5" />
-				<span>Riwayat & Status Pesanan</span>
-			</div>
-			<h1 class="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+			<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
 				Pesanan Jastip Saya
 			</h1>
-			<p class="text-xs text-muted-foreground sm:text-sm">
+			<p class="mt-1 text-xs text-muted-foreground sm:text-sm">
 				Pantau proses belanja dan pengantaran pesanan Anda secara langsung.
 			</p>
 		</div>

@@ -38,7 +38,7 @@ export const PAYMENT_METHOD_LABELS: Record<
 	cash_on_delivery: {
 		label: 'Bayar Tunai di Tempat (COD)',
 		shortLabel: 'COD Tunai',
-		instructions: 'Bayar tunai langsung saat barang tiba bersama struk kasir fisik asli dari toko.'
+		instructions: 'Bayar tunai langsung saat barang tiba sesuai nota belanja toko.'
 	},
 	bank_transfer: {
 		label: 'Transfer Bank Manual',

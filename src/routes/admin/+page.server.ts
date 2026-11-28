@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { requireRole, categorySchema } from '#lib/server/auth.js';
 import { fail } from '@sveltejs/kit';
-import type { OrderStatus, ServiceCategory, UserRole } from '#lib/types/database.types.js';
+import type { OrderStatus, UserRole } from '#lib/types/database.types.js';
 import { getPlatformSettings, updatePlatformSettings } from '#lib/server/settings.js';
 import { getAllPayments, verifyPayment, rejectPayment } from '#lib/server/payment.js';
 import { getAllOrdersForAdmin, transitionOrderStatus } from '#lib/server/order.js';
@@ -15,6 +15,24 @@ import {
 	updateDisputeStatus,
 	updatePricingRule
 } from '#lib/server/admin.js';
+import {
+	deleteCmsContent,
+	deleteMediaAsset,
+	deletePromoPopup,
+	getAllContentsForAdmin,
+	getAllPromosForAdmin,
+	getMediaAssets,
+	isR2Configured,
+	registerExternalMedia,
+	saveCmsContent,
+	savePromoPopup,
+	uploadMediaAsset
+} from '#lib/server/cms.js';
+
+function getFormString(formData: FormData, key: string, fallback = ''): string {
+	const value = formData.get(key);
+	return typeof value === 'string' ? value : fallback;
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Server-side strict authorization: only admin/owner
@@ -25,75 +43,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from('service_categories')
 		.select('*')
 		.order('sort_order', { ascending: true });
-
-	const fallbackCategories: ServiceCategory[] = [
-		{
-			id: '1',
-			name: 'Kuliner & Makanan',
-			slug: 'food-beverage',
-			description: 'Makanan siap saji, kafe, jajanan khas',
-			icon: 'utensils',
-			is_active: true,
-			sort_order: 1,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		{
-			id: '2',
-			name: 'Minimarket & Mart',
-			slug: 'grocery-mart',
-			description: 'Kebutuhan harian, snack, minuman',
-			icon: 'store',
-			is_active: true,
-			sort_order: 2,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		{
-			id: '3',
-			name: 'Pasar Tradisional',
-			slug: 'traditional-market',
-			description: 'Sayur, buah, daging, bumbu dapur',
-			icon: 'carrot',
-			is_active: true,
-			sort_order: 3,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		{
-			id: '4',
-			name: 'Apotek & Obat',
-			slug: 'pharmacy',
-			description: 'Obat bebas, vitamin, suplemen',
-			icon: 'pill',
-			is_active: true,
-			sort_order: 4,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		{
-			id: '5',
-			name: 'Ambil & Antar Dokumen/Barang',
-			slug: 'pickup-delivery',
-			description: 'Kunci, berkas kerja, paket mendesak',
-			icon: 'truck',
-			is_active: true,
-			sort_order: 5,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		{
-			id: '6',
-			name: 'Titip Kustom & Antrean',
-			slug: 'custom-request',
-			description: 'Florist, antrean tiket, permintaan spesifik',
-			icon: 'sparkles',
-			is_active: true,
-			sort_order: 6,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		}
-	];
+	const resolvedCategories = categories ?? [];
 
 	// 2. Fetch platform settings
 	const settings = await getPlatformSettings(locals.supabase);
@@ -144,11 +94,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 	).length;
 	const verifiedProvidersCount = providers.filter((p) => p.is_verified).length;
 
+	const [mediaAssets, cmsContents, promoPopups] = await Promise.all([
+		getMediaAssets(locals.supabase),
+		getAllContentsForAdmin(locals.supabase),
+		getAllPromosForAdmin(locals.supabase)
+	]);
+
 	return {
 		user: auth.user,
 		profile: auth.profile,
 		role: auth.role,
-		categories: categories && categories.length > 0 ? categories : fallbackCategories,
+		categories: resolvedCategories,
 		settings,
 		orders,
 		payments,
@@ -157,6 +113,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		pricingRules,
 		disputes,
 		auditLogs,
+		mediaAssets,
+		cmsContents,
+		promoPopups,
+		r2Configured: isR2Configured(),
 		stats: {
 			totalUsers: userList.length,
 			totalProviders: providerCount,
@@ -165,12 +125,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			pendingOrders: pendingOrdersCount,
 			activeOrders: activeOrdersCount,
 			openDisputes: openDisputesCount,
-			totalCategories: (categories && categories.length > 0 ? categories : fallbackCategories)
-				.length,
-			activeCategories: (categories && categories.length > 0
-				? categories
-				: fallbackCategories
-			).filter((c) => c.is_active).length
+			totalCategories: resolvedCategories.length,
+			activeCategories: resolvedCategories.filter((c) => c.is_active).length
 		}
 	};
 };
@@ -571,6 +527,142 @@ export const actions: Actions = {
 			return { success: true, message: 'Status laporan/sengketa berhasil diperbarui.' };
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : 'Gagal memperbarui status laporan.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	uploadMedia: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+		const file = formData.get('file');
+		const altText = formData.get('alt_text');
+
+		if (!(file instanceof File)) {
+			return fail(400, { error: 'File gambar tidak valid.' });
+		}
+
+		try {
+			await uploadMediaAsset(locals.supabase, auth.user.id, auth.role, {
+				file,
+				altText: typeof altText === 'string' ? altText : undefined
+			});
+			return { success: true, message: 'Gambar berhasil diunggah ke Media Manager.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal mengunggah gambar.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	registerExternalMedia: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+
+		try {
+			await registerExternalMedia(locals.supabase, auth.user.id, auth.role, {
+				fileName: getFormString(formData, 'file_name'),
+				publicUrl: getFormString(formData, 'public_url'),
+				altText: getFormString(formData, 'alt_text')
+			});
+			return { success: true, message: 'URL gambar eksternal berhasil ditambahkan.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menyimpan URL gambar.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	deleteMedia: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+		const id = getFormString(formData, 'id');
+
+		try {
+			await deleteMediaAsset(locals.supabase, auth.user.id, auth.role, id);
+			return { success: true, message: 'Aset media berhasil dihapus.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menghapus aset media.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	saveCmsContent: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+		const rawId = getFormString(formData, 'id');
+
+		try {
+			await saveCmsContent(locals.supabase, auth.user.id, auth.role, {
+				id: rawId.length > 0 ? rawId : undefined,
+				contentType: getFormString(formData, 'content_type', 'post') === 'page' ? 'page' : 'post',
+				title: getFormString(formData, 'title'),
+				slug: getFormString(formData, 'slug'),
+				excerpt: getFormString(formData, 'excerpt'),
+				body: getFormString(formData, 'body'),
+				coverImageUrl: getFormString(formData, 'cover_image_url'),
+				status: getFormString(formData, 'status', 'draft') === 'published' ? 'published' : 'draft'
+			});
+			return { success: true, message: 'Konten berhasil disimpan.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menyimpan konten.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	deleteCmsContent: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+
+		try {
+			await deleteCmsContent(
+				locals.supabase,
+				auth.user.id,
+				auth.role,
+				getFormString(formData, 'id')
+			);
+			return { success: true, message: 'Konten berhasil dihapus.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menghapus konten.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	savePromoPopup: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+		const rawId = getFormString(formData, 'id');
+
+		try {
+			await savePromoPopup(locals.supabase, auth.user.id, auth.role, {
+				id: rawId.length > 0 ? rawId : undefined,
+				title: getFormString(formData, 'title'),
+				description: getFormString(formData, 'description'),
+				imageUrl: getFormString(formData, 'image_url'),
+				ctaLabel: getFormString(formData, 'cta_label', 'Lihat Promo'),
+				ctaHref: getFormString(formData, 'cta_href', '/pesan'),
+				isActive: formData.get('is_active') === 'on' || formData.get('is_active') === 'true',
+				startsAt: getFormString(formData, 'starts_at'),
+				endsAt: getFormString(formData, 'ends_at')
+			});
+			return { success: true, message: 'Popup promo berhasil disimpan.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menyimpan popup promo.';
+			return fail(400, { error: msg });
+		}
+	},
+
+	deletePromoPopup: async ({ request, locals }) => {
+		const auth = requireRole(locals, ['admin']);
+		const formData = await request.formData();
+
+		try {
+			await deletePromoPopup(
+				locals.supabase,
+				auth.user.id,
+				auth.role,
+				getFormString(formData, 'id')
+			);
+			return { success: true, message: 'Popup promo berhasil dihapus.' };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : 'Gagal menghapus popup promo.';
 			return fail(400, { error: msg });
 		}
 	}

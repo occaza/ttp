@@ -4,27 +4,31 @@
 	import { goto } from '$app/navigation';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { Input } from '#lib/components/ui/input/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
 	import {
 		ArrowRight,
 		Carrot,
 		CheckCircle2,
 		ChevronRight,
+		HandHelping,
 		MapPin,
 		Pill,
 		Receipt,
 		Search,
 		ShieldCheck,
+		ShoppingBag,
 		Sparkles,
 		Store,
 		Truck,
 		Utensils,
+		Wrench,
 		XCircle
 	} from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	let searchQuery = $state('');
-	let selectedLocation = $state('Gatak');
+	let selectedLocation = $state('Gatak (Pusat)');
 
 	const locations = [
 		'Gatak (Pusat)',
@@ -36,89 +40,38 @@
 		'Sawit & Sekitarnya'
 	];
 
-	const categoryIcons: Record<string, typeof Utensils> = {
+	const locationOptions = locations.map((loc) => ({ value: loc, label: loc }));
+
+	const categoryIcons: Record<string, typeof ShoppingBag> = {
+		'shopping-bag': ShoppingBag,
+		dititipin: ShoppingBag,
+		truck: Truck,
+		dianterin: Truck,
+		'pickup-delivery': Truck,
+		'hand-helping': HandHelping,
+		dibantuin: HandHelping,
+		wrench: Wrench,
 		utensils: Utensils,
 		'food-beverage': Utensils,
-		kuliner: Utensils,
 		store: Store,
 		'grocery-mart': Store,
-		swalayan: Store,
 		carrot: Carrot,
 		'traditional-market': Carrot,
-		pasar: Carrot,
 		pill: Pill,
 		pharmacy: Pill,
-		farmasi: Pill,
-		truck: Truck,
-		'pickup-delivery': Truck,
-		kurir: Truck,
 		sparkles: Sparkles,
-		'custom-request': Sparkles,
-		custom: Sparkles
+		'custom-request': Sparkles
 	};
 
-	const defaultCategories = [
-		{
-			id: 'kuliner',
-			slug: 'food-beverage',
-			name: 'Kuliner & Warung Lokal',
-			desc: 'Titip makanan dari warung makan, angkringan, atau kafe yang belum tersedia di aplikasi lain.',
-			examples: 'Soto Bebek Gawok, warung makan malam, jajanan pasar',
-			icon: Utensils
-		},
-		{
-			id: 'pasar',
-			slug: 'traditional-market',
-			name: 'Pasar Pagi & Sayur Segar',
-			desc: 'Belanja sayur, lauk, dan bumbu dapur langsung dari pedagang pasar tradisional.',
-			examples: 'Pasar Gawok, sayur segar, daging ayam, bumbu dapur',
-			icon: Carrot
-		},
-		{
-			id: 'swalayan',
-			slug: 'grocery-mart',
-			name: 'Minimarket & Kebutuhan Harian',
-			desc: 'Kebutuhan rumah tangga, air galon, popok, atau belanjaan minimarket terdekat.',
-			examples: 'Indomaret Gatak, Alfamart Gawok, toko kelontong',
-			icon: Store
-		},
-		{
-			id: 'farmasi',
-			slug: 'pharmacy',
-			name: 'Apotek & Obat',
-			desc: 'Obat bebas, vitamin, suplemen, dan perlengkapan kesehatan dari apotek lokal.',
-			examples: 'Apotek Gatak, Kimia Farma Kartasura',
-			icon: Pill
-		},
-		{
-			id: 'kurir',
-			slug: 'pickup-delivery',
-			name: 'Ambil & Antar Barang',
-			desc: 'Jemput dan antar kunci tertinggal, berkas kerja, cucian laundry, atau titipan lokal.',
-			examples: 'Laundry selesai, dokumen kantor, barang tertinggal',
-			icon: Truck
-		},
-		{
-			id: 'custom',
-			slug: 'custom-request',
-			name: 'Titip Kustom',
-			desc: 'Belanja di toko spesifik atau permintaan khusus sesuai catatan Anda.',
-			examples: 'Sentra rotan Trangsan, pakan ternak, perlengkapan lokal',
-			icon: Sparkles
-		}
-	];
-
 	const resolvedCategories = $derived(
-		data?.categories && data.categories.length > 0
-			? data.categories.map((cat, idx) => ({
-					id: cat.id,
-					slug: cat.slug,
-					name: cat.name,
-					desc: cat.description || defaultCategories[idx]?.desc || 'Layanan titip belanja lokal.',
-					examples: defaultCategories[idx]?.examples || 'Belanja kebutuhan toko lokal',
-					icon: categoryIcons[cat.icon || ''] || categoryIcons[cat.slug] || Utensils
-				}))
-			: defaultCategories
+		(data?.categories ?? []).map((cat) => ({
+			id: cat.id,
+			slug: cat.slug,
+			name: cat.name,
+			desc: cat.description || 'Layanan lokal sesuai kebutuhan Anda.',
+			examples: (data?.serviceExamplesByCategory?.[cat.id] ?? []).join(', '),
+			icon: categoryIcons[cat.icon || ''] || categoryIcons[cat.slug] || ShoppingBag
+		}))
 	);
 
 	const filteredCategories = $derived(
@@ -140,13 +93,13 @@
 		},
 		{
 			step: 'Langkah 2',
-			title: 'Dibelikan langsung dengan foto struk',
-			desc: 'Tim Titipin membeli pesanan di lokasi dan mengunggah foto struk kasir asli toko.'
+			title: 'Dibelikan langsung di toko tujuan',
+			desc: 'Tim Titipin membeli pesanan di lokasi dan melampirkan foto nota belanja.'
 		},
 		{
 			step: 'Langkah 3',
 			title: 'Diantar ke alamat Anda',
-			desc: 'Bayar total belanja sesuai struk asli ditambah tarif jasa titip yang disepakati di awal.'
+			desc: 'Bayar total belanja sesuai nota toko ditambah tarif jasa titip yang disepakati di awal.'
 		}
 	];
 
@@ -158,7 +111,7 @@
 		},
 		{
 			feature: 'Harga barang',
-			titipin: 'Harga asli toko fisik sesuai struk kasir',
+			titipin: 'Mengikuti harga di toko tujuan',
 			other: 'Umumnya lebih tinggi dari harga makan di tempat'
 		},
 		{
@@ -168,7 +121,7 @@
 		},
 		{
 			feature: 'Bukti pembelian',
-			titipin: 'Foto struk kasir toko dilampirkan di detail pesanan',
+			titipin: 'Foto nota belanja dilampirkan di detail pesanan',
 			other: 'Menggunakan ringkasan digital aplikasi'
 		}
 	];
@@ -189,13 +142,12 @@
 					<h1
 						class="text-3xl font-black tracking-tight text-balance text-foreground sm:text-4xl lg:text-5xl"
 					>
-						Titip belanja dari toko mana saja, bayar sesuai struk kasir asli.
+						Titip belanja dari toko mana saja di sekitar Gatak.
 					</h1>
 
 					<p class="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
 						Layanan titip belanja dan antar-jemput lokal di area Gatak, Gawok, hingga Kartasura.
-						Harga barang murni mengikuti nota toko tanpa markup, terpisah jelas dari tarif jasa
-						titip.
+						Harga barang mengikuti nota toko, terpisah dari tarif jasa titip.
 					</p>
 
 					<!-- Location & Search Form -->
@@ -214,18 +166,15 @@
 						<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
 							<label class="sr-only" for="hero-area">Pilih area pengantaran</label>
 							<div
-								class="flex min-h-11 items-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-3 py-2 sm:w-48"
+								class="flex min-h-11 items-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-3 py-1 sm:w-52"
 							>
 								<MapPin class="size-4 shrink-0 text-primary" />
-								<select
+								<Select
 									id="hero-area"
 									bind:value={selectedLocation}
-									class="w-full bg-transparent text-base font-semibold text-foreground focus:outline-hidden sm:text-xs"
-								>
-									{#each locations as loc (loc)}
-										<option value={loc}>{loc}</option>
-									{/each}
-								</select>
+									options={locationOptions}
+									triggerClass="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+								/>
 							</div>
 
 							<div class="relative flex-1">
@@ -261,7 +210,7 @@
 							<ArrowRight class="size-4" />
 						</a>
 						<span class="text-xs text-muted-foreground">
-							100% sesuai struk asli &middot; Tarif flat mulai Rp 8.000
+							Bayar sesuai nota toko &middot; Tarif flat mulai Rp 8.000
 						</span>
 					</div>
 				</div>
@@ -287,7 +236,7 @@
 								class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300"
 							>
 								<CheckCircle2 class="size-3" />
-								<span>Foto Struk</span>
+								<span>Foto Nota</span>
 							</span>
 						</div>
 
@@ -298,7 +247,7 @@
 									2 porsi Soto Bebek + 2 Es Teh
 								</p>
 								<div class="mt-2 flex justify-between border-t border-border/50 pt-2 font-semibold">
-									<span>Harga Struk Kasir Toko</span>
+									<span>Harga Nota Toko</span>
 									<span class="text-foreground tabular-nums">Rp 36.000</span>
 								</div>
 							</div>
@@ -324,7 +273,7 @@
 								class="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-[11px] font-medium text-emerald-800 dark:text-emerald-300"
 							>
 								<ShieldCheck class="size-4 shrink-0 text-emerald-600" />
-								<span>Foto struk kasir asli dikirim di halaman detail pesanan.</span>
+								<span>Foto nota belanja dikirim di halaman detail pesanan.</span>
 							</div>
 						</div>
 					</div>
@@ -385,10 +334,14 @@
 							<p class="mt-1.5 text-xs leading-relaxed text-muted-foreground">
 								{category.desc}
 							</p>
-							<p class="mt-3 rounded-lg bg-muted/40 px-2.5 py-2 text-[11px] text-muted-foreground">
-								<span class="font-semibold text-foreground">Contoh:</span>
-								{category.examples}
-							</p>
+							{#if category.examples}
+								<p
+									class="mt-3 rounded-lg bg-muted/40 px-2.5 py-2 text-[11px] text-muted-foreground"
+								>
+									<span class="font-semibold text-foreground">Contoh:</span>
+									{category.examples}
+								</p>
+							{/if}
 						</div>
 
 						<div
@@ -477,25 +430,46 @@
 					Perlu titip belanja hari ini di area Gatak dan sekitarnya?
 				</h2>
 				<p class="mt-2 text-xs leading-relaxed text-primary-foreground/90 sm:text-sm">
-					Buat akun gratis untuk mengirim daftar belanja, memantau progres pesanan, dan menerima
-					foto struk kasir asli.
+					{#if data?.user}
+						Kirim daftar belanja, pantau progres pesanan, dan lihat rincian nota pembelian langsung
+						dari akun Anda.
+					{:else}
+						Buat akun gratis untuk mengirim daftar belanja, memantau progres pesanan, dan melihat
+						rincian nota pembelian.
+					{/if}
 				</p>
 			</div>
 
 			<div class="flex w-full shrink-0 flex-col gap-2.5 sm:w-auto sm:flex-row">
-				<a
-					href={resolve('/daftar')}
-					class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-5 text-xs font-bold text-primary transition-colors hover:bg-white/95"
-				>
-					<span>Daftar Akun</span>
-					<ArrowRight class="size-4" />
-				</a>
-				<a
-					href={resolve('/pesan')}
-					class="inline-flex h-11 items-center justify-center rounded-xl border border-white/30 bg-white/10 px-5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
-				>
-					<span>Buat Pesanan</span>
-				</a>
+				{#if data?.user}
+					<a
+						href={resolve('/pesan')}
+						class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-5 text-xs font-bold text-primary transition-colors hover:bg-white/95"
+					>
+						<span>Buat Pesanan</span>
+						<ArrowRight class="size-4" />
+					</a>
+					<a
+						href={resolve('/pesanan')}
+						class="inline-flex h-11 items-center justify-center rounded-xl border border-white/30 bg-white/10 px-5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+					>
+						<span>Pesanan Saya</span>
+					</a>
+				{:else}
+					<a
+						href={resolve('/daftar')}
+						class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-5 text-xs font-bold text-primary transition-colors hover:bg-white/95"
+					>
+						<span>Daftar Akun</span>
+						<ArrowRight class="size-4" />
+					</a>
+					<a
+						href={resolve('/pesan')}
+						class="inline-flex h-11 items-center justify-center rounded-xl border border-white/30 bg-white/10 px-5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+					>
+						<span>Buat Pesanan</span>
+					</a>
+				{/if}
 			</div>
 		</div>
 	</section>

@@ -294,7 +294,7 @@ export function calculatePricingBreakdown(
 	if (itemCostEstimate > 0) {
 		lineItems.push({
 			code: 'ITEM_COST_ESTIMATE',
-			label: 'Estimasi Belanja Toko (100% Sesuai Struk Kasir Asli)',
+			label: 'Estimasi Belanja Toko (Sesuai Nota)',
 			amount: itemCostEstimate,
 			type: 'item_cost',
 			isEstimate: true,

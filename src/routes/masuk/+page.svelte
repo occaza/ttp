@@ -80,19 +80,19 @@
 				</div>
 				<div class="mt-3 space-y-2 text-xs text-white/90">
 					<div class="flex justify-between">
-						<span>Martabak Spesial Pecenongan</span>
-						<span class="font-semibold text-white">Rp 75.000</span>
+						<span>Soto Bebek Gawok (2 porsi)</span>
+						<span class="font-semibold text-white">Rp 30.000</span>
 					</div>
 					<div class="flex justify-between text-[11px] text-white/75">
 						<span>Biaya Jasa Titip Flat</span>
-						<span class="font-medium text-white">Rp 12.000</span>
+						<span class="font-medium text-white">Rp 8.000</span>
 					</div>
 				</div>
 				<div
 					class="mt-3 flex items-center gap-2 rounded-lg bg-black/20 p-2 text-[11px] text-white/90"
 				>
 					<Receipt class="size-3.5 shrink-0 text-emerald-300" />
-					<span>Foto struk kasir toko asli diverifikasi sistem</span>
+					<span>Foto nota belanja dikirim di halaman pesanan</span>
 				</div>
 			</div>
 
@@ -102,11 +102,11 @@
 			>
 				<div class="flex items-center gap-2">
 					<CheckCircle2 class="size-4 shrink-0 text-emerald-300" />
-					<span>Harga belanja sesuai struk asli toko tanpa markup</span>
+					<span>Harga belanja mengikuti nota toko tujuan</span>
 				</div>
 				<div class="flex items-center gap-2">
 					<ShieldCheck class="size-4 shrink-0 text-emerald-300" />
-					<span>Mitra kurir lokal terverifikasi identitas resmi</span>
+					<span>Pengantaran langsung oleh tim &amp; mitra lokal</span>
 				</div>
 			</div>
 		</div>
@@ -189,7 +189,7 @@
 							placeholder="nama@email.com"
 							required
 							value={form?.email || ''}
-							class="h-10 pl-9.5 text-sm"
+							class="h-10 pl-9.5 text-base sm:text-sm"
 						/>
 					</div>
 				</div>

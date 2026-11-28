@@ -15,6 +15,8 @@ export const load: LayoutLoad = ({ data, depends }) => {
 		user: data.user,
 		profile: data.profile,
 		role: data.role,
-		unreadNotificationCount: data.unreadNotificationCount
+		unreadNotificationCount: data.unreadNotificationCount,
+		activePromo: data.activePromo,
+		publishedPages: data.publishedPages
 	};
 };

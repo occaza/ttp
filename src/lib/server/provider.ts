@@ -14,125 +14,6 @@ export interface EnrichedProviderService extends ProviderService {
 	provider?: (ProviderProfile & { phone?: string | null }) | null;
 }
 
-const defaultOwnerProvider = {
-	id: 'owner-titipin',
-	user_id: 'owner-titipin-uid',
-	business_name: 'Titipin Langsung (Owner)',
-	bio: 'Dijalankan dan dibelikan langsung oleh pengelola Titipin di Gatak. Belanja jujur, cepat, dan 100% nota kasir asli toko.',
-	coverage_area: 'Kecamatan Gatak & Sekitarnya',
-	is_active: true,
-	is_verified: true,
-	rating_avg: 5.0,
-	rating_count: 0,
-	created_at: new Date().toISOString(),
-	updated_at: new Date().toISOString(),
-	phone: '08161666202'
-};
-
-// Initial realistic default services for local Gatak discovery testing
-export const localGatakDiscoverySeeds: EnrichedProviderService[] = [
-	{
-		id: 'seed-1',
-		provider_id: 'owner-titipin',
-		category_id: 'seed-cat-1',
-		title: 'Jastip Soto Bebek & Kuliner Gawok',
-		description:
-			'Bisa titip Soto Bebek Gawok, Bebek Goreng, atau kuliner malam area Gawok & sekitarnya. Dibelikan dan diantar hangat.',
-		base_fee: 8000,
-		coverage_area: 'Gatak, Gawok & Blimbing, Mayang',
-		is_active: true,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
-		category: {
-			id: 'seed-cat-1',
-			name: 'Kuliner & Warung Hits',
-			slug: 'food-beverage',
-			description: 'Jastip kuliner lokal dan makanan enak',
-			icon: 'utensils',
-			is_active: true,
-			sort_order: 1,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		provider: defaultOwnerProvider
-	},
-	{
-		id: 'seed-2',
-		provider_id: 'owner-titipin',
-		category_id: 'seed-cat-2',
-		title: 'Belanja Sayur Subuh Pasar Gawok',
-		description:
-			'Jastip belanja sayur mayur segar, bumbu pawon, ayam potong, dan kebutuhan dapur langsung dari pasar subuh Gawok.',
-		base_fee: 10000,
-		coverage_area: 'Gatak, Gawok & Blimbing, Trangsan & Luwang',
-		is_active: true,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
-		category: {
-			id: 'seed-cat-2',
-			name: 'Pasar Pagi & Sayur Segar',
-			slug: 'traditional-market',
-			description: 'Belanja pasar tradisional segar',
-			icon: 'carrot',
-			is_active: true,
-			sort_order: 2,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		provider: defaultOwnerProvider
-	},
-	{
-		id: 'seed-3',
-		provider_id: 'owner-titipin',
-		category_id: 'seed-cat-3',
-		title: 'Titip Beli Obat Apotek & Resep',
-		description:
-			'Layanan cepat jastip obat bebas, vitamin, atau tebus obat apotek darurat area Gatak dan Kartasura.',
-		base_fee: 7000,
-		coverage_area: 'Gatak (Pusat), Kartasura & UMS, Baki',
-		is_active: true,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
-		category: {
-			id: 'seed-cat-3',
-			name: 'Apotek & Kebutuhan Medis',
-			slug: 'pharmacy',
-			description: 'Apotek dan obat-obatan darurat',
-			icon: 'pill',
-			is_active: true,
-			sort_order: 3,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		provider: defaultOwnerProvider
-	},
-	{
-		id: 'seed-4',
-		provider_id: 'owner-titipin',
-		category_id: 'seed-cat-4',
-		title: 'Antar Jemput Berkas & Barang Kampus UMS',
-		description:
-			'Pengantaran dokumen, barang tertinggal, atau paket rute Gatak - Pabelan / Kampus UMS.',
-		base_fee: 9000,
-		coverage_area: 'Gatak (Pusat), Kartasura & UMS, Mayang & Sanggung',
-		is_active: true,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
-		category: {
-			id: 'seed-cat-4',
-			name: 'Ambil & Antar Dokumen',
-			slug: 'pickup-delivery',
-			description: 'Pengantaran dokumen dan barang lokal',
-			icon: 'truck',
-			is_active: true,
-			sort_order: 4,
-			created_at: new Date().toISOString(),
-			updated_at: new Date().toISOString()
-		},
-		provider: defaultOwnerProvider
-	}
-];
-
 export async function getOrCreateProviderProfile(
 	supabase: SupabaseClient<Database>,
 	userId: string,
@@ -243,8 +124,7 @@ export async function getCategoryActiveServices(
 		console.warn('[CategoryServices] Database query fallback:', err);
 	}
 
-	// Return relevant local seeds as fallback
-	return localGatakDiscoverySeeds.filter((s) => s.category_id === categoryId);
+	return [];
 }
 
 export interface ServiceFilterOptions {
@@ -295,11 +175,6 @@ export async function searchServices(
 		}
 	} catch (err) {
 		console.warn('[SearchServices] Supabase query fallback:', err);
-	}
-
-	// If no services in database yet, blend with realistic Gatak local seeds
-	if (results.length === 0) {
-		results = [...localGatakDiscoverySeeds];
 	}
 
 	// Client / Server In-Memory Filtering
@@ -368,7 +243,5 @@ export async function getServiceDetail(
 		console.warn('[ServiceDetail] DB fetch fallback:', err);
 	}
 
-	// Fallback check against discovery seeds
-	const seedMatch = localGatakDiscoverySeeds.find((s) => s.id === serviceId);
-	return seedMatch || null;
+	return null;
 }

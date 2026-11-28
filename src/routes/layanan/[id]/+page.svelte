@@ -17,7 +17,9 @@
 		Store,
 		Carrot,
 		Pill,
-		Truck
+		Truck,
+		HandHelping,
+		Wrench
 	} from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -26,16 +28,30 @@
 
 	function getCategoryIcon(slug?: string) {
 		switch (slug) {
+			case 'dititipin':
+			case 'shopping-bag':
+				return ShoppingBag;
+			case 'dianterin':
+			case 'pickup-delivery':
+			case 'truck':
+				return Truck;
+			case 'dibantuin':
+			case 'hand-helping':
+				return HandHelping;
+			case 'wrench':
+				return Wrench;
 			case 'food-beverage':
+			case 'utensils':
 				return Utensils;
 			case 'grocery-mart':
+			case 'store':
 				return Store;
 			case 'traditional-market':
+			case 'carrot':
 				return Carrot;
 			case 'pharmacy':
+			case 'pill':
 				return Pill;
-			case 'pickup-delivery':
-				return Truck;
 			default:
 				return ShoppingBag;
 		}
@@ -64,7 +80,7 @@
 	<title>{s.title} - Titipin Jastip Lokal</title>
 	<meta
 		name="description"
-		content="{s.title} di area {s.coverage_area}. Dibelikan dan diantar langsung dengan tarif jastip flat dan struk toko asli."
+		content="{s.title} di area {s.coverage_area}. Dibelikan dan diantar langsung dengan tarif jastip flat."
 	/>
 </svelte:head>
 
@@ -132,7 +148,7 @@
 
 				<div class="border-t border-border/60 pt-5">
 					<h3 class="text-xs font-bold tracking-wide text-foreground uppercase">
-						Standar Jaminan Layanan Titipin
+						Rincian Layanan Titipin
 					</h3>
 					<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
 						<div
@@ -140,9 +156,9 @@
 						>
 							<Receipt class="mt-0.5 size-4 shrink-0 text-primary" />
 							<div>
-								<span class="font-bold text-foreground">100% Struk Kasir Asli</span>
+								<span class="font-bold text-foreground">Sesuai Nota Toko</span>
 								<p class="mt-0.5 text-[11px] text-muted-foreground">
-									Harga belanjaan murni sesuai nota fisik toko tanpa biaya mark-up.
+									Harga barang mengikuti nota belanja di toko tujuan.
 								</p>
 							</div>
 						</div>
@@ -184,8 +200,8 @@
 							2
 						</span>
 						<span>
-							Pesanan dikonfirmasi, langsung dibelikan ke toko fisik tujuan, dan foto struk kasir
-							toko asli dikirim sebagai bukti.
+							Pesanan dikonfirmasi, langsung dibelikan ke toko tujuan, dan foto nota belanja dikirim
+							di detail pesanan.
 						</span>
 					</li>
 					<li class="flex items-start gap-2.5">
@@ -195,7 +211,7 @@
 							3
 						</span>
 						<span>
-							Pesanan diantar sampai depan pintu. Anda membayar total sesuai struk asli ditambah
+							Pesanan diantar sampai depan pintu. Anda membayar total belanja sesuai nota ditambah
 							tarif jastip.
 						</span>
 					</li>
@@ -260,8 +276,8 @@
 					<span class="text-xs text-muted-foreground">/ pesanan</span>
 				</div>
 				<p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-					Tarif jasa flat transparan untuk area {s.coverage_area}. Harga barang belanjaan dibayar
-					terpisah sesuai struk fisik toko.
+					Tarif jasa flat untuk area {s.coverage_area}. Harga barang dibayar terpisah sesuai nota
+					toko.
 				</p>
 
 				<div class="mt-5 space-y-2.5">

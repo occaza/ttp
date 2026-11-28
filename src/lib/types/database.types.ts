@@ -2,6 +2,10 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type UserRole = 'customer' | 'provider' | 'admin';
 export type DisputeStatus = 'open' | 'investigating' | 'resolved' | 'dismissed';
+export type MediaStorageProvider = 'supabase' | 'r2' | 'external';
+export type CmsContentType = 'post' | 'page';
+export type CmsContentStatus = 'draft' | 'published';
+
 export type OrderStatus =
 	| 'pending'
 	| 'accepted'
@@ -827,6 +831,135 @@ export interface Database {
 				};
 				Relationships: [];
 			};
+			media_assets: {
+				Row: {
+					id: string;
+					file_name: string;
+					storage_provider: MediaStorageProvider;
+					storage_path: string | null;
+					public_url: string;
+					mime_type: string;
+					size_bytes: number;
+					alt_text: string | null;
+					uploaded_by: string | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					file_name: string;
+					storage_provider?: MediaStorageProvider;
+					storage_path?: string | null;
+					public_url: string;
+					mime_type?: string;
+					size_bytes?: number;
+					alt_text?: string | null;
+					uploaded_by?: string | null;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					file_name?: string;
+					storage_provider?: MediaStorageProvider;
+					storage_path?: string | null;
+					public_url?: string;
+					mime_type?: string;
+					size_bytes?: number;
+					alt_text?: string | null;
+					uploaded_by?: string | null;
+					created_at?: string;
+				};
+				Relationships: [];
+			};
+			cms_contents: {
+				Row: {
+					id: string;
+					content_type: CmsContentType;
+					title: string;
+					slug: string;
+					excerpt: string | null;
+					body: string;
+					cover_image_url: string | null;
+					status: CmsContentStatus;
+					author_id: string | null;
+					published_at: string | null;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					content_type: CmsContentType;
+					title: string;
+					slug: string;
+					excerpt?: string | null;
+					body: string;
+					cover_image_url?: string | null;
+					status?: CmsContentStatus;
+					author_id?: string | null;
+					published_at?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					content_type?: CmsContentType;
+					title?: string;
+					slug?: string;
+					excerpt?: string | null;
+					body?: string;
+					cover_image_url?: string | null;
+					status?: CmsContentStatus;
+					author_id?: string | null;
+					published_at?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			promo_popups: {
+				Row: {
+					id: string;
+					title: string;
+					description: string;
+					image_url: string | null;
+					cta_label: string;
+					cta_href: string;
+					is_active: boolean;
+					starts_at: string | null;
+					ends_at: string | null;
+					created_by: string | null;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					title: string;
+					description: string;
+					image_url?: string | null;
+					cta_label?: string;
+					cta_href?: string;
+					is_active?: boolean;
+					starts_at?: string | null;
+					ends_at?: string | null;
+					created_by?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					title?: string;
+					description?: string;
+					image_url?: string | null;
+					cta_label?: string;
+					cta_href?: string;
+					is_active?: boolean;
+					starts_at?: string | null;
+					ends_at?: string | null;
+					created_by?: string | null;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -866,3 +999,6 @@ export type Review = Database['public']['Tables']['reviews']['Row'];
 export type ProviderPayout = Database['public']['Tables']['provider_payouts']['Row'];
 export type Dispute = Database['public']['Tables']['disputes']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
+export type MediaAsset = Database['public']['Tables']['media_assets']['Row'];
+export type CmsContent = Database['public']['Tables']['cms_contents']['Row'];
+export type PromoPopup = Database['public']['Tables']['promo_popups']['Row'];

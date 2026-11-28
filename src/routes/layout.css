@@ -23,6 +23,8 @@
 		--input: oklch(0.9 0.01 240);
 		--ring: oklch(0.42 0.13 195);
 		--radius: 0.625rem;
+		--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+		--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 	}
 
 	.dark {
@@ -52,9 +54,19 @@
 	}
 
 	html {
+		color-scheme: light;
 		-webkit-tap-highlight-color: transparent;
 		-webkit-text-size-adjust: 100%;
 		overscroll-behavior-y: none;
+	}
+
+	html.dark {
+		color-scheme: dark;
+	}
+
+	select option {
+		background-color: var(--popover);
+		color: var(--popover-foreground);
 	}
 
 	body {
@@ -127,4 +139,57 @@
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
 	--radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Purposeful micro-interactions */
+.titipin-popover-enter {
+	transition:
+		opacity 180ms var(--ease-out),
+		transform 180ms var(--ease-out);
+	transform-origin: top center;
+}
+
+@starting-style {
+	.titipin-popover-enter {
+		opacity: 0;
+		transform: translateY(-4px) scale(0.97);
+	}
+}
+
+.titipin-dock-item {
+	transition:
+		background-color 200ms var(--ease-out),
+		color 200ms var(--ease-out),
+		transform 140ms var(--ease-out);
+}
+
+.titipin-dock-label {
+	transition:
+		opacity 180ms var(--ease-out),
+		transform 180ms var(--ease-out);
+}
+
+@starting-style {
+	.titipin-dock-label {
+		opacity: 0;
+		transform: translateX(-4px);
+	}
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.titipin-dock-item:not([aria-current='page']):hover {
+		background-color: color-mix(in oklch, var(--muted) 65%, transparent);
+		color: var(--primary);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

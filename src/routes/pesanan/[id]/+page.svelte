@@ -26,6 +26,7 @@
 	} from 'lucide-svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -50,6 +51,13 @@
 	let submittingDispute = $state(false);
 	let disputeReason = $state('');
 	let disputeDescription = $state('');
+
+	const DISPUTE_STATUS_LABELS: Record<string, string> = {
+		open: 'Menunggu',
+		investigating: 'Ditinjau',
+		resolved: 'Selesai',
+		dismissed: 'Ditutup'
+	};
 
 	// Simplified 4-step progress mapping (folds accepted->shopping and purchased->delivering)
 	const stepNumber = $derived.by(() => {
@@ -261,7 +269,7 @@
 					{@const isItemEstimate = li.code === 'ITEM_ESTIMATE'}
 					{@const displayLabel =
 						isItemEstimate && o.actual_item_cost !== null && o.actual_item_cost !== undefined
-							? 'Belanja Toko (Sesuai Struk Kasir)'
+							? 'Belanja Toko (Sesuai Nota)'
 							: li.label}
 					{@const displayAmount =
 						isItemEstimate && o.actual_item_cost !== null && o.actual_item_cost !== undefined
@@ -372,7 +380,7 @@
 				bind:value={chatInput}
 				placeholder={isRunnerView ? 'Kabar untuk pemesan...' : 'Tulis pesan untuk kurir...'}
 				required
-				class="h-10 flex-1 text-xs"
+				class="h-10 flex-1 text-base sm:text-xs"
 			/>
 			<Button type="submit" disabled={sendingChat} class="h-10 gap-1.5 px-4 text-xs font-bold">
 				<Send class="size-3.5" />
@@ -492,7 +500,7 @@
 								step="500"
 								placeholder="Total nota toko (Rp)"
 								required
-								class="h-10 flex-1 bg-background text-xs tabular-nums sm:max-w-48"
+								class="h-10 flex-1 bg-background text-base tabular-nums sm:max-w-48 sm:text-xs"
 							/>
 							<Button size="sm" type="submit" class="h-10 text-xs font-bold">
 								Input Nota &amp; Berangkat Antar
@@ -589,7 +597,7 @@
 						step="500"
 						bind:value={verifyAmount}
 						required
-						class="h-9 w-36 text-xs tabular-nums"
+						class="h-9 w-36 text-base tabular-nums sm:text-xs"
 					/>
 					<Button
 						type="submit"
@@ -733,14 +741,16 @@
 				class="space-y-2.5"
 			>
 				<div class="grid grid-cols-1 gap-2 sm:grid-cols-12">
-					<select
-						name="attachment_type"
-						bind:value={attachmentType}
-						class="h-9 rounded-md border border-input bg-background px-2.5 text-xs sm:col-span-4"
-					>
-						<option value="receipt">Struk Kasir Toko</option>
-						<option value="delivery_proof">Bukti Pengantaran</option>
-					</select>
+					<div class="sm:col-span-4">
+						<Select
+							name="attachment_type"
+							bind:value={attachmentType}
+							options={[
+								{ value: 'receipt', label: 'Nota Belanja Toko' },
+								{ value: 'delivery_proof', label: 'Bukti Pengantaran' }
+							]}
+						/>
+					</div>
 					<input
 						type="file"
 						name="file"
@@ -755,7 +765,7 @@
 						type="text"
 						bind:value={evidenceNote}
 						placeholder="Catatan nota (opsional)"
-						class="h-9 flex-1 text-xs"
+						class="h-9 flex-1 text-base sm:text-xs"
 					/>
 					<Button
 						type="submit"
@@ -834,7 +844,7 @@
 						<div class="space-y-1.5 rounded-xl border border-border/60 bg-muted/20 p-2.5 text-xs">
 							<span class="font-semibold text-primary">
 								{att.attachment_type === 'receipt'
-									? 'Struk Kasir Asli'
+									? 'Nota Belanja'
 									: att.attachment_type === 'delivery_proof'
 										? 'Bukti Pengantaran'
 										: 'Lampiran'}
@@ -980,14 +990,14 @@
 									type="text"
 									bind:value={payerName}
 									placeholder="Nama pengirim rekening"
-									class="h-9 text-xs"
+									class="h-9 text-base sm:text-xs"
 								/>
 								<Input
 									name="external_reference"
 									type="text"
 									bind:value={paymentExternalRef}
 									placeholder="No. referensi (opsional)"
-									class="h-9 text-xs"
+									class="h-9 text-base sm:text-xs"
 								/>
 							</div>
 							<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -1098,107 +1108,7 @@
 								type="text"
 								bind:value={reviewComment}
 								placeholder="Bagaimana pengalaman titip belanja kali ini? (opsional)"
-								class="h-9 flex-1 text-xs"
-							/>
-							<Button
-								type="submit"
-								size="sm"
-								disabled={submittingReview}
-								class="h-9 text-xs font-bold"
-							>
-								{submittingReview ? 'Mengirim...' : 'Kirim Ulasan'}
-							</Button>
-						</div>
-					</form>
-				{/if}
-			</section>
-		{/if}
-
-		{#if o.status === 'completed' && (data.review || data.reviewEligibility.eligible)}
-			<section class="space-y-3 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
-				<div class="flex items-center justify-between gap-2">
-					<h2 class="text-sm font-bold text-foreground">Ulasan Pelanggan</h2>
-					{#if data.review}
-						<span class="inline-flex items-center gap-1 text-xs font-bold text-amber-600">
-							<Star class="size-3.5 fill-amber-400 text-amber-400" />
-							<span>{data.review.rating}/5</span>
-						</span>
-					{/if}
-				</div>
-
-				{#if form?.reviewError}
-					<div
-						role="alert"
-						class="rounded-lg bg-destructive/10 p-2.5 text-xs font-semibold text-destructive"
-					>
-						{form.reviewError}
-					</div>
-				{/if}
-				{#if form?.reviewSuccess}
-					<div
-						role="status"
-						class="rounded-lg bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
-					>
-						{form.reviewSuccess}
-					</div>
-				{/if}
-
-				{#if data.review}
-					<div class="space-y-1.5 rounded-xl bg-muted/25 p-3.5 text-xs">
-						<div class="flex items-center gap-1">
-							{#each [1, 2, 3, 4, 5] as star (star)}
-								<Star
-									class="size-4 {star <= data.review.rating
-										? 'fill-amber-400 text-amber-400'
-										: 'text-muted-foreground/30'}"
-								/>
-							{/each}
-						</div>
-						{#if data.review.comment}
-							<p class="leading-relaxed text-foreground">{data.review.comment}</p>
-						{/if}
-					</div>
-				{:else if data.reviewEligibility.eligible}
-					<form
-						method="POST"
-						action="?/submitReview"
-						use:enhance={() => {
-							submittingReview = true;
-							return async ({ update }) => {
-								submittingReview = false;
-								await update();
-							};
-						}}
-						class="space-y-3"
-					>
-						<div class="flex items-center gap-1.5">
-							{#each [1, 2, 3, 4, 5] as star (star)}
-								<button
-									type="button"
-									aria-label="Beri {star} bintang"
-									onclick={() => (selectedRating = star)}
-									class="rounded-lg p-1 transition-transform hover:scale-110"
-								>
-									<Star
-										class="size-6 {star <= selectedRating
-											? 'fill-amber-400 text-amber-400'
-											: 'text-muted-foreground/30'}"
-									/>
-								</button>
-							{/each}
-							<input type="hidden" name="rating" value={selectedRating} />
-							<span class="ml-2 text-xs font-semibold text-muted-foreground tabular-nums">
-								{selectedRating}/5
-							</span>
-						</div>
-
-						<div class="flex flex-col gap-2 sm:flex-row">
-							<Input
-								name="comment"
-								type="text"
-								bind:value={reviewComment}
-								placeholder="Bagaimana pengalaman titip belanja kali ini? (opsional)"
-								class="h-9 flex-1 text-xs"
+								class="h-9 flex-1 text-base sm:text-xs"
 							/>
 							<Button
 								type="submit"
@@ -1247,7 +1157,7 @@
 							type="text"
 							bind:value={cancelReason}
 							required
-							class="h-9 bg-background text-xs"
+							class="h-9 bg-background text-base sm:text-xs"
 						/>
 						<div class="flex justify-end gap-2">
 							<Button
@@ -1315,8 +1225,8 @@
 						<div class="rounded-xl border border-border/70 bg-background p-3 text-xs">
 							<div class="flex items-center justify-between gap-2">
 								<span class="font-bold text-foreground">{disp.reason}</span>
-								<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase">
-									{disp.status}
+								<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold">
+									{DISPUTE_STATUS_LABELS[disp.status] || disp.status}
 								</span>
 							</div>
 							<p class="mt-1 text-muted-foreground">{disp.description}</p>
@@ -1351,14 +1261,14 @@
 						bind:value={disputeReason}
 						placeholder="Ringkasan kendala (misal: Barang kurang / salah kirim)"
 						required
-						class="h-9 text-xs"
+						class="h-9 text-base sm:text-xs"
 					/>
 					<Input
 						name="description"
 						bind:value={disputeDescription}
 						placeholder="Jelaskan detail kendala agar Admin dapat menindaklanjuti..."
 						required
-						class="h-9 text-xs"
+						class="h-9 text-base sm:text-xs"
 					/>
 					<div class="flex justify-end">
 						<Button

@@ -196,7 +196,7 @@ export const actions: Actions = {
 
 			const typeLabel =
 				attachmentType === 'receipt'
-					? 'Foto Struk Kasir Asli'
+					? 'Foto Nota Belanja'
 					: attachmentType === 'delivery_proof'
 						? 'Bukti Pengantaran'
 						: 'Lampiran Gambar';

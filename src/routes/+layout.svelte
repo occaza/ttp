@@ -3,21 +3,78 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import type { LayoutProps } from './$types';
 	import { resolve } from '$app/paths';
-	import { Home, Compass, ShoppingBag, User as UserIcon, ShieldCheck, Bell } from 'lucide-svelte';
+	import { page } from '$app/state';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import {
+		Home,
+		Compass,
+		ShoppingBag,
+		User as UserIcon,
+		ShieldCheck,
+		Bell,
+		Store
+	} from 'lucide-svelte';
 
 	let { children, data }: LayoutProps = $props();
+
+	let promoOpen = $state(false);
+	let hasOpenedPromo = $state(false);
+	const currentPath = $derived(page.url.pathname);
+	const isHome = $derived(currentPath === '/');
+	const isAdmin = $derived(currentPath.startsWith('/admin'));
+	const isMitra = $derived(currentPath.startsWith('/mitra'));
+	const isServices = $derived(currentPath.startsWith('/layanan'));
+	const isCategories = $derived(currentPath.startsWith('/kategori'));
+	const isOrders = $derived(currentPath.startsWith('/pesanan'));
+	const isProfile = $derived(currentPath.startsWith('/profil'));
+	const isAuth = $derived(currentPath.startsWith('/masuk') || currentPath.startsWith('/daftar'));
 
 	const displayName = $derived.by(() => {
 		if (!data?.profile?.full_name) return 'Profil';
 		return data.profile.full_name.trim().split(' ')[0] || 'Profil';
 	});
+
+	$effect(() => {
+		const promo = data?.activePromo;
+		const path = page.url.pathname;
+		if (!promo || path.startsWith('/admin') || path.startsWith('/mitra')) {
+			promoOpen = false;
+			return;
+		}
+		try {
+			const storageKey = `titipin_promo_dismissed_${promo.id}_${promo.updated_at}`;
+			const dismissed = localStorage.getItem(storageKey);
+			if (!dismissed) {
+				hasOpenedPromo = true;
+				promoOpen = true;
+			} else {
+				promoOpen = false;
+			}
+		} catch {
+			hasOpenedPromo = true;
+			promoOpen = true;
+		}
+	});
+
+	function dismissPromo() {
+		const promo = data?.activePromo;
+		if (promo) {
+			try {
+				localStorage.setItem(`titipin_promo_dismissed_${promo.id}_${promo.updated_at}`, '1');
+			} catch {
+				// ignore storage errors
+			}
+		}
+		promoOpen = false;
+	}
 </script>
 
 <svelte:head>
-	<title>Titipin - Layanan Jastip Belanja & Pengantaran Lokal Terpercaya</title>
+	<title>Titipin - Layanan Jastip Belanja &amp; Pengantaran Lokal</title>
 	<meta
 		name="description"
-		content="Layanan jasa titip belanja, pengambilan barang, dan pengantaran lokal terpercaya dengan struk toko asli."
+		content="Layanan jasa titip belanja, pengambilan barang, dan pengantaran lokal di area Gatak dan Kartasura."
 	/>
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<link rel="icon" href={favicon} />
@@ -50,10 +107,29 @@
 					class="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex"
 					aria-label="Navigasi Utama"
 				>
-					<a href={resolve('/layanan')} class="transition-colors hover:text-foreground">
+					<a
+						href={resolve('/layanan')}
+						class="transition-colors hover:text-foreground {currentPath.startsWith('/layanan')
+							? 'font-semibold text-foreground'
+							: ''}"
+					>
 						Cari Layanan
 					</a>
-					<a href="{resolve('/')}#eksplor" class="transition-colors hover:text-foreground">
+					<a
+						href={resolve('/pesan')}
+						class="transition-colors hover:text-foreground {currentPath.startsWith('/pesan') &&
+						!currentPath.startsWith('/pesanan')
+							? 'font-semibold text-foreground'
+							: ''}"
+					>
+						Pesan Jastip
+					</a>
+					<a
+						href="{resolve('/')}#eksplor"
+						class="transition-colors hover:text-foreground {currentPath.startsWith('/kategori')
+							? 'font-semibold text-foreground'
+							: ''}"
+					>
 						Kategori
 					</a>
 					<a href="{resolve('/')}#carakerja" class="transition-colors hover:text-foreground">
@@ -61,6 +137,14 @@
 					</a>
 					<a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-foreground">
 						Keunggulan
+					</a>
+					<a
+						href={resolve('/blog')}
+						class="transition-colors hover:text-foreground {currentPath.startsWith('/blog')
+							? 'font-semibold text-foreground'
+							: ''}"
+					>
+						Blog
 					</a>
 				</nav>
 			</div>
@@ -83,13 +167,27 @@
 						{/if}
 					</a>
 
-					<a
-						href={resolve('/pesanan')}
-						class="hidden items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-muted/40 sm:inline-flex"
-					>
-						<ShoppingBag class="size-3.5 text-primary" />
-						<span>Pesanan</span>
-					</a>
+					{#if data?.role === 'provider' || data?.role === 'admin'}
+						<a
+							href={resolve('/mitra/dashboard')}
+							aria-label="Dashboard Mitra"
+							class="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-muted/40 sm:px-3"
+						>
+							<Store class="size-3.5 text-primary" />
+							<span class="hidden sm:inline">Mitra</span>
+						</a>
+					{/if}
+
+					{#if data?.role === 'admin'}
+						<a
+							href={resolve('/admin')}
+							aria-label="Panel Admin"
+							class="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-all hover:bg-primary/15 sm:px-3"
+						>
+							<ShieldCheck class="size-3.5" />
+							<span class="hidden sm:inline">Admin</span>
+						</a>
+					{/if}
 
 					<a
 						href={resolve('/profil')}
@@ -103,13 +201,6 @@
 						<span class="text-xs font-semibold text-foreground group-hover:text-primary">
 							{displayName}
 						</span>
-						{#if data?.role === 'admin'}
-							<span
-								class="py-0.2 rounded bg-primary/10 px-1.5 text-[9px] font-bold text-primary uppercase"
-							>
-								Admin
-							</span>
-						{/if}
 					</a>
 				{:else}
 					<a
@@ -150,12 +241,12 @@
 						<span class="text-sm font-bold text-foreground">Titipin Indonesia</span>
 					</div>
 					<p class="max-w-sm text-xs leading-relaxed text-muted-foreground">
-						Layanan jasa titip belanja & pengantaran lokal terpercaya dengan struk kasir toko fisik
-						asli.
+						Layanan jasa titip belanja &amp; pengantaran lokal di area Gatak, Kartasura, dan
+						sekitarnya.
 					</p>
 					<div class="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
 						<ShieldCheck class="size-4 text-primary" />
-						<span>100% Struk Kasir Asli & Terverifikasi</span>
+						<span>Harga belanja sesuai nota toko</span>
 					</div>
 				</div>
 
@@ -177,6 +268,11 @@
 								Keunggulan & Tarif
 							</a>
 						</li>
+						<li>
+							<a href={resolve('/blog')} class="transition-colors hover:text-primary">
+								Blog &amp; Kabar
+							</a>
+						</li>
 					</ul>
 				</div>
 
@@ -195,62 +291,117 @@
 				<p>
 					&copy; {new Date().getFullYear()} Titipin Indonesia.
 				</p>
-				<div class="flex items-center gap-4">
-					<a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-foreground">
-						Ketentuan
-					</a>
-					<a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-foreground">
-						Privasi
-					</a>
+				<div class="flex flex-wrap items-center gap-4">
+					{#if data?.publishedPages && data.publishedPages.length > 0}
+						{#each data.publishedPages as pg (pg.slug)}
+							<a
+								href={resolve('/p/[slug]', { slug: pg.slug })}
+								class="transition-colors hover:text-foreground"
+							>
+								{pg.title}
+							</a>
+						{/each}
+					{:else}
+						<a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-foreground">
+							Ketentuan
+						</a>
+						<a href="{resolve('/')}#keunggulan" class="transition-colors hover:text-foreground">
+							Privasi
+						</a>
+					{/if}
 				</div>
 			</div>
 		</div>
 	</footer>
 
 	<!-- Mobile Bottom Navigation Bar -->
+	{#snippet dockItem(href: string, label: string, active: boolean, Icon: typeof Home)}
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
+		<a
+			{href}
+			aria-current={active ? 'page' : undefined}
+			aria-label={label}
+			title={label}
+			class="titipin-dock-item flex items-center justify-center rounded-full active:scale-[0.96] {active
+				? 'gap-2 bg-primary/12 px-4 py-2 font-semibold text-primary'
+				: 'min-h-11 min-w-11 text-muted-foreground'}"
+		>
+			<Icon class={active ? 'size-4.5 shrink-0' : 'size-5 shrink-0'} />
+			{#if active}
+				<span class="titipin-dock-label text-xs whitespace-nowrap">{label}</span>
+			{/if}
+		</a>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
+	{/snippet}
+
 	<nav
-		class="fixed right-0 bottom-0 left-0 z-40 border-t border-border/70 bg-background/95 pb-[calc(0.35rem+env(safe-area-inset-bottom,0px))] backdrop-blur-md supports-backdrop-filter:bg-background/85 md:hidden"
+		class="fixed right-0 bottom-0 left-0 z-40 rounded-t-2xl border-t border-border/70 bg-background/95 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_-6px_oklch(0_0_0/0.06)] backdrop-blur-md supports-backdrop-filter:bg-background/85 md:hidden"
 		aria-label="Navigasi Bawah Mobile"
 	>
-		<div class="mx-auto grid h-14 max-w-lg grid-cols-4 px-2">
-			<a
-				href={resolve('/')}
-				class="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground transition-all hover:text-primary active:scale-95"
-			>
-				<Home class="size-4.5" />
-				<span class="text-[11px]">Beranda</span>
-			</a>
-			<a
-				href="{resolve('/')}#eksplor"
-				class="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground transition-all hover:text-primary active:scale-95"
-			>
-				<Compass class="size-4.5" />
-				<span class="text-[11px]">Kategori</span>
-			</a>
-			<a
-				href={data?.user ? resolve('/pesanan') : resolve('/masuk')}
-				class="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground transition-all hover:text-primary active:scale-95"
-			>
-				<ShoppingBag class="size-4.5" />
-				<span class="text-[11px]">Pesanan</span>
-			</a>
+		<div class="mx-auto flex h-15 max-w-lg items-center justify-around px-3 py-1.5">
+			{@render dockItem(resolve('/'), 'Beranda', isHome, Home)}
+
 			{#if data?.user}
-				<a
-					href={resolve('/profil')}
-					class="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground transition-all hover:text-primary active:scale-95"
-				>
-					<UserIcon class="size-4.5" />
-					<span class="text-[11px]">Profil</span>
-				</a>
+				{#if data.role === 'admin'}
+					{@render dockItem(resolve('/admin'), 'Admin', isAdmin, ShieldCheck)}
+				{:else if data.role === 'provider'}
+					{@render dockItem(resolve('/mitra/dashboard'), 'Mitra', isMitra, Store)}
+				{:else}
+					{@render dockItem(resolve('/kategori'), 'Kategori', isCategories, Compass)}
+				{/if}
+
+				{@render dockItem(resolve('/pesanan'), 'Pesanan', isOrders, ShoppingBag)}
+				{@render dockItem(resolve('/profil'), 'Profil', isProfile, UserIcon)}
 			{:else}
-				<a
-					href={resolve('/masuk')}
-					class="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground transition-all hover:text-primary active:scale-95"
-				>
-					<UserIcon class="size-4.5" />
-					<span class="text-[11px]">Masuk</span>
-				</a>
+				{@render dockItem(resolve('/layanan'), 'Layanan', isServices, Store)}
+				{@render dockItem(resolve('/kategori'), 'Kategori', isCategories, Compass)}
+				{@render dockItem(resolve('/masuk'), 'Masuk', isAuth, UserIcon)}
 			{/if}
 		</div>
 	</nav>
 </div>
+
+<!-- Promo Popup -->
+{#if data?.activePromo}
+	<Dialog.Root
+		bind:open={promoOpen}
+		onOpenChange={(nextOpen) => {
+			if (!nextOpen && hasOpenedPromo) dismissPromo();
+		}}
+	>
+		<Dialog.Content class="max-w-md overflow-hidden rounded-2xl p-0">
+			{#if data.activePromo.image_url}
+				<img
+					src={data.activePromo.image_url}
+					alt={data.activePromo.title}
+					class="max-h-56 w-full object-cover"
+				/>
+			{/if}
+			<div class="space-y-3 p-5 sm:p-6">
+				<Dialog.Header class="text-left">
+					<Dialog.Title class="text-lg font-bold text-foreground">
+						{data.activePromo.title}
+					</Dialog.Title>
+					<Dialog.Description class="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+						{data.activePromo.description}
+					</Dialog.Description>
+				</Dialog.Header>
+
+				<div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+					<Button variant="outline" size="sm" onclick={dismissPromo} class="h-9 text-xs">
+						Tutup
+					</Button>
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+					<Button
+						size="sm"
+						href={data.activePromo.cta_href}
+						onclick={dismissPromo}
+						class="h-9 text-xs font-bold"
+					>
+						{data.activePromo.cta_label || 'Lihat Promo'}
+					</Button>
+				</div>
+			</div>
+		</Dialog.Content>
+	</Dialog.Root>
+{/if}

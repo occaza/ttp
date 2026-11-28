@@ -40,7 +40,7 @@
 	<title>Daftar Akun Baru - Titipin</title>
 	<meta
 		name="description"
-		content="Daftar akun Titipin untuk memesan jasa titip belanja lokal dengan harga struk toko asli."
+		content="Daftar akun Titipin untuk memesan jasa titip belanja lokal di area Gatak dan Kartasura."
 	/>
 </svelte:head>
 
@@ -95,7 +95,7 @@
 						</li>
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-emerald-300" />
-							<span>Harga barang sesuai struk kasir toko asli</span>
+							<span>Harga barang mengikuti nota toko tujuan</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<CheckCircle2 class="mt-0.5 size-3.5 shrink-0 text-emerald-300" />

@@ -5,6 +5,7 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
 	import {
 		Search,
 		MapPin,
@@ -15,6 +16,8 @@
 		Carrot,
 		Pill,
 		Truck,
+		HandHelping,
+		Wrench,
 		ArrowRight,
 		X
 	} from 'lucide-svelte';
@@ -44,6 +47,17 @@
 		'Sawit & Sekitarnya'
 	];
 
+	const areaOptions = [
+		{ value: 'all', label: 'Semua Area (Gatak & Sekitar)' },
+		...areas.filter((a) => a !== 'Semua Area').map((a) => ({ value: a, label: a }))
+	];
+
+	const sortOptions = [
+		{ value: 'newest', label: 'Terbaru' },
+		{ value: 'cheapest', label: 'Tarif Terendah' },
+		{ value: 'rating', label: 'Rating Tertinggi' }
+	];
+
 	function applyFilters() {
 		const params = new SvelteURLSearchParams();
 		if (searchQuery.trim()) params.set('q', searchQuery.trim());
@@ -69,16 +83,30 @@
 
 	function getCategoryIcon(slug?: string) {
 		switch (slug) {
+			case 'dititipin':
+			case 'shopping-bag':
+				return ShoppingBag;
+			case 'dianterin':
+			case 'pickup-delivery':
+			case 'truck':
+				return Truck;
+			case 'dibantuin':
+			case 'hand-helping':
+				return HandHelping;
+			case 'wrench':
+				return Wrench;
 			case 'food-beverage':
+			case 'utensils':
 				return Utensils;
 			case 'grocery-mart':
+			case 'store':
 				return Store;
 			case 'traditional-market':
+			case 'carrot':
 				return Carrot;
 			case 'pharmacy':
+			case 'pill':
 				return Pill;
-			case 'pickup-delivery':
-				return Truck;
 			default:
 				return ShoppingBag;
 		}
@@ -96,18 +124,12 @@
 <div class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
 	<!-- Header -->
 	<div class="space-y-2 border-b border-border/60 pb-6">
-		<div
-			class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-		>
-			<ShoppingBag class="size-3.5" />
-			<span>Katalog Pencarian Jastip Lokal</span>
-		</div>
 		<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
 			Pilihan Layanan Jastip di Area Gatak
 		</h1>
 		<p class="max-w-2xl text-xs text-muted-foreground sm:text-sm">
 			Layanan belanja langsung ke warung, pasar tradisional, minimarket, atau apotek di wilayah
-			Gatak dan sekitarnya dengan struk kasir asli toko.
+			Gatak dan sekitarnya.
 		</p>
 	</div>
 
@@ -131,30 +153,25 @@
 
 			<!-- Area Filter -->
 			<div class="relative sm:col-span-4">
-				<MapPin class="pointer-events-none absolute top-2.5 left-3 size-4 text-primary" />
-				<select
+				<MapPin
+					class="pointer-events-none absolute top-3 left-3 z-10 size-4 text-primary sm:top-2.5"
+				/>
+				<Select
 					bind:value={selectedArea}
+					options={areaOptions}
 					onchange={applyFilters}
-					class="h-10 w-full rounded-md border border-input bg-transparent pr-4 pl-9 text-xs font-medium text-foreground shadow-xs focus:ring-1 focus:ring-ring"
-				>
-					<option value="all">Semua Area (Kecamatan Gatak & Sekitar)</option>
-					{#each areas.filter((a) => a !== 'Semua Area') as a (a)}
-						<option value={a}>{a}</option>
-					{/each}
-				</select>
+					triggerClass="h-10 pl-9"
+				/>
 			</div>
 
 			<!-- Sort Filter -->
 			<div class="sm:col-span-2">
-				<select
+				<Select
 					bind:value={selectedSort}
+					options={sortOptions}
 					onchange={applyFilters}
-					class="h-10 w-full rounded-md border border-input bg-transparent px-3 text-xs font-medium text-foreground shadow-xs focus:ring-1 focus:ring-ring"
-				>
-					<option value="newest">Terbaru</option>
-					<option value="cheapest">Tarif Terendah</option>
-					<option value="rating">Rating Tertinggi</option>
-				</select>
+					triggerClass="h-10"
+				/>
 			</div>
 		</div>
 

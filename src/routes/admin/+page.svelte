@@ -8,19 +8,35 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
-	import type { ServiceCategory } from '#lib/types/database.types.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { RichTextEditor } from '#lib/components/ui/richtext/index.js';
+	import type {
+		CmsContent,
+		CmsContentStatus,
+		CmsContentType,
+		PromoPopup,
+		ServiceCategory
+	} from '#lib/types/database.types.js';
 	import { ORDER_STATUS_LABELS, formatCleanAddress } from '#lib/constants/order.js';
 	import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '#lib/constants/payment.js';
+	import { formatUserUid } from '#lib/utils/uid.js';
+	import { renderCmsContentToHtml } from '#lib/utils/markdown.js';
 	import {
 		AlertCircle,
 		AlertTriangle,
 		ArrowRight,
 		BadgeCheck,
+		BookOpen,
+		Check,
 		CheckCircle2,
+		Copy,
 		ExternalLink,
+		Eye,
 		FileText,
+		Image as ImageIcon,
 		Layers,
 		LayoutDashboard,
+		Megaphone,
 		Pencil,
 		Plus,
 		Power,
@@ -36,7 +52,17 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	type AdminTab =
-		'overview' | 'orders' | 'payments' | 'disputes' | 'categories' | 'users' | 'settings' | 'audit';
+		| 'overview'
+		| 'orders'
+		| 'payments'
+		| 'disputes'
+		| 'categories'
+		| 'users'
+		| 'settings'
+		| 'audit'
+		| 'media'
+		| 'cms'
+		| 'promos';
 
 	let activeTab = $state<AdminTab>('overview');
 	let orderFilter = $state<'all' | 'actionable' | 'completed'>('all');
@@ -54,6 +80,127 @@
 	function openEditCategoryModal(cat: ServiceCategory) {
 		editingCategory = cat;
 		isCategoryModalOpen = true;
+	}
+
+	// Media Manager state
+	let copiedMediaId = $state<string | null>(null);
+	let confirmDeleteMediaId = $state<string | null>(null);
+	let isMediaPickerOpen = $state(false);
+	let mediaPickerTarget = $state<'cms' | 'promo'>('cms');
+
+	function openMediaPicker(target: 'cms' | 'promo') {
+		mediaPickerTarget = target;
+		isMediaPickerOpen = true;
+	}
+
+	function selectMediaForTarget(url: string) {
+		if (mediaPickerTarget === 'cms') {
+			cmsCoverUrl = url;
+		} else {
+			promoImageUrl = url;
+		}
+		isMediaPickerOpen = false;
+	}
+
+	async function copyMediaUrl(id: string, url: string) {
+		try {
+			await navigator.clipboard.writeText(url);
+			copiedMediaId = id;
+			setTimeout(() => {
+				if (copiedMediaId === id) copiedMediaId = null;
+			}, 2000);
+		} catch {
+			copiedMediaId = null;
+		}
+	}
+
+	// CMS Blog & Pages editor state
+	let cmsFilter = $state<'all' | 'post' | 'page'>('all');
+	const cmsFilters: { id: 'all' | 'post' | 'page'; label: string }[] = [
+		{ id: 'all', label: 'Semua' },
+		{ id: 'post', label: 'Artikel Blog' },
+		{ id: 'page', label: 'Halaman Statis' }
+	];
+	const filteredCmsContents = $derived.by(() => {
+		if (cmsFilter === 'all') return data.cmsContents;
+		return data.cmsContents.filter((c) => c.content_type === cmsFilter);
+	});
+
+	let showCmsEditor = $state(false);
+	let cmsPreviewMode = $state(false);
+	let cmsId = $state('');
+	let cmsType = $state<CmsContentType>('post');
+	let cmsTitle = $state('');
+	let cmsSlug = $state('');
+	let cmsExcerpt = $state('');
+	let cmsCoverUrl = $state('');
+	let cmsBody = $state('');
+	let cmsStatus = $state<CmsContentStatus>('draft');
+	let confirmDeleteCmsId = $state<string | null>(null);
+
+	function openNewCmsEditor(type: CmsContentType) {
+		cmsId = '';
+		cmsType = type;
+		cmsTitle = '';
+		cmsSlug = '';
+		cmsExcerpt = '';
+		cmsCoverUrl = '';
+		cmsBody = '';
+		cmsStatus = 'draft';
+		cmsPreviewMode = false;
+		showCmsEditor = true;
+	}
+
+	function openEditCmsEditor(item: CmsContent) {
+		cmsId = item.id;
+		cmsType = item.content_type;
+		cmsTitle = item.title;
+		cmsSlug = item.slug;
+		cmsExcerpt = item.excerpt || '';
+		cmsCoverUrl = item.cover_image_url || '';
+		cmsBody = item.body;
+		cmsStatus = item.status;
+		cmsPreviewMode = false;
+		showCmsEditor = true;
+	}
+
+	// Promo Popup editor state
+	let showPromoEditor = $state(false);
+	let promoId = $state('');
+	let promoTitle = $state('');
+	let promoDesc = $state('');
+	let promoImageUrl = $state('');
+	let promoCtaLabel = $state('Pesan Sekarang');
+	let promoCtaHref = $state('/pesan');
+	let promoStartsAt = $state('');
+	let promoEndsAt = $state('');
+	let promoIsActive = $state(true);
+	let confirmDeletePromoId = $state<string | null>(null);
+
+	function openNewPromoEditor() {
+		promoId = '';
+		promoTitle = '';
+		promoDesc = '';
+		promoImageUrl = '';
+		promoCtaLabel = 'Pesan Sekarang';
+		promoCtaHref = '/pesan';
+		promoStartsAt = '';
+		promoEndsAt = '';
+		promoIsActive = true;
+		showPromoEditor = true;
+	}
+
+	function openEditPromoEditor(p: PromoPopup) {
+		promoId = p.id;
+		promoTitle = p.title;
+		promoDesc = p.description;
+		promoImageUrl = p.image_url || '';
+		promoCtaLabel = p.cta_label;
+		promoCtaHref = p.cta_href;
+		promoStartsAt = p.starts_at ? p.starts_at.slice(0, 16) : '';
+		promoEndsAt = p.ends_at ? p.ends_at.slice(0, 16) : '';
+		promoIsActive = p.is_active;
+		showPromoEditor = true;
 	}
 
 	const filteredOrders = $derived.by(() => {
@@ -106,6 +253,29 @@
 			]
 		},
 		{
+			label: 'Konten & Promo',
+			items: [
+				{
+					id: 'media' as AdminTab,
+					label: 'Media Manager',
+					icon: ImageIcon,
+					badge: data.mediaAssets.length
+				},
+				{
+					id: 'cms' as AdminTab,
+					label: 'Blog & Halaman',
+					icon: BookOpen,
+					badge: data.cmsContents.length
+				},
+				{
+					id: 'promos' as AdminTab,
+					label: 'Popup Promo',
+					icon: Megaphone,
+					badge: data.promoPopups.filter((p) => p.is_active).length
+				}
+			]
+		},
+		{
 			label: 'Konfigurasi',
 			items: [
 				{ id: 'categories' as AdminTab, label: 'Kategori', icon: Layers, badge: 0 },
@@ -144,7 +314,10 @@
 			</p>
 		</div>
 
-		<div class="flex shrink-0 items-center gap-2">
+		<div class="flex shrink-0 flex-wrap items-center gap-2">
+			<Button variant="outline" size="sm" href={resolve('/mitra/dashboard')} class="h-9 text-xs">
+				Dashboard Mitra
+			</Button>
 			<Button variant="outline" size="sm" href={resolve('/profil')} class="h-9 text-xs">
 				Profil
 			</Button>
@@ -465,7 +638,7 @@
 						<div>
 							<h2 class="text-base font-bold text-foreground">Pesanan Jastip</h2>
 							<p class="text-xs text-muted-foreground">
-								Kelola penerimaan, input total struk kasir asli, dan penyelesaian antar.
+								Kelola penerimaan, input total nota belanja, dan penyelesaian antar.
 							</p>
 						</div>
 
@@ -946,16 +1119,17 @@
 											}}
 										>
 											<input type="hidden" name="dispute_id" value={disp.id} />
-											<select
+											<Select
 												name="status"
 												value={disp.status}
-												class="h-9 rounded-md border border-input bg-background px-2.5 text-xs"
-											>
-												<option value="open">Open</option>
-												<option value="investigating">Investigating</option>
-												<option value="resolved">Resolved</option>
-												<option value="dismissed">Dismissed</option>
-											</select>
+												class="w-36"
+												options={[
+													{ value: 'open', label: 'Open' },
+													{ value: 'investigating', label: 'Investigating' },
+													{ value: 'resolved', label: 'Resolved' },
+													{ value: 'dismissed', label: 'Dismissed' }
+												]}
+											/>
 											<Input
 												name="resolution_note"
 												value={disp.resolution_note || ''}
@@ -1242,7 +1416,9 @@
 												class="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground"
 											>
 												<span>
-													ID: <code class="font-mono text-[10px]">{u.id.slice(0, 8)}...</code>
+													UID: <code class="font-mono text-[11px] font-semibold text-foreground">
+														{formatUserUid(u.id)}
+													</code>
 												</span>
 												<span>Telp: {u.phone || 'Tidak dicantumkan'}</span>
 											</div>
@@ -1261,15 +1437,16 @@
 											}}
 										>
 											<input type="hidden" name="user_id" value={u.id} />
-											<select
+											<Select
 												name="role"
 												value={u.role}
-												class="h-9 rounded-md border border-input bg-background px-2.5 text-xs"
-											>
-												<option value="customer">Pelanggan</option>
-												<option value="provider">Mitra</option>
-												<option value="admin">Admin / Owner</option>
-											</select>
+												class="w-36"
+												options={[
+													{ value: 'customer', label: 'Pelanggan' },
+													{ value: 'provider', label: 'Mitra' },
+													{ value: 'admin', label: 'Admin / Owner' }
+												]}
+											/>
 											<Button
 												type="submit"
 												variant="outline"
@@ -1358,16 +1535,16 @@
 								<Label for="operational_status" class="text-xs font-semibold">
 									Status Operasional
 								</Label>
-								<select
+								<Select
 									id="operational_status"
 									name="operational_status"
 									value={data.settings.operational_status}
-									class="h-9 w-full rounded-md border border-input bg-background px-3 text-xs focus:ring-1 focus:ring-ring focus:outline-none"
-								>
-									<option value="active">Berjalan Normal (Aktif)</option>
-									<option value="maintenance">Mode Pemeliharaan (Maintenance)</option>
-									<option value="paused">Operasional Dijeda Sementara</option>
-								</select>
+									options={[
+										{ value: 'active', label: 'Berjalan Normal (Aktif)' },
+										{ value: 'maintenance', label: 'Mode Pemeliharaan (Maintenance)' },
+										{ value: 'paused', label: 'Operasional Dijeda Sementara' }
+									]}
+								/>
 							</div>
 
 							<div class="pt-1">
@@ -1552,6 +1729,801 @@
 						</div>
 					{/if}
 				</section>
+
+				<!-- ============================================================= -->
+				<!-- TAB: MEDIA MANAGER                                            -->
+				<!-- ============================================================= -->
+			{:else if activeTab === 'media'}
+				<section class="space-y-5">
+					<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+						<div>
+							<h2 class="text-base font-bold text-foreground">Media Manager</h2>
+							<p class="text-xs text-muted-foreground">
+								Storage aktif:
+								<span class="font-semibold text-foreground">
+									{data.r2Configured ? 'Cloudflare R2' : 'Supabase Storage (public-media)'}
+								</span>
+								&middot; Anda juga bisa menautkan URL gambar eksternal agar hemat ruang.
+							</p>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+						<!-- Upload File -->
+						<form
+							method="POST"
+							action="?/uploadMedia"
+							enctype="multipart/form-data"
+							class="space-y-3 rounded-2xl border border-border/80 bg-card p-5"
+							use:enhance={() => {
+								isSubmitting = true;
+								return async ({ update }) => {
+									await update();
+									isSubmitting = false;
+								};
+							}}
+						>
+							<h3 class="text-xs font-bold text-foreground">Unggah File Gambar (Maks. 5 MB)</h3>
+							<input
+								type="file"
+								name="file"
+								accept="image/jpeg,image/png,image/webp,image/gif"
+								required
+								class="block w-full text-xs text-muted-foreground file:mr-2.5 file:rounded-md file:border file:border-border file:bg-muted file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-foreground"
+							/>
+							<div class="flex gap-2">
+								<Input
+									name="alt_text"
+									placeholder="Teks alt / keterangan (opsional)"
+									class="h-9 flex-1 text-base sm:text-xs"
+								/>
+								<Button
+									type="submit"
+									size="sm"
+									disabled={isSubmitting}
+									class="h-9 text-xs font-bold"
+								>
+									{isSubmitting ? 'Mengunggah...' : 'Unggah'}
+								</Button>
+							</div>
+						</form>
+
+						<!-- External URL -->
+						<form
+							method="POST"
+							action="?/registerExternalMedia"
+							class="space-y-3 rounded-2xl border border-border/80 bg-card p-5"
+							use:enhance={() => {
+								isSubmitting = true;
+								return async ({ update }) => {
+									await update();
+									isSubmitting = false;
+								};
+							}}
+						>
+							<h3 class="text-xs font-bold text-foreground">Tautkan URL Gambar Eksternal</h3>
+							<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+								<Input
+									name="file_name"
+									placeholder="Nama aset (misal: banner-promo.jpg)"
+									required
+									class="h-9 text-base sm:text-xs"
+								/>
+								<Input
+									name="alt_text"
+									placeholder="Keterangan (opsional)"
+									class="h-9 text-base sm:text-xs"
+								/>
+							</div>
+							<div class="flex gap-2">
+								<Input
+									name="public_url"
+									type="url"
+									placeholder="https://cdn.example.com/gambar.jpg"
+									required
+									class="h-9 flex-1 text-base sm:text-xs"
+								/>
+								<Button
+									type="submit"
+									size="sm"
+									variant="outline"
+									disabled={isSubmitting}
+									class="h-9 text-xs font-semibold"
+								>
+									Simpan URL
+								</Button>
+							</div>
+						</form>
+					</div>
+
+					<!-- Asset Grid -->
+					{#if data.mediaAssets.length === 0}
+						<div
+							class="rounded-2xl border border-dashed border-border/80 bg-card/50 p-10 text-center text-xs text-muted-foreground"
+						>
+							Belum ada aset media tersimpan. Unggah gambar atau tambahkan URL eksternal di atas.
+						</div>
+					{:else}
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{#each data.mediaAssets as asset (asset.id)}
+								<article
+									class="flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card"
+								>
+									<img
+										src={asset.public_url}
+										alt={asset.alt_text || asset.file_name}
+										class="h-36 w-full bg-muted/30 object-cover"
+										loading="lazy"
+									/>
+									<div class="space-y-2.5 p-3.5 text-xs">
+										<div class="flex items-center justify-between gap-2">
+											<p class="truncate font-semibold text-foreground">{asset.file_name}</p>
+											<span
+												class="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase"
+											>
+												{asset.storage_provider}
+											</span>
+										</div>
+
+										<div class="flex items-center justify-between gap-1.5">
+											<button
+												type="button"
+												onclick={() => copyMediaUrl(asset.id, asset.public_url)}
+												class="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border/70 px-2.5 text-[11px] font-semibold text-foreground hover:bg-muted"
+											>
+												{#if copiedMediaId === asset.id}
+													<Check class="size-3.5 text-emerald-600" />
+													<span class="text-emerald-600">URL Disalin</span>
+												{:else}
+													<Copy class="size-3.5" />
+													<span>Salin URL</span>
+												{/if}
+											</button>
+
+											{#if confirmDeleteMediaId === asset.id}
+												<form method="POST" action="?/deleteMedia" use:enhance>
+													<input type="hidden" name="id" value={asset.id} />
+													<button
+														type="submit"
+														class="inline-flex h-8 items-center rounded-lg bg-destructive px-2.5 text-[11px] font-bold text-destructive-foreground"
+													>
+														Hapus
+													</button>
+												</form>
+												<button
+													type="button"
+													onclick={() => (confirmDeleteMediaId = null)}
+													class="inline-flex h-8 items-center rounded-lg border border-border/70 px-2 text-[11px]"
+												>
+													Batal
+												</button>
+											{:else}
+												<button
+													type="button"
+													onclick={() => (confirmDeleteMediaId = asset.id)}
+													class="inline-flex size-8 items-center justify-center rounded-lg border border-border/70 text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+													aria-label="Hapus {asset.file_name}"
+												>
+													<Trash2 class="size-3.5" />
+												</button>
+											{/if}
+										</div>
+									</div>
+								</article>
+							{/each}
+						</div>
+					{/if}
+				</section>
+
+				<!-- ============================================================= -->
+				<!-- TAB: BLOG & HALAMAN STATIS                                    -->
+				<!-- ============================================================= -->
+			{:else if activeTab === 'cms'}
+				<section class="space-y-5">
+					<div class="flex flex-wrap items-center justify-between gap-3">
+						<div>
+							<h2 class="text-base font-bold text-foreground">Blog &amp; Halaman Statis</h2>
+							<p class="text-xs text-muted-foreground">
+								Tulis artikel blog (<code class="font-mono">/blog/slug</code>) atau halaman statis
+								seperti Syarat &amp; Ketentuan, Privasi, dan Disclaimer (<code class="font-mono">
+									/p/slug
+								</code>).
+							</p>
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<Button
+								size="sm"
+								variant="outline"
+								onclick={() => openNewCmsEditor('page')}
+								class="h-9 gap-1.5 text-xs font-semibold"
+							>
+								<Plus class="size-3.5" />
+								<span>Halaman Statis</span>
+							</Button>
+							<Button
+								size="sm"
+								onclick={() => openNewCmsEditor('post')}
+								class="h-9 gap-1.5 text-xs font-semibold"
+							>
+								<Plus class="size-3.5" />
+								<span>Artikel Blog</span>
+							</Button>
+						</div>
+					</div>
+
+					{#if showCmsEditor}
+						<form
+							method="POST"
+							action="?/saveCmsContent"
+							class="space-y-4 rounded-2xl border border-primary/30 bg-card p-5"
+							use:enhance={() => {
+								isSubmitting = true;
+								return async ({ result, update }) => {
+									isSubmitting = false;
+									if (result.type === 'success') showCmsEditor = false;
+									await update();
+								};
+							}}
+						>
+							<input type="hidden" name="id" value={cmsId} />
+
+							<div class="flex items-center justify-between border-b border-border/60 pb-3">
+								<h3 class="text-sm font-bold text-foreground">
+									{cmsId
+										? 'Edit Konten'
+										: cmsType === 'page'
+											? 'Buat Halaman Statis'
+											: 'Tulis Artikel Blog'}
+								</h3>
+								<div class="flex items-center gap-2">
+									<button
+										type="button"
+										onclick={() => (cmsPreviewMode = !cmsPreviewMode)}
+										class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+									>
+										<Eye class="size-3.5" />
+										<span>{cmsPreviewMode ? 'Mode Editor' : 'Pratinjau'}</span>
+									</button>
+									<button
+										type="button"
+										onclick={() => (showCmsEditor = false)}
+										class="text-xs text-muted-foreground hover:text-foreground"
+									>
+										Tutup
+									</button>
+								</div>
+							</div>
+
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+								<div class="space-y-1">
+									<Label class="text-xs font-semibold">Tipe Konten</Label>
+									<Select
+										name="content_type"
+										bind:value={cmsType}
+										options={[
+											{ value: 'post', label: 'Artikel Blog (/blog/...)' },
+											{ value: 'page', label: 'Halaman Statis (/p/...)' }
+										]}
+									/>
+								</div>
+								<div class="space-y-1">
+									<Label class="text-xs font-semibold">Status</Label>
+									<Select
+										name="status"
+										bind:value={cmsStatus}
+										options={[
+											{ value: 'draft', label: 'Draft (Disimpan)' },
+											{ value: 'published', label: 'Terbitkan (Publik)' }
+										]}
+									/>
+								</div>
+								<div class="space-y-1">
+									<Label for="cms-slug" class="text-xs font-semibold">Slug URL</Label>
+									<Input
+										id="cms-slug"
+										name="slug"
+										bind:value={cmsSlug}
+										placeholder="otomatis-dari-judul"
+										class="h-10 text-base sm:h-9 sm:text-xs"
+									/>
+								</div>
+							</div>
+
+							<div class="space-y-1">
+								<Label for="cms-title" class="text-xs font-semibold">Judul</Label>
+								<Input
+									id="cms-title"
+									name="title"
+									bind:value={cmsTitle}
+									placeholder="Contoh: Syarat dan Ketentuan Layanan Titipin"
+									required
+									class="h-10 text-base sm:h-9 sm:text-xs"
+								/>
+							</div>
+
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+								<div class="space-y-1">
+									<Label for="cms-excerpt" class="text-xs font-semibold">
+										Ringkasan (Opsional)
+									</Label>
+									<Input
+										id="cms-excerpt"
+										name="excerpt"
+										bind:value={cmsExcerpt}
+										placeholder="Ringkasan singkat untuk meta & kartu daftar"
+										class="h-10 text-base sm:h-9 sm:text-xs"
+									/>
+								</div>
+								<div class="space-y-1">
+									<Label for="cms-cover" class="text-xs font-semibold">
+										Featured Image / Gambar Sampul (SEO &amp; Share)
+									</Label>
+									<div class="flex gap-2">
+										<Input
+											id="cms-cover"
+											name="cover_image_url"
+											bind:value={cmsCoverUrl}
+											placeholder="Pilih dari Media atau tempel URL eksternal"
+											class="h-10 flex-1 text-base sm:h-9 sm:text-xs"
+										/>
+										<Button
+											type="button"
+											variant="outline"
+											size="sm"
+											onclick={() => openMediaPicker('cms')}
+											class="h-10 shrink-0 gap-1.5 text-xs sm:h-9"
+										>
+											<ImageIcon class="size-3.5" />
+											<span>Pilih dari Media</span>
+										</Button>
+									</div>
+								</div>
+							</div>
+
+							{#if cmsCoverUrl}
+								<div
+									class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-2.5"
+								>
+									<img
+										src={cmsCoverUrl}
+										alt="Pratinjau sampul konten"
+										class="h-14 w-24 rounded-lg object-cover"
+									/>
+									<div class="min-w-0 flex-1 text-xs">
+										<p class="font-semibold text-foreground">Sampul terpilih</p>
+										<p class="truncate text-[11px] text-muted-foreground">{cmsCoverUrl}</p>
+									</div>
+									<button
+										type="button"
+										onclick={() => (cmsCoverUrl = '')}
+										class="shrink-0 text-xs font-medium text-destructive hover:underline"
+									>
+										Hapus
+									</button>
+								</div>
+							{/if}
+
+							<div class="space-y-1">
+								<Label for="cms-body" class="text-xs font-semibold">Isi Konten</Label>
+								{#if cmsPreviewMode}
+									<input type="hidden" name="body" value={cmsBody} />
+									<div
+										class="min-h-48 space-y-3 rounded-xl border border-border/70 bg-background p-4 text-sm leading-relaxed text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-foreground [&_h3]:mt-3 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-foreground [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+									>
+										<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+										{@html renderCmsContentToHtml(cmsBody)}
+									</div>
+								{:else}
+									<RichTextEditor
+										id="cms-body"
+										name="body"
+										bind:value={cmsBody}
+										mediaUrls={data.mediaAssets}
+									/>
+								{/if}
+							</div>
+
+							<div class="flex justify-end gap-2">
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onclick={() => (showCmsEditor = false)}
+								>
+									Batal
+								</Button>
+								<Button type="submit" size="sm" disabled={isSubmitting}>
+									{isSubmitting ? 'Menyimpan...' : 'Simpan Konten'}
+								</Button>
+							</div>
+						</form>
+					{/if}
+
+					<!-- Filter Blog vs Halaman -->
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<div class="flex items-center gap-1 rounded-lg border border-border/70 bg-muted/30 p-1">
+							{#each cmsFilters as f (f.id)}
+								<button
+									type="button"
+									onclick={() => (cmsFilter = f.id)}
+									class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 {cmsFilter ===
+									f.id
+										? 'bg-background font-semibold text-foreground shadow-2xs'
+										: 'text-muted-foreground hover:text-foreground'}"
+								>
+									{f.label}
+								</button>
+							{/each}
+						</div>
+						<span class="text-xs text-muted-foreground tabular-nums">
+							{filteredCmsContents.length} konten
+						</span>
+					</div>
+
+					{#if filteredCmsContents.length === 0}
+						<div
+							class="rounded-2xl border border-dashed border-border/80 bg-card/50 p-10 text-center text-xs text-muted-foreground"
+						>
+							Belum ada konten pada filter ini. Klik tombol di atas untuk mulai menulis.
+						</div>
+					{:else}
+						<div class="divide-y divide-border/60 rounded-2xl border border-border/80 bg-card">
+							{#each filteredCmsContents as item (item.id)}
+								<div class="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
+									<div class="flex min-w-0 items-center gap-3">
+										{#if item.cover_image_url}
+											<img
+												src={item.cover_image_url}
+												alt={item.title}
+												class="hidden size-12 shrink-0 rounded-lg border border-border/60 object-cover sm:block"
+											/>
+										{/if}
+										<div class="min-w-0 space-y-1">
+											<div class="flex flex-wrap items-center gap-2">
+												<Badge variant="outline" class="text-[10px]">
+													{item.content_type === 'page' ? 'Halaman Statis' : 'Artikel Blog'}
+												</Badge>
+												<Badge
+													variant={item.status === 'published' ? 'default' : 'secondary'}
+													class="text-[10px]"
+												>
+													{item.status === 'published' ? 'Terbit' : 'Draft'}
+												</Badge>
+												<span class="font-mono text-[11px] text-muted-foreground">
+													{item.content_type === 'page' ? `/p/${item.slug}` : `/blog/${item.slug}`}
+												</span>
+											</div>
+											<p class="truncate text-sm font-bold text-foreground">{item.title}</p>
+										</div>
+									</div>
+
+									<div class="flex shrink-0 flex-wrap items-center gap-1.5">
+										{#if item.status === 'published'}
+											<Button
+												variant="outline"
+												size="sm"
+												href={item.content_type === 'page'
+													? resolve('/p/[slug]', { slug: item.slug })
+													: resolve('/blog/[slug]', { slug: item.slug })}
+												target="_blank"
+												class="h-8 gap-1 text-xs"
+											>
+												<ExternalLink class="size-3" />
+												<span>Lihat</span>
+											</Button>
+										{/if}
+										<Button
+											variant="outline"
+											size="sm"
+											onclick={() => openEditCmsEditor(item)}
+											class="h-8 gap-1 text-xs"
+										>
+											<Pencil class="size-3" />
+											<span>Edit</span>
+										</Button>
+
+										{#if confirmDeleteCmsId === item.id}
+											<form method="POST" action="?/deleteCmsContent" use:enhance>
+												<input type="hidden" name="id" value={item.id} />
+												<button
+													type="submit"
+													class="inline-flex h-8 items-center rounded-lg bg-destructive px-2.5 text-xs font-bold text-destructive-foreground"
+												>
+													Hapus
+												</button>
+											</form>
+											<button
+												type="button"
+												onclick={() => (confirmDeleteCmsId = null)}
+												class="inline-flex h-8 items-center rounded-lg border border-border/70 px-2 text-xs"
+											>
+												Batal
+											</button>
+										{:else}
+											<button
+												type="button"
+												onclick={() => (confirmDeleteCmsId = item.id)}
+												class="inline-flex size-8 items-center justify-center rounded-lg border border-border/70 text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+												aria-label="Hapus {item.title}"
+											>
+												<Trash2 class="size-3.5" />
+											</button>
+										{/if}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</section>
+
+				<!-- ============================================================= -->
+				<!-- TAB: POPUP PROMO                                              -->
+				<!-- ============================================================= -->
+			{:else if activeTab === 'promos'}
+				<section class="space-y-5">
+					<div class="flex flex-wrap items-center justify-between gap-3">
+						<div>
+							<h2 class="text-base font-bold text-foreground">Popup Promo</h2>
+							<p class="text-xs text-muted-foreground">
+								Atur popup promo atau pengumuman yang tampil ke pengunjung halaman publik.
+							</p>
+						</div>
+						<Button
+							size="sm"
+							onclick={openNewPromoEditor}
+							class="h-9 gap-1.5 text-xs font-semibold"
+						>
+							<Plus class="size-3.5" />
+							<span>Buat Popup Promo</span>
+						</Button>
+					</div>
+
+					{#if showPromoEditor}
+						<form
+							method="POST"
+							action="?/savePromoPopup"
+							class="space-y-4 rounded-2xl border border-primary/30 bg-card p-5"
+							use:enhance={() => {
+								isSubmitting = true;
+								return async ({ result, update }) => {
+									isSubmitting = false;
+									if (result.type === 'success') showPromoEditor = false;
+									await update();
+								};
+							}}
+						>
+							<input type="hidden" name="id" value={promoId} />
+
+							<div class="flex items-center justify-between border-b border-border/60 pb-3">
+								<h3 class="text-sm font-bold text-foreground">
+									{promoId ? 'Edit Popup Promo' : 'Buat Popup Promo Baru'}
+								</h3>
+								<button
+									type="button"
+									onclick={() => (showPromoEditor = false)}
+									class="text-xs text-muted-foreground hover:text-foreground"
+								>
+									Tutup
+								</button>
+							</div>
+
+							<div class="space-y-1">
+								<Label for="promo-title" class="text-xs font-semibold">Judul Promo</Label>
+								<Input
+									id="promo-title"
+									name="title"
+									bind:value={promoTitle}
+									placeholder="Contoh: Gratis Ongkos Jastip Minggu Ini"
+									required
+									class="h-10 text-base sm:h-9 sm:text-xs"
+								/>
+							</div>
+
+							<div class="space-y-1">
+								<Label for="promo-desc" class="text-xs font-semibold">Deskripsi Singkat</Label>
+								<Textarea
+									id="promo-desc"
+									name="description"
+									bind:value={promoDesc}
+									rows={3}
+									required
+									placeholder="Jelaskan syarat dan detail promo secara singkat..."
+									class="text-base sm:text-xs"
+								/>
+							</div>
+
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+								<div class="space-y-1">
+									<Label for="promo-cta-label" class="text-xs font-semibold">Teks Tombol CTA</Label>
+									<Input
+										id="promo-cta-label"
+										name="cta_label"
+										bind:value={promoCtaLabel}
+										placeholder="Pesan Sekarang"
+										class="h-10 text-base sm:h-9 sm:text-xs"
+									/>
+								</div>
+								<div class="space-y-1">
+									<Label for="promo-cta-href" class="text-xs font-semibold">Tujuan Link CTA</Label>
+									<Input
+										id="promo-cta-href"
+										name="cta_href"
+										bind:value={promoCtaHref}
+										placeholder="/pesan"
+										class="h-10 text-base sm:h-9 sm:text-xs"
+									/>
+								</div>
+							</div>
+
+							<div class="space-y-1.5">
+								<Label for="promo-img" class="text-xs font-semibold">
+									Gambar Banner Promo (Opsional)
+								</Label>
+								<div class="flex gap-2">
+									<Input
+										id="promo-img"
+										name="image_url"
+										bind:value={promoImageUrl}
+										placeholder="Pilih dari Media atau tempel URL eksternal"
+										class="h-10 flex-1 text-base sm:h-9 sm:text-xs"
+									/>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onclick={() => openMediaPicker('promo')}
+										class="h-10 shrink-0 gap-1.5 text-xs sm:h-9"
+									>
+										<ImageIcon class="size-3.5" />
+										<span>Pilih dari Media</span>
+									</Button>
+								</div>
+								{#if promoImageUrl}
+									<div
+										class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-2.5"
+									>
+										<img
+											src={promoImageUrl}
+											alt="Pratinjau banner promo"
+											class="h-14 w-24 rounded-lg object-cover"
+										/>
+										<div class="min-w-0 flex-1 text-xs">
+											<p class="font-semibold text-foreground">Banner terpilih</p>
+											<p class="truncate text-[11px] text-muted-foreground">{promoImageUrl}</p>
+										</div>
+										<button
+											type="button"
+											onclick={() => (promoImageUrl = '')}
+											class="shrink-0 text-xs font-medium text-destructive hover:underline"
+										>
+											Hapus
+										</button>
+									</div>
+								{/if}
+							</div>
+
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+								<div class="space-y-1">
+									<Label for="promo-start" class="text-xs font-semibold">
+										Mulai Tayang (Opsional)
+									</Label>
+									<Input
+										id="promo-start"
+										name="starts_at"
+										type="datetime-local"
+										bind:value={promoStartsAt}
+										class="h-10 text-base sm:h-9 sm:text-xs"
+									/>
+								</div>
+								<div class="space-y-1">
+									<Label for="promo-end" class="text-xs font-semibold">Berakhir (Opsional)</Label>
+									<Input
+										id="promo-end"
+										name="ends_at"
+										type="datetime-local"
+										bind:value={promoEndsAt}
+										class="h-10 text-base sm:h-9 sm:text-xs"
+									/>
+								</div>
+							</div>
+
+							<div class="flex items-center gap-2 pt-1">
+								<input
+									type="checkbox"
+									id="promo-active"
+									name="is_active"
+									value="true"
+									bind:checked={promoIsActive}
+									class="size-4 rounded border-border text-primary focus:ring-primary"
+								/>
+								<Label for="promo-active" class="cursor-pointer text-xs font-medium">
+									Aktifkan popup promo ini untuk pengunjung publik
+								</Label>
+							</div>
+
+							<div class="flex justify-end gap-2">
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onclick={() => (showPromoEditor = false)}
+								>
+									Batal
+								</Button>
+								<Button type="submit" size="sm" disabled={isSubmitting}>
+									{isSubmitting ? 'Menyimpan...' : 'Simpan Promo'}
+								</Button>
+							</div>
+						</form>
+					{/if}
+
+					{#if data.promoPopups.length === 0}
+						<div
+							class="rounded-2xl border border-dashed border-border/80 bg-card/50 p-10 text-center text-xs text-muted-foreground"
+						>
+							Belum ada popup promo. Klik tombol di atas untuk membuat promo baru.
+						</div>
+					{:else}
+						<div class="divide-y divide-border/60 rounded-2xl border border-border/80 bg-card">
+							{#each data.promoPopups as promo (promo.id)}
+								<div class="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
+									<div class="min-w-0 space-y-1">
+										<div class="flex flex-wrap items-center gap-2">
+											<Badge
+												variant={promo.is_active ? 'default' : 'secondary'}
+												class="text-[10px]"
+											>
+												{promo.is_active ? 'Aktif' : 'Nonaktif'}
+											</Badge>
+											<span class="text-xs font-bold text-foreground">{promo.title}</span>
+										</div>
+										<p class="line-clamp-2 text-xs text-muted-foreground">{promo.description}</p>
+									</div>
+
+									<div class="flex shrink-0 items-center gap-1.5">
+										<Button
+											variant="outline"
+											size="sm"
+											onclick={() => openEditPromoEditor(promo)}
+											class="h-8 gap-1 text-xs"
+										>
+											<Pencil class="size-3" />
+											<span>Edit</span>
+										</Button>
+
+										{#if confirmDeletePromoId === promo.id}
+											<form method="POST" action="?/deletePromoPopup" use:enhance>
+												<input type="hidden" name="id" value={promo.id} />
+												<button
+													type="submit"
+													class="inline-flex h-8 items-center rounded-lg bg-destructive px-2.5 text-xs font-bold text-destructive-foreground"
+												>
+													Hapus
+												</button>
+											</form>
+											<button
+												type="button"
+												onclick={() => (confirmDeletePromoId = null)}
+												class="inline-flex h-8 items-center rounded-lg border border-border/70 px-2 text-xs"
+											>
+												Batal
+											</button>
+										{:else}
+											<button
+												type="button"
+												onclick={() => (confirmDeletePromoId = promo.id)}
+												class="inline-flex size-8 items-center justify-center rounded-lg border border-border/70 text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+												aria-label="Hapus {promo.title}"
+											>
+												<Trash2 class="size-3.5" />
+											</button>
+										{/if}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</section>
 			{/if}
 		</main>
 	</div>
@@ -1605,7 +2577,7 @@
 					name="slug"
 					required
 					value={editingCategory?.slug ?? ''}
-					placeholder="contoh: food-beverage"
+					placeholder="contoh: dititipin"
 					class="text-xs"
 				/>
 			</div>
@@ -1673,5 +2645,65 @@
 				</Button>
 			</Dialog.Footer>
 		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
+<!-- Modal: Visual Media Picker -->
+<Dialog.Root bind:open={isMediaPickerOpen}>
+	<Dialog.Content class="max-w-2xl rounded-2xl">
+		<Dialog.Header>
+			<Dialog.Title class="text-base font-bold">Pilih Gambar dari Media Manager</Dialog.Title>
+			<Dialog.Description class="text-xs text-muted-foreground">
+				Klik gambar di bawah untuk langsung memasangnya tanpa perlu menyalin URL.
+			</Dialog.Description>
+		</Dialog.Header>
+
+		{#if data.mediaAssets.length === 0}
+			<div class="space-y-3 rounded-xl border border-dashed border-border/80 p-8 text-center">
+				<ImageIcon class="mx-auto size-7 text-muted-foreground/60" />
+				<p class="text-xs text-muted-foreground">
+					Belum ada gambar di Media Manager. Unggah gambar atau tambahkan URL eksternal terlebih
+					dahulu.
+				</p>
+				<Button
+					size="sm"
+					variant="outline"
+					onclick={() => {
+						isMediaPickerOpen = false;
+						activeTab = 'media';
+					}}
+					class="h-9 text-xs"
+				>
+					Buka Media Manager
+				</Button>
+			</div>
+		{:else}
+			<div class="grid max-h-96 grid-cols-2 gap-3 overflow-y-auto py-1 sm:grid-cols-3">
+				{#each data.mediaAssets as asset (asset.id)}
+					<button
+						type="button"
+						onclick={() => selectMediaForTarget(asset.public_url)}
+						class="group overflow-hidden rounded-xl border border-border/80 bg-card text-left transition-colors hover:border-primary"
+					>
+						<img
+							src={asset.public_url}
+							alt={asset.alt_text || asset.file_name}
+							class="h-28 w-full bg-muted/30 object-cover"
+							loading="lazy"
+						/>
+						<div class="flex items-center justify-between gap-1.5 p-2 text-[11px]">
+							<span class="truncate font-medium text-foreground group-hover:text-primary">
+								{asset.file_name}
+							</span>
+							<span
+								class="shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] text-muted-foreground uppercase"
+							>
+								{asset.storage_provider}
+							</span>
+						</div>
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</Dialog.Content>
 </Dialog.Root>

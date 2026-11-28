@@ -3,28 +3,12 @@
 	import { enhance } from '$app/forms';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import {
-		ShoppingBag,
-		MapPin,
-		Plus,
-		Trash2,
-		Receipt,
-		ArrowRight,
-		AlertCircle
-	} from 'lucide-svelte';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import { Plus, Trash2, AlertCircle } from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Form states
-	let originName = $state('');
-	let originAddress = $state('Kecamatan Gatak & Sekitarnya');
-	let selectedAddressId = $state('manual');
-	let recipientName = $state('');
-	let recipientPhone = $state('');
-	let manualAddressText = $state('');
-	let customerNotes = $state('');
-
-	// Items list
 	interface ItemInput {
 		id: string;
 		name: string;
@@ -34,31 +18,105 @@
 		estimated_price: number;
 	}
 
+	let selectedCategoryId = $state('');
+	let selectedServiceId = $state('custom');
+	let originName = $state('');
+	let originAddress = $state('');
+	let selectedAddressId = $state('manual');
+	let recipientName = $state('');
+	let recipientPhone = $state('');
+	let manualAddressText = $state('');
+	let customerNotes = $state('');
+	let isSubmitting = $state(false);
+	let initialized = $state(false);
+
 	let items = $state<ItemInput[]>([
 		{
 			id: 'item-1',
-			name: 'Soto Bebek Bungkus',
+			name: '',
 			quantity: 1,
-			unit: 'porsi',
-			notes: 'Kuah dan sambal dipisah',
-			estimated_price: 15000
+			unit: 'pcs',
+			notes: '',
+			estimated_price: 0
 		}
 	]);
 
 	$effect(() => {
-		originName =
-			data.defaultOrigin ||
-			data.selectedService?.title?.replace(/^Jastip\s+/i, '') ||
-			'Warung / Toko di Gatak';
-		originAddress = data.selectedService?.coverage_area || 'Kecamatan Gatak & Sekitarnya';
+		if (initialized) return;
+		initialized = true;
+
+		selectedCategoryId = data.initialCategoryId || data.categories[0]?.id || 'custom';
+		selectedServiceId = data.selectedService?.id || 'custom';
+		originName = data.defaultOrigin || data.selectedService?.title || '';
+		originAddress = data.selectedService?.coverage_area || '';
 		selectedAddressId =
 			data.addresses.find((a) => a.is_primary)?.id || data.addresses[0]?.id || 'manual';
 		recipientName = data.profile?.full_name || '';
 		recipientPhone = data.profile?.phone || '';
-		if (data.selectedService?.title && items[0]?.name === 'Soto Bebek Bungkus') {
-			items[0].name = `Pesanan ${data.selectedService.title}`;
-		}
 	});
+
+	const categoryOptions = $derived([
+		...data.categories.map((cat) => ({
+			value: cat.id,
+			label: cat.name
+		})),
+		{ value: 'custom', label: 'Lainnya / Pesanan Kustom' }
+	]);
+
+	const servicesInCategory = $derived(
+		selectedCategoryId === 'custom'
+			? data.services
+			: data.services.filter((s) => s.category_id === selectedCategoryId)
+	);
+
+	const serviceOptions = $derived([
+		...servicesInCategory.map((svc) => ({
+			value: svc.id,
+			label: `${svc.title} (Rp ${Number(svc.base_fee).toLocaleString('id-ID')})`
+		})),
+		{ value: 'custom', label: 'Tulis tempat atau kebutuhan sendiri' }
+	]);
+
+	const activeService = $derived(
+		selectedServiceId !== 'custom'
+			? data.services.find((s) => s.id === selectedServiceId) || data.selectedService || null
+			: null
+	);
+
+	function handleCategoryChange(nextCategoryId: string) {
+		selectedCategoryId = nextCategoryId;
+		if (selectedServiceId !== 'custom') {
+			const stillValid = data.services.some(
+				(s) => s.id === selectedServiceId && s.category_id === nextCategoryId
+			);
+			if (!stillValid) {
+				selectedServiceId = 'custom';
+			}
+		}
+	}
+
+	function handleServiceChange(nextServiceId: string) {
+		selectedServiceId = nextServiceId;
+		if (nextServiceId === 'custom') return;
+		const svc = data.services.find((s) => s.id === nextServiceId);
+		if (svc) {
+			selectedCategoryId = svc.category_id;
+			if (!originName.trim() || data.services.some((s) => s.title === originName.trim())) {
+				originName = svc.title;
+			}
+			if (!originAddress.trim()) {
+				originAddress = svc.coverage_area;
+			}
+		}
+	}
+
+	const addressOptions = $derived([
+		...data.addresses.map((addr) => ({
+			value: addr.id,
+			label: `${addr.label} - ${addr.recipient_name} (${addr.street_address})${addr.is_primary ? ' (Utama)' : ''}`
+		})),
+		{ value: 'manual', label: 'Masukkan alamat baru / manual' }
+	]);
 
 	const resolvedAddressText = $derived.by(() => {
 		if (selectedAddressId === 'manual') {
@@ -76,7 +134,7 @@
 			quantity: 1,
 			unit: 'pcs',
 			notes: '',
-			estimated_price: 10000
+			estimated_price: 0
 		});
 	}
 
@@ -85,10 +143,11 @@
 		items.splice(index, 1);
 	}
 
-	// Live fee calculations
-	const baseJastipFee = $derived(Number(data.selectedService?.base_fee) || 8000);
-	const platformFee = 1000;
-	const totalJastipFee = $derived(baseJastipFee + platformFee);
+	const baseServiceFee = $derived(
+		activeService ? Number(activeService.base_fee) : Number(data.pricingRule.base_fee)
+	);
+	const platformFee = $derived(Number(data.pricingRule.platform_fee));
+	const totalServiceFee = $derived(baseServiceFee + platformFee);
 
 	const estimatedItemCost = $derived(
 		items.reduce(
@@ -96,35 +155,24 @@
 			0
 		)
 	);
-
-	let isSubmitting = $state(false);
 </script>
 
 <svelte:head>
-	<title>Buat Pesanan Jastip - Titipin</title>
+	<title>Buat Pesanan - Titipin</title>
 </svelte:head>
 
-<div class="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
-	<!-- Page Header -->
-	<div class="space-y-1.5 border-b border-border/60 pb-5">
-		<div
-			class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-		>
-			<ShoppingBag class="size-3.5" />
-			<span>Formulir Pesanan Jastip</span>
-		</div>
-		<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-			Titip Belanja & Pengantaran
-		</h1>
-		<p class="text-xs text-muted-foreground sm:text-sm">
-			Tuliskan toko tujuan, daftar barang, dan alamat pengantaran. Harga belanjaan murni sesuai nota
-			fisik toko.
+<div class="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
+	<header class="max-w-2xl space-y-2 border-b border-border/70 pb-5">
+		<h1 class="text-2xl font-black tracking-tight text-foreground sm:text-3xl">Buat Pesanan</h1>
+		<p class="text-sm leading-relaxed text-muted-foreground">
+			Pilih layanan atau tulis lokasi tujuan, rincian kebutuhan, dan alamat pengantaran Anda.
 		</p>
-	</div>
+	</header>
 
 	{#if form?.error}
 		<div
-			class="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs font-semibold text-destructive"
+			role="alert"
+			class="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs font-semibold text-destructive"
 		>
 			<AlertCircle class="size-4 shrink-0" />
 			<span>{form.error}</span>
@@ -147,10 +195,15 @@
 		<input
 			type="hidden"
 			name="provider_id"
-			value={data.selectedService?.provider_id || data.defaultProviderId || ''}
+			value={activeService?.provider_id || data.defaultProviderId || ''}
 		/>
-		<input type="hidden" name="service_id" value={data.selectedService?.id || ''} />
-		<input type="hidden" name="category_id" value={data.selectedService?.category_id || ''} />
+		<input type="hidden" name="service_id" value={activeService?.id || ''} />
+		<input
+			type="hidden"
+			name="category_id"
+			value={activeService?.category_id ||
+				(selectedCategoryId !== 'custom' ? selectedCategoryId : '')}
+		/>
 		<input
 			type="hidden"
 			name="destination_address_id"
@@ -159,120 +212,138 @@
 		<input type="hidden" name="destination_address_text" value={resolvedAddressText} />
 		<input type="hidden" name="items_json" value={JSON.stringify(items)} />
 
-		<!-- Left Form Inputs (8 cols) -->
+		<!-- Main Form Workspace (8 cols) -->
 		<div class="space-y-6 lg:col-span-8">
-			<!-- Store / Origin Section -->
-			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
-				<div class="flex items-center gap-2 border-b border-border/60 pb-3">
-					<div
-						class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"
-					>
-						<MapPin class="size-4" />
+			<!-- 1. Service & Origin -->
+			<section class="space-y-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
+				<div class="border-b border-border/60 pb-3">
+					<h2 class="text-sm font-bold text-foreground">Layanan &amp; Lokasi Awal</h2>
+					<p class="mt-0.5 text-xs text-muted-foreground">
+						Pilih kategori layanan dan titik tempat pembelian atau penjemputan
+					</p>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="space-y-1.5">
+						<label for="order-category" class="block text-xs font-semibold text-foreground">
+							Kategori Layanan
+						</label>
+						<Select
+							id="order-category"
+							value={selectedCategoryId}
+							options={categoryOptions}
+							onchange={handleCategoryChange}
+						/>
 					</div>
-					<div>
-						<h2 class="text-sm font-bold text-foreground">Lokasi Toko / Warung Asal</h2>
-						<p class="text-[11px] text-muted-foreground">Tempat pembelian belanjaan Anda</p>
+
+					<div class="space-y-1.5">
+						<label for="order-service" class="block text-xs font-semibold text-foreground">
+							Pilihan Layanan
+						</label>
+						<Select
+							id="order-service"
+							value={selectedServiceId}
+							options={serviceOptions}
+							onchange={handleServiceChange}
+						/>
 					</div>
 				</div>
 
-				<div class="space-y-3">
-					<div>
-						<label for="origin_name" class="mb-1 block text-xs font-semibold text-foreground">
-							Nama Warung / Toko / Pasar <span class="text-destructive">*</span>
+				<div class="space-y-3 border-t border-border/50 pt-4">
+					<div class="space-y-1.5">
+						<label for="origin_name" class="block text-xs font-semibold text-foreground">
+							Nama Tempat / Toko / Titik Awal <span class="text-destructive">*</span>
 						</label>
 						<Input
 							id="origin_name"
 							name="origin_name"
 							type="text"
 							bind:value={originName}
-							placeholder="Contoh: Soto Bebek Gawok, Pasar Subuh Gawok, Toko Kelontong Bu Sri"
+							placeholder="Contoh: Mie Gacoan Makamhaji, Roti Sajiyem, Kantor Kelurahan"
 							required
-							class="text-xs"
+							class="text-base sm:text-xs"
 						/>
 					</div>
 
-					<div>
-						<label for="origin_address" class="mb-1 block text-xs font-semibold text-foreground">
-							Alamat / Patokan Toko (Opsional)
+					<div class="space-y-1.5">
+						<label for="origin_address" class="block text-xs font-semibold text-foreground">
+							Patokan / Alamat Lokasi Awal (Opsional)
 						</label>
 						<Input
 							id="origin_address"
 							name="origin_address"
 							type="text"
 							bind:value={originAddress}
-							placeholder="Contoh: Sebelah barat rel stasiun Gawok, depan gapura"
-							class="text-xs"
+							placeholder="Contoh: Sebelah barat stasiun, depan minimarket"
+							class="text-base sm:text-xs"
 						/>
 					</div>
 				</div>
-			</div>
+			</section>
 
-			<!-- Shopping Items Section -->
-			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
-				<div class="flex items-center justify-between border-b border-border/60 pb-3">
-					<div class="flex items-center gap-2">
-						<div
-							class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"
-						>
-							<ShoppingBag class="size-4" />
-						</div>
-						<div>
-							<h2 class="text-sm font-bold text-foreground">Daftar Barang Titipan</h2>
-							<p class="text-[11px] text-muted-foreground">
-								Cantumkan rincian pesanan secara teliti
-							</p>
-						</div>
+			<!-- 2. Order Items / Details -->
+			<section class="space-y-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
+				<div class="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+					<div>
+						<h2 class="text-sm font-bold text-foreground">Rincian Pesanan</h2>
+						<p class="mt-0.5 text-xs text-muted-foreground">
+							Tuliskan daftar barang, dokumen, atau pekerjaan yang diminta
+						</p>
 					</div>
 
-					<button
+					<Button
 						type="button"
+						variant="outline"
+						size="sm"
 						onclick={addItem}
-						class="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-muted/40 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+						class="gap-1.5 text-xs"
 					>
 						<Plus class="size-3.5" />
-						<span>Tambah Item</span>
-					</button>
+						<span>Tambah Baris</span>
+					</Button>
 				</div>
 
-				<div class="space-y-4">
+				<div class="space-y-3">
 					{#each items as item, index (item.id)}
 						<div class="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4">
 							<div class="flex items-center justify-between">
-								<span class="text-xs font-bold text-foreground">Item #{index + 1}</span>
+								<span class="text-xs font-bold text-foreground tabular-nums">
+									Item {index + 1}
+								</span>
 								{#if items.length > 1}
 									<button
 										type="button"
 										onclick={() => removeItem(index)}
-										class="text-destructive/80 transition-colors hover:text-destructive"
-										title="Hapus item"
+										aria-label="Hapus item {index + 1}"
+										class="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg text-destructive/80 transition-colors hover:bg-destructive/10 hover:text-destructive"
 									>
 										<Trash2 class="size-4" />
 									</button>
 								{/if}
 							</div>
 
-							<div class="grid grid-cols-1 gap-2.5 sm:grid-cols-12">
-								<div class="sm:col-span-8">
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-12">
+								<div class="sm:col-span-7">
 									<label
 										for={`item-name-${index}`}
-										class="mb-1 block text-[11px] font-semibold text-foreground"
+										class="mb-1 block text-xs font-semibold text-foreground"
 									>
-										Nama Barang / Menu <span class="text-destructive">*</span>
+										Nama Barang / Kebutuhan <span class="text-destructive">*</span>
 									</label>
 									<Input
 										id={`item-name-${index}`}
 										type="text"
 										bind:value={item.name}
-										placeholder="Misal: Soto Bebek, Minyak Goreng 2L, dll"
+										placeholder="Contoh: Mie Suit Level 1, Amplop Dokumen, Survey Lokasi"
 										required
-										class="text-xs"
+										class="text-base sm:text-xs"
 									/>
 								</div>
 
 								<div class="sm:col-span-2">
 									<label
 										for={`item-qty-${index}`}
-										class="mb-1 block text-[11px] font-semibold text-foreground"
+										class="mb-1 block text-xs font-semibold text-foreground"
 									>
 										Jumlah
 									</label>
@@ -281,14 +352,14 @@
 										type="number"
 										min="1"
 										bind:value={item.quantity}
-										class="text-xs"
+										class="text-base tabular-nums sm:text-xs"
 									/>
 								</div>
 
-								<div class="sm:col-span-2">
+								<div class="sm:col-span-3">
 									<label
 										for={`item-unit-${index}`}
-										class="mb-1 block text-[11px] font-semibold text-foreground"
+										class="mb-1 block text-xs font-semibold text-foreground"
 									>
 										Satuan
 									</label>
@@ -296,17 +367,17 @@
 										id={`item-unit-${index}`}
 										type="text"
 										bind:value={item.unit}
-										placeholder="porsi / pcs / kg"
-										class="text-xs"
+										placeholder="pcs / porsi / jam"
+										class="text-base sm:text-xs"
 									/>
 								</div>
 							</div>
 
-							<div class="grid grid-cols-1 gap-2.5 sm:grid-cols-12">
-								<div class="sm:col-span-6">
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-12">
+								<div class="sm:col-span-5">
 									<label
 										for={`item-price-${index}`}
-										class="mb-1 block text-[11px] font-semibold text-foreground"
+										class="mb-1 block text-xs font-semibold text-foreground"
 									>
 										Estimasi Harga Satuan (Rp)
 									</label>
@@ -314,17 +385,17 @@
 										id={`item-price-${index}`}
 										type="number"
 										min="0"
-										step="1000"
+										step="500"
 										bind:value={item.estimated_price}
-										placeholder="15000"
-										class="text-xs"
+										placeholder="0 jika tidak ada belanja barang"
+										class="text-base tabular-nums sm:text-xs"
 									/>
 								</div>
 
-								<div class="sm:col-span-6">
+								<div class="sm:col-span-7">
 									<label
 										for={`item-notes-${index}`}
-										class="mb-1 block text-[11px] font-semibold text-foreground"
+										class="mb-1 block text-xs font-semibold text-foreground"
 									>
 										Catatan Khusus
 									</label>
@@ -332,60 +403,39 @@
 										id={`item-notes-${index}`}
 										type="text"
 										bind:value={item.notes}
-										placeholder="Misal: jangan pedas, pilih yang matang"
-										class="text-xs"
+										placeholder="Contoh: Tanpa seledri, titip foto lokasi"
+										class="text-base sm:text-xs"
 									/>
 								</div>
 							</div>
 						</div>
 					{/each}
 				</div>
-			</div>
+			</section>
 
-			<!-- Delivery Destination Address -->
-			<div class="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
-				<div class="flex items-center gap-2 border-b border-border/60 pb-3">
-					<div
-						class="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"
-					>
-						<MapPin class="size-4" />
-					</div>
-					<div>
-						<h2 class="text-sm font-bold text-foreground">Alamat Tujuan Pengantaran</h2>
-						<p class="text-[11px] text-muted-foreground">Lokasi rumah, kantor, atau kost Anda</p>
-					</div>
+			<!-- 3. Destination & Recipient -->
+			<section class="space-y-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
+				<div class="border-b border-border/60 pb-3">
+					<h2 class="text-sm font-bold text-foreground">Tujuan Pengantaran &amp; Penerima</h2>
+					<p class="mt-0.5 text-xs text-muted-foreground">
+						Pilih alamat tersimpan atau masukkan alamat tujuan secara langsung
+					</p>
 				</div>
 
 				{#if data.addresses.length > 0}
-					<div class="space-y-2">
+					<div class="space-y-1.5">
 						<label for="address-selector" class="block text-xs font-semibold text-foreground">
 							Pilih Alamat Tersimpan
 						</label>
-						<select
-							id="address-selector"
-							bind:value={selectedAddressId}
-							class="w-full rounded-md border border-input bg-background p-2 text-xs font-medium text-foreground focus:ring-1 focus:ring-ring"
-						>
-							{#each data.addresses as addr (addr.id)}
-								<option value={addr.id}>
-									{addr.label} &bull; {addr.recipient_name} ({addr.street_address}) {addr.is_primary
-										? '★ Utama'
-										: ''}
-								</option>
-							{/each}
-							<option value="manual">+ Masukkan Alamat Baru / Manual</option>
-						</select>
+						<Select id="address-selector" bind:value={selectedAddressId} options={addressOptions} />
 					</div>
 				{/if}
 
 				{#if selectedAddressId === 'manual' || data.addresses.length === 0}
-					<div class="space-y-3 border-t border-border/50 pt-3">
+					<div class="space-y-3 border-t border-border/50 pt-4">
 						<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-							<div>
-								<label
-									for="recipient_name"
-									class="mb-1 block text-xs font-semibold text-foreground"
-								>
+							<div class="space-y-1.5">
+								<label for="recipient_name" class="block text-xs font-semibold text-foreground">
 									Nama Penerima <span class="text-destructive">*</span>
 								</label>
 								<Input
@@ -393,127 +443,115 @@
 									name="recipient_name"
 									type="text"
 									bind:value={recipientName}
+									placeholder="Nama lengkap penerima"
 									required
-									class="text-xs"
+									class="text-base sm:text-xs"
 								/>
 							</div>
-							<div>
-								<label
-									for="recipient_phone"
-									class="mb-1 block text-xs font-semibold text-foreground"
-								>
-									Nomor Telepon / WhatsApp <span class="text-destructive">*</span>
+							<div class="space-y-1.5">
+								<label for="recipient_phone" class="block text-xs font-semibold text-foreground">
+									Nomor WhatsApp / Telepon <span class="text-destructive">*</span>
 								</label>
 								<Input
 									id="recipient_phone"
 									name="recipient_phone"
 									type="tel"
 									bind:value={recipientPhone}
+									placeholder="08xxxxxxxxxx"
 									required
-									class="text-xs"
+									class="text-base tabular-nums sm:text-xs"
 								/>
 							</div>
 						</div>
 
-						<div>
-							<label for="manual_address" class="mb-1 block text-xs font-semibold text-foreground">
-								Alamat Lengkap Pengantaran <span class="text-destructive">*</span>
+						<div class="space-y-1.5">
+							<label for="manual_address" class="block text-xs font-semibold text-foreground">
+								Alamat Lengkap Tujuan <span class="text-destructive">*</span>
 							</label>
-							<textarea
+							<Textarea
 								id="manual_address"
 								bind:value={manualAddressText}
-								rows="3"
-								placeholder="Contoh: Jl. Stasiun Gawok No. 12, RT 02/RW 01, Krapyak, Gatak (Pagar hitam)"
+								rows={3}
+								placeholder="Tuliskan nama jalan, nomor rumah, RT/RW, dan patokan terdekat"
 								required={selectedAddressId === 'manual'}
-								class="w-full rounded-md border border-input bg-transparent p-2 text-xs shadow-xs focus:ring-1 focus:ring-ring"
-							></textarea>
+								class="text-base sm:text-xs"
+							/>
 						</div>
 					</div>
 				{/if}
 
-				<!-- Customer Extra Notes -->
-				<div class="border-t border-border/50 pt-3">
-					<label for="customer_notes" class="mb-1 block text-xs font-semibold text-foreground">
-						Catatan Tambahan untuk Pengantar (Opsional)
+				<div class="space-y-1.5 border-t border-border/50 pt-4">
+					<label for="customer_notes" class="block text-xs font-semibold text-foreground">
+						Catatan untuk Petugas (Opsional)
 					</label>
 					<Input
 						id="customer_notes"
 						name="customer_notes"
 						type="text"
 						bind:value={customerNotes}
-						placeholder="Misal: Titipkan ke satpam, hubungi sebelum jalan, dll"
-						class="text-xs"
+						placeholder="Contoh: Hubungi sebelum berangkat, titipkan di pos depan"
+						class="text-base sm:text-xs"
 					/>
 				</div>
-			</div>
+			</section>
 		</div>
 
-		<!-- Right Summary Box (4 cols) -->
-		<div class="space-y-6 lg:sticky lg:top-20 lg:col-span-4">
-			<div class="space-y-4 rounded-2xl border border-primary/30 bg-card p-6 shadow-md">
-				<div class="flex items-center justify-between border-b border-border/60 pb-3">
-					<span class="text-xs font-bold text-foreground">Ringkasan Biaya Jastip</span>
-					<span class="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-						100% Struk Toko Asli
-					</span>
+		<!-- Sticky Cost Summary (4 cols) -->
+		<aside class="lg:sticky lg:top-20 lg:col-span-4 lg:self-start">
+			<div class="space-y-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
+				<div class="border-b border-border/60 pb-3">
+					<h2 class="text-sm font-bold text-foreground">Ringkasan Biaya</h2>
+					{#if activeService}
+						<p class="mt-0.5 truncate text-xs text-muted-foreground">{activeService.title}</p>
+					{:else}
+						<p class="mt-0.5 text-xs text-muted-foreground">{data.pricingRule.name}</p>
+					{/if}
 				</div>
 
-				<div class="space-y-2 text-xs">
-					<div class="flex justify-between">
-						<span class="text-muted-foreground">Tarif Jasa Titip (Flat)</span>
-						<span class="font-bold text-foreground">
-							Rp {baseJastipFee.toLocaleString('id-ID')}
-						</span>
+				<dl class="space-y-2.5 text-xs">
+					<div class="flex items-center justify-between">
+						<dt class="text-muted-foreground">Tarif Layanan</dt>
+						<dd class="font-semibold text-foreground tabular-nums">
+							Rp {baseServiceFee.toLocaleString('id-ID')}
+						</dd>
 					</div>
 
-					<div class="flex justify-between">
-						<span class="text-muted-foreground">Biaya Platform Titipin</span>
-						<span class="font-bold text-foreground">Rp {platformFee.toLocaleString('id-ID')}</span>
+					<div class="flex items-center justify-between">
+						<dt class="text-muted-foreground">Biaya Platform</dt>
+						<dd class="font-semibold text-foreground tabular-nums">
+							Rp {platformFee.toLocaleString('id-ID')}
+						</dd>
 					</div>
 
-					<div class="flex justify-between border-t border-border/50 pt-2 font-bold">
-						<span class="text-foreground">Total Ongkos Jastip</span>
-						<span class="text-primary">Rp {totalJastipFee.toLocaleString('id-ID')}</span>
+					<div class="flex items-center justify-between border-t border-border/60 pt-2.5">
+						<dt class="font-bold text-foreground">Total Biaya Jasa</dt>
+						<dd class="text-base font-extrabold text-primary tabular-nums">
+							Rp {totalServiceFee.toLocaleString('id-ID')}
+						</dd>
 					</div>
 
 					{#if estimatedItemCost > 0}
 						<div
-							class="flex justify-between border-t border-dashed border-border/60 pt-2 text-muted-foreground"
+							class="flex items-center justify-between border-t border-dashed border-border/60 pt-2.5"
 						>
-							<span>Estimasi Belanja Toko</span>
-							<span class="font-semibold text-foreground">
+							<dt class="text-muted-foreground">Estimasi Belanja</dt>
+							<dd class="font-semibold text-foreground tabular-nums">
 								Rp {estimatedItemCost.toLocaleString('id-ID')}
-							</span>
+							</dd>
 						</div>
 					{/if}
-				</div>
+				</dl>
 
-				<div
-					class="rounded-xl border border-border/60 bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground"
+				<p
+					class="rounded-xl border border-border/70 bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground"
 				>
-					<div class="flex items-start gap-1.5 font-semibold text-foreground">
-						<Receipt class="mt-0.5 size-3.5 shrink-0 text-primary" />
-						<span>Prinsip Belanja Titipin</span>
-					</div>
-					<p class="mt-1">
-						Nominal belanjaan dihitung 100% sesuai struk fisik kasir toko saat barang dibeli, tanpa
-						biaya terselubung.
-					</p>
-				</div>
+					Jika ada pembelian barang di lokasi, total belanja dibayarkan sesuai nota asli.
+				</p>
 
-				<Button
-					type="submit"
-					disabled={isSubmitting}
-					class="h-11 w-full gap-2 rounded-xl text-xs font-bold shadow-xs transition-transform active:scale-98"
-				>
-					{#if isSubmitting}
-						<span>Memproses Pesanan...</span>
-					{:else}
-						<span>Kirim Pesanan Jastip</span>
-						<ArrowRight class="size-4" />
-					{/if}
+				<Button type="submit" disabled={isSubmitting} class="h-11 w-full text-xs font-bold">
+					{isSubmitting ? 'Memproses Pesanan...' : 'Kirim Pesanan'}
 				</Button>
 			</div>
-		</div>
+		</aside>
 	</form>
 </div>

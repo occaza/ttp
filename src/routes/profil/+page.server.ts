@@ -1,22 +1,42 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireAuth, profileUpdateSchema, addressSchema } from '#lib/server/auth.js';
+import { getCustomerOrders } from '#lib/server/order.js';
+import { getUserNotifications } from '#lib/server/communication.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const auth = requireAuth(locals);
 
-	const { data: addresses } = await locals.supabase
-		.from('addresses')
-		.select('*')
-		.eq('user_id', auth.user.id)
-		.order('is_primary', { ascending: false })
-		.order('created_at', { ascending: false });
+	const [addressesResult, orders, notifications] = await Promise.all([
+		locals.supabase
+			.from('addresses')
+			.select('*')
+			.eq('user_id', auth.user.id)
+			.order('is_primary', { ascending: false })
+			.order('created_at', { ascending: false }),
+		getCustomerOrders(locals.supabase, auth.user.id),
+		getUserNotifications(locals.supabase, auth.user.id)
+	]);
+
+	const activeOrdersCount = orders.filter((o) =>
+		['pending', 'accepted', 'shopping', 'purchased', 'delivering'].includes(o.status)
+	).length;
+	const completedOrdersCount = orders.filter((o) => o.status === 'completed').length;
+	const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
 
 	return {
 		user: auth.user,
 		profile: auth.profile,
 		role: auth.role,
-		addresses: addresses || []
+		addresses: addressesResult.data || [],
+		orders,
+		recentNotifications: notifications.slice(0, 4),
+		stats: {
+			totalOrders: orders.length,
+			activeOrdersCount,
+			completedOrdersCount,
+			unreadNotificationsCount
+		}
 	};
 };
 
